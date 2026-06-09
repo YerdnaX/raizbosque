@@ -774,6 +774,45 @@ const { productos, estaCargando, error } = useProductos()
 
 ---
 
+# 15.1. Rotación y scroll en pantallas
+
+Toda pantalla cuyo contenido pueda superar la altura disponible (especialmente en orientación horizontal) debe envolver su contenido en un `ScrollView`.
+
+Usar `ImageBackground` como contenedor raíz cuando la pantalla tenga imagen de fondo, con `flex: 1`.
+
+Usar `ScrollView` con `contentContainerStyle` para el centrado y padding, no con `style`.
+
+Usar `flexGrow: 1` en `contentContainerStyle` para que el contenido se centre en portrait y pueda hacer scroll en landscape.
+
+Patrón correcto para pantallas con imagen de fondo:
+
+```tsx
+<ImageBackground source={require('...')} style={estilos.fondo} resizeMode="cover">
+    <ScrollView
+        contentContainerStyle={estilos.contenedor}
+        keyboardShouldPersistTaps="handled"
+    >
+        {/* contenido */}
+    </ScrollView>
+</ImageBackground>
+```
+
+```ts
+fondo: {
+    flex: 1,
+},
+contenedor: {
+    flexGrow: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+},
+```
+
+Agregar siempre `keyboardShouldPersistTaps="handled"` en pantallas con formularios para que el teclado no bloquee los botones.
+
+---
+
 # 16. Hooks
 
 Usar hooks para encapsular lógica reutilizable.

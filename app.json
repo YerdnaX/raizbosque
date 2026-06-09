@@ -3,7 +3,7 @@
     "name": "raizbosque",
     "slug": "raizbosque",
     "version": "1.0.0",
-    "orientation": "portrait",
+    "orientation": "default",
     "icon": "./assets/images/icon.png",
     "scheme": "raizbosque",
     "userInterfaceStyle": "automatic",
