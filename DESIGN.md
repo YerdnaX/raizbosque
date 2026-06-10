@@ -51,44 +51,44 @@ colors:
 typography:
   display-lg:
     fontFamily: Literata
-    fontSize: 40px
+    fontSize: 42px
     fontWeight: '700'
     lineHeight: 48px
     letterSpacing: -0.02em
   headline-lg:
     fontFamily: Literata
-    fontSize: 32px
+    fontSize: 34px
     fontWeight: '600'
     lineHeight: 40px
   headline-lg-mobile:
     fontFamily: Literata
-    fontSize: 28px
+    fontSize: 30px
     fontWeight: '600'
     lineHeight: 34px
   headline-md:
     fontFamily: Literata
-    fontSize: 24px
+    fontSize: 26px
     fontWeight: '600'
     lineHeight: 32px
   body-lg:
     fontFamily: Hanken Grotesk
-    fontSize: 18px
+    fontSize: 20px
     fontWeight: '400'
     lineHeight: 28px
   body-md:
     fontFamily: Hanken Grotesk
-    fontSize: 16px
+    fontSize: 18px
     fontWeight: '400'
     lineHeight: 24px
   label-lg:
     fontFamily: Hanken Grotesk
-    fontSize: 14px
+    fontSize: 18px
     fontWeight: '600'
     lineHeight: 20px
     letterSpacing: 0.05em
   label-sm:
     fontFamily: Hanken Grotesk
-    fontSize: 12px
+    fontSize: 14px
     fontWeight: '500'
     lineHeight: 16px
 rounded:

@@ -1,10 +1,13 @@
 import { View, Text, TextInput, Pressable, StyleSheet, ImageBackground, ScrollView } from "react-native";
 import { useState } from "react";
+import { router } from "expo-router";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Login() {
     const [correo, setCorreo] = useState("");
     const [contrasena, setContrasena] = useState("");
     const [mostrarContrasena, setMostrarContrasena] = useState(false);
+    const insets = useSafeAreaInsets();
 
     return (
         <ImageBackground
@@ -13,7 +16,7 @@ export default function Login() {
             resizeMode="cover"
         >
             <ScrollView
-                contentContainerStyle={estilos.contenedor}
+                contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]}
                 keyboardShouldPersistTaps="handled"
             >
             <View style={estilos.tarjeta}>
@@ -48,7 +51,10 @@ export default function Login() {
                     </View>
                 </View>
 
-                <Pressable style={estilos.olvidaste}>
+                <Pressable
+                    style={estilos.olvidaste}
+                    onPress={() => router.push('/recuperar-contrasena')}
+                >
                     <Text style={estilos.olvidasteTexto}>¿Olvidaste tu contraseña?</Text>
                 </Pressable>
 
@@ -57,11 +63,20 @@ export default function Login() {
                     onPress={() => {
                         if (estanVacios(correo, contrasena)) {
                             alert("Por favor, complete todos los campos.");
+                        } else {
+                            router.replace('/(tabs)/perfil');
                         }
                     }}
                 >
                     <Text style={estilos.botonEntrarTexto}>ENTRAR</Text>
                 </Pressable>
+                <Pressable
+                    style={estilos.botonRegistrarse}
+                    onPress={() => router.push('/registro')}
+                >
+                    <Text style={estilos.botonRegistrarseTexto}>REGISTRARSE</Text>
+                </Pressable>
+
             </View>
             </ScrollView>
         </ImageBackground>
@@ -83,10 +98,10 @@ const estilos = StyleSheet.create({
         padding: 20,
     },
     tarjeta: {
-        backgroundColor: '#ffffffA9',
+        backgroundColor: '#ffffff',
         borderRadius: 24,
-        padding: 32,
-        width: '80%',
+        padding: 30,
+        width: '85%',
         shadowColor: '#1b3022',
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.08,
@@ -98,24 +113,24 @@ const estilos = StyleSheet.create({
         fontWeight: '700',
         color: '#1c1c18',
         textAlign: 'center',
-        marginBottom: 4,
+        marginBottom: 20,
     },
     subtitulo: {
         fontSize: 18,
         fontWeight: '600',
         color: '#1c1c18',
         textAlign: 'center',
-        marginBottom: 32,
+        marginBottom: 20,
     },
     campo: {
         marginBottom: 16,
     },
     etiqueta: {
         alignSelf: 'flex-start',
-        fontSize: 14,
+        fontSize: 18,
         fontWeight: '500',
         color: '#434843',
-        marginBottom: 6,
+        marginBottom: 8,
     },
     input: {
         backgroundColor: '#fefcf8',
@@ -158,10 +173,24 @@ const estilos = StyleSheet.create({
         borderRadius: 999,
         paddingVertical: 16,
         alignItems: 'center',
-        marginBottom: 24,
+        marginBottom: 12,
     },
     botonEntrarTexto: {
         color: '#ffffff',
+        fontSize: 14,
+        fontWeight: '600',
+        letterSpacing: 1,
+    },
+    botonRegistrarse: {
+        borderWidth: 1.5,
+        borderColor: '#1b3022',
+        borderRadius: 999,
+        paddingVertical: 16,
+        alignItems: 'center',
+        marginBottom: 24,
+    },
+    botonRegistrarseTexto: {
+        color: '#1b3022',
         fontSize: 14,
         fontWeight: '600',
         letterSpacing: 1,
