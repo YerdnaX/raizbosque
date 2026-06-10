@@ -36,7 +36,7 @@ export default function DetallePlanta() {
                 <Encabezado />
                 <View style={estilos.centrado}>
                     <ActivityIndicator size="large" color="#1b3022" />
-                    <Text style={estilos.cargandoTexto}>Cargando la info desde el API...</Text>
+                    <Text style={estilos.cargandoTexto}>Cargando :D</Text>
                 </View>
             </View>
         );
@@ -102,9 +102,6 @@ export default function DetallePlanta() {
 
                     {/* Nombre y precio */}
                     <Text style={estilos.nombre}>{planta.Nombre}</Text>
-                    {planta.NombreCategoria ? (
-                        <Text style={estilos.nombreCientifico}>{planta.NombreCategoria}</Text>
-                    ) : null}
                     <Text style={estilos.precio}>₡{planta.Precio.toLocaleString('es-CR')}</Text>
 
                     <View style={estilos.separador} />
@@ -267,10 +264,15 @@ const estilos = StyleSheet.create({
         color: '#1c1c18',
     },
     nombreCientifico: {
-        fontSize: 14,
-        color: '#737973',
-        fontStyle: 'italic',
-        marginTop: -4,
+        alignSelf: 'flex-start',
+        backgroundColor: '#e8f0e5',
+        borderRadius: 999,
+        paddingHorizontal: 10,
+        paddingVertical: 3,
+        fontSize: 11,
+        color: '#526349',
+        fontWeight: '600',
+        marginTop: 2,
     },
     precio: {
         fontSize: 26,

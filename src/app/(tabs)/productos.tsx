@@ -252,7 +252,7 @@ const estilos = StyleSheet.create({
     precio: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#1c1c18',
+        color: '#526349',
     },
     botonAgregar: {
         width: 28,

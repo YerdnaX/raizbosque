@@ -18,6 +18,7 @@ export default function Jardin() {
 
             <View style={estilos.cuerpo}>
                 <Text style={estilos.texto}>Mi Jardín</Text>
+                <Text style={estilos.texto}>Pendiente :c</Text>
             </View>
  </View>
     );

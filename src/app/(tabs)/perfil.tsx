@@ -7,6 +7,7 @@ import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 const opciones = [
     { titulo: 'Editar Perfil',      icono: 'pencil'      },
     { titulo: 'Mis Direcciones',    icono: 'mappin'      },
+    { titulo: 'Reservaciones',    icono: 'mappin'      },
     { titulo: 'Métodos de Pago',    icono: 'creditcard'  },
     { titulo: 'Historial de Compras',    icono: 'history'  },
     { titulo: 'Configuración',      icono: 'gearshape'   },

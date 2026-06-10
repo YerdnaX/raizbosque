@@ -1,3 +1,29 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="24" height="24" role="img" aria-label="productos">
-  <path d="M 15 42 L 85 42 L 80 90 L 20 90 Z M 35 42 A 15 15 0 0 1 65 42 L 58 42 A 8 8 0 0 0 42 42 Z"/>
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <g stroke="#7F9A70" stroke-width="14" stroke-linecap="round" stroke-linejoin="round">
+
+    <!-- Manija superior -->
+    <path d="M202 204V154C202 115 225 94 256 94C287 94 310 115 310 154V204" />
+
+    <!-- Parte superior lateral izquierda de la bolsa -->
+    <path d="M128 204L145 154H202" />
+
+    <!-- Parte superior lateral derecha de la bolsa -->
+    <path d="M310 154H367L384 204" />
+
+    <!-- Cuerpo principal de la bolsa -->
+    <path d="M128 204H384V382C384 401 370 416 351 416H161C142 416 128 401 128 382V204Z" />
+
+    <!-- Tallo central -->
+    <path d="M256 340V306" />
+
+    <!-- Hoja pequeña izquierda -->
+    <path d="M256 306C226 306 207 287 205 259C233 257 255 274 256 306Z" />
+
+    <!-- Hoja grande derecha -->
+    <path d="M262 304C265 255 300 226 339 229C342 274 309 306 262 304Z" />
+
+    <!-- Unión orgánica del tallo -->
+    <path d="M256 306C259 294 262 286 270 278" />
+
+  </g>
 </svg>

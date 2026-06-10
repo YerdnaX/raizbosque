@@ -36,7 +36,7 @@ export default function DetallePlato() {
                 <Encabezado />
                 <View style={estilos.centrado}>
                     <ActivityIndicator size="large" color="#1b3022" />
-                    <Text style={estilos.cargandoTexto}>Cargando la info desde el API...</Text>
+                    <Text style={estilos.cargandoTexto}>Cargando :D</Text>
                 </View>
             </View>
         );
