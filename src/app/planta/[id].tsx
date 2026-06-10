@@ -71,16 +71,16 @@ export default function DetallePlanta() {
                 <View style={estilos.imagenPrincipal}>
                     {urlImagen(planta.Imagen) ? (
                         <Image source={{ uri: urlImagen(planta.Imagen)! }} style={estilos.imagenReal} />
-                    ) : (
-                        <SymbolView name="photo" size={56} tintColor="#b0b0a8" />
-                    )}
+                    ) : null}
                 </View>
 
                 {/* Miniaturas */}
                 <View style={estilos.miniaturas}>
                     {[0, 1, 2, 3].map(i => (
                         <View key={i} style={estilos.miniatura}>
-                            <SymbolView name="photo" size={20} tintColor="#b0b0a8" />
+                            {urlImagen(planta.Imagen) ? (
+                                <Image source={{ uri: urlImagen(planta.Imagen)! }} style={estilos.imagenMiniatura} />
+                            ) : null}
                         </View>
                     ))}
                 </View>
@@ -231,8 +231,14 @@ const estilos = StyleSheet.create({
         height: 72,
         backgroundColor: '#e5e2dc',
         borderRadius: 8,
+        overflow: 'hidden',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    imagenMiniatura: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     infoContenido: {
         paddingHorizontal: 20,
