@@ -1,23 +1,28 @@
-import { View, Text, Pressable, ScrollView, StyleSheet, ActivityIndicator, ImageBackground } from "react-native";
+import { View, Text, Pressable, ScrollView, StyleSheet, ActivityIndicator, ImageBackground, Image } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
 import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
+import AtrasIcono from '@/assets/icons/atras.svg';
 import { useDetalleRestaurante } from '../../features/restaurante/hooks/useDetalleRestaurante';
+import { urlImagen } from '../../utils/urlImagen';
 
 const IMAGEN_TOPBAR = require('@/assets/images/login/topBar.png');
 
 function Encabezado() {
+    const insets = useSafeAreaInsets();
     return (
-        <ImageBackground source={IMAGEN_TOPBAR} style={estilos.encabezado} resizeMode="cover">
-            <Pressable style={estilos.botonAtras} onPress={() => router.back()}>
-                <Text style={estilos.flechaAtras}>←</Text>
-            </Pressable>
-            <Text style={estilos.encabezadoTitulo}>RAÍCES</Text>
-            <Pressable style={estilos.botonEncabezado}>
-                <CarritoIcono width={30} height={30} fill="#1b3022" />
-            </Pressable>
-        </ImageBackground>
+        <>
+            <ImageBackground source={IMAGEN_TOPBAR} style={[estilos.encabezado, { paddingTop: insets.top }]} resizeMode="cover">
+                <Pressable style={estilos.botonAtras} onPress={() => router.back()}>
+                    <AtrasIcono width={56} height={56} fill="#000000" />
+                </Pressable>
+                <Text style={estilos.encabezadoTitulo}>RAÍCES</Text>
+                <Pressable style={estilos.botonEncabezado}>
+                    <CarritoIcono width={30} height={30} fill="#1b3022" />
+                </Pressable>
+            </ImageBackground>
+        </>
     );
 }
 
@@ -27,19 +32,19 @@ export default function DetallePlato() {
 
     if (estaCargando) {
         return (
-            <SafeAreaView style={estilos.contenedor} edges={['top']}>
+            <View style={estilos.contenedor}>
                 <Encabezado />
                 <View style={estilos.centrado}>
                     <ActivityIndicator size="large" color="#1b3022" />
                     <Text style={estilos.cargandoTexto}>Cargando la info desde el API...</Text>
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
 
     if (error || !item) {
         return (
-            <SafeAreaView style={estilos.contenedor} edges={['top']}>
+            <View style={estilos.contenedor}>
                 <Encabezado />
                 <View style={estilos.centrado}>
                     <Text style={estilos.errorTexto}>{error ?? 'Producto no encontrado.'}</Text>
@@ -47,18 +52,22 @@ export default function DetallePlato() {
                         <Text style={estilos.botonVolverTexto}>Volver al Menú</Text>
                     </Pressable>
                 </View>
-            </SafeAreaView>
+            </View>
         );
     }
 
     return (
-        <SafeAreaView style={estilos.contenedor} edges={['top']}>
+        <View style={estilos.contenedor}>
             <Encabezado />
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={estilos.scroll}>
                 {/* Imagen principal */}
                 <View style={estilos.imagenPrincipal}>
-                    <SymbolView name="photo" size={56} tintColor="#b0b0a8" />
+                    {urlImagen(item.Imagen) ? (
+                        <Image source={{ uri: urlImagen(item.Imagen)! }} style={estilos.imagenReal} />
+                    ) : (
+                        <SymbolView name="photo" size={56} tintColor="#b0b0a8" />
+                    )}
                 </View>
 
                 {/* Miniaturas */}
@@ -130,11 +139,8 @@ export default function DetallePlato() {
                     <SymbolView name="cart.fill.badge.plus" size={18} tintColor="#ffffff" />
                     <Text style={estilos.botonAgregarTexto}>AGREGAR AL CARRITO</Text>
                 </Pressable>
-                <Pressable style={estilos.botonPersonalizar}>
-                    <Text style={estilos.botonPersonalizarTexto}>PERSONALIZAR PEDIDO</Text>
-                </Pressable>
             </View>
-        </SafeAreaView>
+        </View>
     );
 }
 
@@ -156,18 +162,7 @@ const estilos = StyleSheet.create({
         padding: 4,
     },
     botonAtras: {
-        backgroundColor: 'rgba(0,0,0,0.18)',
-        borderRadius: 20,
-        width: 36,
-        height: 36,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    flechaAtras: {
-        fontSize: 20,
-        color: '#ffffff',
-        fontWeight: '700',
-        lineHeight: 22,
+        padding: 4,
     },
     encabezadoTitulo: {
         fontSize: 18,
@@ -214,6 +209,11 @@ const estilos = StyleSheet.create({
         backgroundColor: '#e5e2dc',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    imagenReal: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover',
     },
     miniaturas: {
         flexDirection: 'row',

@@ -3,6 +3,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import InicioIcono from '@/assets/icons/bottomBar/inicio.svg';
 import RestauranteIcono from '@/assets/icons/bottomBar/restaurante.svg';
 import ViveroIcono from '@/assets/icons/bottomBar/vivero.svg';
+import ProductosIcono from '@/assets/icons/bottomBar/productos.svg';
 import JardinIcono from '@/assets/icons/bottomBar/mi-jardin.svg';
 import PerfilIcono from '@/assets/icons/bottomBar/perfil.svg';
 
@@ -53,6 +54,15 @@ export default function TabsLayout() {
                     title: 'Vivero',
                     tabBarIcon: ({ color, size }) => (
                         <ViveroIcono width={size} height={size} fill={color} />
+                    ),
+                }}
+            />
+            <Tabs.Screen
+                name="productos"
+                options={{
+                    title: 'Productos',
+                    tabBarIcon: ({ color, size }) => (
+                        <ProductosIcono width={size} height={size} fill={color} />
                     ),
                 }}
             />

@@ -14,7 +14,10 @@ export function useVivero() {
                 console.error('[useVivero]', err.message, err.code);
                 setError('No se pudieron cargar las plantas.');
             })
-            .finally(() => setEstaCargando(false));
+            .finally(() => {
+                console.log('[useVivero] Carga de plantas finalizada. Total plantas:', plantas.length); 
+                setEstaCargando(false); 
+            });
     }, []);
 
     return { plantas, estaCargando, error };

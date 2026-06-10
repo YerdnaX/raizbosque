@@ -1,25 +1,27 @@
 import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions, ImageBackground } from "react-native";
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 
 const opciones = [
     { titulo: 'Editar Perfil',      icono: 'pencil'      },
     { titulo: 'Mis Direcciones',    icono: 'mappin'      },
     { titulo: 'Métodos de Pago',    icono: 'creditcard'  },
+    { titulo: 'Historial de Compras',    icono: 'history'  },
     { titulo: 'Configuración',      icono: 'gearshape'   },
 ] as const;
 
 export default function Perfil() {
+    const insets = useSafeAreaInsets();
     const { width, height } = useWindowDimensions();
     const esHorizontal = width > height;
 
     return (
-        <SafeAreaView style={estilos.contenedor} edges={['top']}>
+        <View style={estilos.contenedor}>
             <ImageBackground
                 source={require('@/assets/images/login/topBar.png')}
-                style={estilos.encabezado}
+                style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
                 <Pressable style={estilos.botonEncabezado}>
@@ -71,7 +73,7 @@ export default function Perfil() {
                     <Text style={estilos.cerrarSesionTexto}>Cerrar Sesión</Text>
                 </Pressable>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 

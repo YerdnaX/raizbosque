@@ -1,12 +1,14 @@
 import { View, Text, TextInput, Pressable, FlatList, StyleSheet, ActivityIndicator, ImageBackground, Image } from "react-native";
 import { useState, useMemo } from "react";
 import { router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
 import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 import { useVivero } from '../../features/vivero/hooks/useVivero';
+import { urlImagen } from '../../utils/urlImagen';
 
 export default function Vivero() {
+    const insets = useSafeAreaInsets();
     const { plantas, estaCargando, error } = useVivero();
     const [busqueda, setBusqueda] = useState('');
     const [filtroActivo, setFiltroActivo] = useState('Todos');
@@ -15,7 +17,6 @@ export default function Vivero() {
         () => ['Todos', ...Array.from(new Set(plantas.map(p => p.NombreCategoria)))],
         [plantas],
     );
-
     const plantasFiltradas = plantas.filter(planta => {
         const coincideBusqueda = planta.Nombre.toLowerCase().includes(busqueda.toLowerCase());
         const coincideFiltro = filtroActivo === 'Todos' || planta.NombreCategoria === filtroActivo;
@@ -23,10 +24,10 @@ export default function Vivero() {
     });
 
     return (
-        <SafeAreaView style={estilos.contenedor} edges={['top']}>
+        <View style={estilos.contenedor}>
             <ImageBackground
                 source={require('@/assets/images/login/topBar.png')}
-                style={estilos.encabezado}
+                style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
                 <Pressable style={estilos.botonEncabezado}>
@@ -90,10 +91,9 @@ export default function Vivero() {
                             onPress={() => router.push(`/planta/${item.IdProducto}`)}
                         >
                             <View style={estilos.imagenPlaceholder}>
-                                {item.Imagen && (
-                                    <Image source={{ uri: item.Imagen }} style={estilos.imagen} />
-                                )
-                                }
+                                {urlImagen(item.Imagen) ? (
+                                    <Image source={{ uri: urlImagen(item.Imagen)! }} style={estilos.imagen} />
+                                ) : null}
                             </View>
                             <Text style={estilos.nombrePlanta} numberOfLines={2}>{item.Nombre}</Text>
                             {item.FrecuenciaRiego && (
@@ -112,7 +112,7 @@ export default function Vivero() {
                     )}
                 />
             )}
-        </SafeAreaView>
+        </View>
     );
 }
 
@@ -269,7 +269,8 @@ const estilos = StyleSheet.create({
         marginTop: 40,
     },
     imagen: {
-        width: 32,
-        height: 32,
-        },
+        width: '100%',
+        height: '100%',
+        borderRadius: 8,
+    },
 });

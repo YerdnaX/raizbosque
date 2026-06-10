@@ -1,11 +1,10 @@
-import { View, Text, StyleSheet, ImageBackground, StatusBar } from "react-native";
+import { View, Text, StyleSheet, ImageBackground } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 export default function Jardin() {
     const insets = useSafeAreaInsets();
     return (
         <View style={[estilos.contenedor]}>
-            <StatusBar barStyle="dark-content" backgroundColor="transparent" />
             <ImageBackground
                 source={require('@/assets/images/login/topBar.png')}
                 style={[estilos.encabezado, { paddingTop: insets.top }]}

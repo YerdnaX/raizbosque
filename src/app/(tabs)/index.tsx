@@ -1,6 +1,6 @@
-import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions, ActivityIndicator, ImageBackground } from "react-native";
+import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions, ActivityIndicator, ImageBackground, Image } from "react-native";
 import { router } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
 import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 import RestauranteIcono from '@/assets/icons/bottomBar/restaurante.svg';
@@ -8,6 +8,7 @@ import ViveroIcono from '@/assets/icons/bottomBar/vivero.svg';
 import JardinIcono from '@/assets/icons/bottomBar/mi-jardin.svg';
 import PerfilIcono from '@/assets/icons/bottomBar/perfil.svg';
 import { useInicio } from '../../features/inicio/hooks/useInicio';
+import { urlImagen } from '../../utils/urlImagen';
 
 const SECCIONES = [
     { titulo: 'Restaurante', ruta: '/(tabs)/restaurante', Icono: RestauranteIcono },
@@ -19,15 +20,16 @@ const SECCIONES = [
 const itemsCarrito = 0;
 
 export default function Inicio() {
+    const insets = useSafeAreaInsets();
     const { width, height } = useWindowDimensions();
     const esHorizontal = width > height;
     const { plantaDelMes, estaCargando, error } = useInicio();
 
     return (
-        <SafeAreaView style={estilos.contenedor} edges={['top']}>
+        <View style={estilos.contenedor}>
             <ImageBackground
                 source={require('@/assets/images/login/topBar.png')}
-                style={estilos.encabezado}
+                style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
                 <Pressable style={estilos.botonEncabezado}>
@@ -54,7 +56,7 @@ export default function Inicio() {
                 </View>
 
                 <View style={estilos.seccion}>
-                    <Text style={estilos.seccionTitulo}>🌿 Planta del Mes</Text>
+                    <Text style={estilos.seccionTitulo}>🌿 Planta del Mes 🌿</Text>
                     {estaCargando ? (
                         <View style={estilos.tarjetaCargando}>
                             <ActivityIndicator size="large" color="#1b3022" />
@@ -68,7 +70,9 @@ export default function Inicio() {
                     ) : (
                         <View style={estilos.tarjetaPlanta}>
                             <View style={[estilos.imagenDestacada, esHorizontal && { height: 110 }]}>
-                                <SymbolView name="photo" size={esHorizontal ? 32 : 48} tintColor="#b0b0a8" />
+                                {urlImagen(plantaDelMes.Imagen) ? (
+                                    <Image source={{ uri: urlImagen(plantaDelMes.Imagen)! }} style={estilos.imagen} />
+                                ) : null}
                             </View>
                             <View style={estilos.infoPlanta}>
                                 <Text style={estilos.nombrePlanta}>{plantaDelMes.Nombre}</Text>
@@ -110,7 +114,7 @@ export default function Inicio() {
                     </View>
                 </View>
             </ScrollView>
-        </SafeAreaView>
+        </View>
     );
 }
 
@@ -303,4 +307,9 @@ const estilos = StyleSheet.create({
         color: '#737973',
         textAlign: 'center',
     },
+    imagen: {
+        width: "100%",
+        height: "100%",
+        borderRadius: 8,
+        },
 });

@@ -4,23 +4,23 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
 import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
-import { useRestaurante } from '../../features/restaurante/hooks/useRestaurante';
+import { useProductos } from '../../features/productos/hooks/useProductos';
 import { urlImagen } from '../../utils/urlImagen';
 
-export default function Restaurante() {
+export default function Productos() {
     const insets = useSafeAreaInsets();
-    const { items, estaCargando, error } = useRestaurante();
+    const { productos, estaCargando, error } = useProductos();
     const [busqueda, setBusqueda] = useState('');
     const [filtroActivo, setFiltroActivo] = useState('Todos');
 
     const categorias = useMemo(
-        () => ['Todos', ...Array.from(new Set(items.map(i => i.NombreCategoria)))],
-        [items],
+        () => ['Todos', ...Array.from(new Set(productos.map(p => p.NombreCategoria)))],
+        [productos],
     );
 
-    const itemsFiltrados = items.filter(item => {
-        const coincideBusqueda = item.Nombre.toLowerCase().includes(busqueda.toLowerCase());
-        const coincideFiltro = filtroActivo === 'Todos' || item.NombreCategoria === filtroActivo;
+    const productosFiltrados = productos.filter(p => {
+        const coincideBusqueda = p.Nombre.toLowerCase().includes(busqueda.toLowerCase());
+        const coincideFiltro = filtroActivo === 'Todos' || p.NombreCategoria === filtroActivo;
         return coincideBusqueda && coincideFiltro;
     });
 
@@ -34,7 +34,7 @@ export default function Restaurante() {
                 <Pressable style={estilos.botonEncabezado}>
                     <SymbolView name="line.3.horizontal" size={24} tintColor="#1b3022" />
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>Restaurante</Text>
+                <Text style={estilos.encabezadoTitulo}>Productos</Text>
                 <Pressable style={estilos.botonEncabezado}>
                     <CarritoIcono width={30} height={30} fill="#1b3022" />
                 </Pressable>
@@ -50,8 +50,8 @@ export default function Restaurante() {
                 </View>
             ) : (
                 <FlatList
-                    data={itemsFiltrados}
-                    keyExtractor={item => item.IdProducto.toString()}
+                    data={productosFiltrados}
+                    keyExtractor={p => p.IdProducto.toString()}
                     numColumns={2}
                     contentContainerStyle={estilos.lista}
                     columnWrapperStyle={estilos.fila}
@@ -62,7 +62,7 @@ export default function Restaurante() {
                                 <SymbolView name="magnifyingglass" size={18} tintColor="#737973" />
                                 <TextInput
                                     style={estilos.inputBusqueda}
-                                    placeholder="Buscar en el menú..."
+                                    placeholder="Buscar productos..."
                                     placeholderTextColor="#b0b0a8"
                                     value={busqueda}
                                     onChangeText={setBusqueda}
@@ -84,22 +84,22 @@ export default function Restaurante() {
                         </View>
                     }
                     ListEmptyComponent={
-                        <Text style={estilos.vacio}>No se encontraron items.</Text>
+                        <Text style={estilos.vacio}>No se encontraron productos.</Text>
                     }
                     renderItem={({ item }) => (
                         <Pressable
                             style={estilos.tarjeta}
-                            onPress={() => router.push(`/plato/${item.IdProducto}` as any)}
+                            onPress={() => router.push(`/planta/${item.IdProducto}`)}
                         >
                             <View style={estilos.imagenPlaceholder}>
                                 {urlImagen(item.Imagen) ? (
                                     <Image source={{ uri: urlImagen(item.Imagen)! }} style={estilos.imagen} />
                                 ) : null}
                             </View>
-                            <Text style={estilos.nombreItem} numberOfLines={2}>{item.Nombre}</Text>
-                            {item.Descripcion && (
-                                <Text style={estilos.descripcion} numberOfLines={1}>{item.Descripcion}</Text>
-                            )}
+                            <View style={estilos.categoria}>
+                                <Text style={estilos.categoriaTexto}>{item.NombreCategoria}</Text>
+                            </View>
+                            <Text style={estilos.nombreProducto} numberOfLines={2}>{item.Nombre}</Text>
                             <View style={estilos.precioFila}>
                                 <Text style={estilos.precio}>₡{item.Precio.toLocaleString('es-CR')}</Text>
                                 <View style={estilos.botonAgregar}>
@@ -220,15 +220,28 @@ const estilos = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 8,
     },
-    nombreItem: {
+    imagen: {
+        width: '100%',
+        height: '100%',
+        borderRadius: 8,
+    },
+    categoria: {
+        backgroundColor: '#e8f0e5',
+        borderRadius: 6,
+        paddingHorizontal: 8,
+        paddingVertical: 3,
+        alignSelf: 'flex-start',
+        marginBottom: 6,
+    },
+    categoriaTexto: {
+        fontSize: 11,
+        color: '#1b3022',
+        fontWeight: '600',
+    },
+    nombreProducto: {
         fontSize: 14,
         fontWeight: '600',
         color: '#1c1c18',
-        marginBottom: 2,
-    },
-    descripcion: {
-        fontSize: 12,
-        color: '#737973',
         marginBottom: 8,
     },
     precioFila: {
@@ -239,7 +252,7 @@ const estilos = StyleSheet.create({
     precio: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#526349',
+        color: '#1c1c18',
     },
     botonAgregar: {
         width: 28,
@@ -261,9 +274,4 @@ const estilos = StyleSheet.create({
         fontSize: 14,
         marginTop: 40,
     },
-    imagen: {
-        width: "100%",
-        height: "100%",
-        borderRadius: 8,
-        },
 });
