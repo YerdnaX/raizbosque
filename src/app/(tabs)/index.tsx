@@ -2,6 +2,10 @@ import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
+import RestauranteIcono from '@/assets/icons/bottomBar/restaurante.svg';
+import ViveroIcono from '@/assets/icons/bottomBar/vivero.svg';
+import JardinIcono from '@/assets/icons/bottomBar/mi-jardin.svg';
+import PerfilIcono from '@/assets/icons/bottomBar/perfil.svg';
 
 const PLANTA_DEL_MES = {
     nombre: 'Monstera Deliciosa',
@@ -11,11 +15,11 @@ const PLANTA_DEL_MES = {
 };
 
 const SECCIONES = [
-    { titulo: 'Restaurante', subtitulo: 'Bebidas, postres y platos', icono: 'fork.knife',  ruta: '/(tabs)/restaurante' },
-    { titulo: 'Vivero',      subtitulo: 'Plantas para tu hogar',     icono: 'leaf.fill',   ruta: '/(tabs)/vivero'      },
-    { titulo: 'Mi Jardín',   subtitulo: 'Tu colección de plantas',   icono: 'tree.fill',   ruta: '/(tabs)/jardin'      },
-    { titulo: 'Mi Perfil',   subtitulo: 'Cuenta y configuración',    icono: 'person.fill', ruta: '/(tabs)/perfil'      },
-] as const;
+    { titulo: 'Restaurante', ruta: '/(tabs)/restaurante', Icono: RestauranteIcono },
+    { titulo: 'Vivero',      ruta: '/(tabs)/vivero',      Icono: ViveroIcono      },
+    { titulo: 'Mi Jardín',   ruta: '/(tabs)/jardin',      Icono: JardinIcono      },
+    { titulo: 'Mi Perfil',   ruta: '/(tabs)/perfil',      Icono: PerfilIcono      },
+];
 
 const itemsCarrito = 3;
 
@@ -79,12 +83,9 @@ export default function Inicio() {
                             <Pressable
                                 key={seccion.titulo}
                                 style={estilos.celdaCuadricula}
-                                onPress={() => router.navigate(seccion.ruta)}
+                                onPress={() => router.navigate(seccion.ruta as any)}
                             >
-                                <View style={estilos.iconoGrande}>
-                                    <SymbolView name={seccion.icono} size={28} tintColor="#1b3022" />
-                                </View>
-                                <Text style={estilos.tituloSeccion}>{seccion.titulo}</Text>
+                                <seccion.Icono width="100%" height="100%" fill="#1b3022" />
                             </Pressable>
                         ))}
                     </View>
@@ -232,30 +233,34 @@ const estilos = StyleSheet.create({
     },
     celdaCuadricula: {
         width: '47.5%',
+        aspectRatio: 1,
         backgroundColor: '#ffffff',
         borderRadius: 16,
-        padding: 20,
-        alignItems: 'center',
-        gap: 10,
+        overflow: 'hidden',
+        justifyContent: 'flex-end',
         shadowColor: '#1b3022',
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.06,
         shadowRadius: 8,
         elevation: 2,
+        padding: 35,
     },
-    iconoGrande: {
-        width: 56,
-        height: 56,
-        borderRadius: 14,
-        backgroundColor: '#f0eee8',
-        justifyContent: 'center',
-        alignItems: 'center',
+    iconoFondo: {
+        position: 'absolute',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+    },
+    etiquetaCelda: {
+        backgroundColor: 'rgba(255, 255, 255, 0.88)',
+        paddingVertical: 10,
+        paddingHorizontal: 14,
     },
     tituloSeccion: {
         fontSize: 14,
         fontWeight: '700',
         color: '#1c1c18',
-        textAlign: 'center',
     },
     subtituloSeccion: {
         fontSize: 11,

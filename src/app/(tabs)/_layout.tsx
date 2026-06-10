@@ -1,6 +1,10 @@
 import { Tabs } from 'expo-router';
-import { SymbolView } from 'expo-symbols';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import InicioIcono from '@/assets/icons/bottomBar/inicio.svg';
+import RestauranteIcono from '@/assets/icons/bottomBar/restaurante.svg';
+import ViveroIcono from '@/assets/icons/bottomBar/vivero.svg';
+import JardinIcono from '@/assets/icons/bottomBar/mi-jardin.svg';
+import PerfilIcono from '@/assets/icons/bottomBar/perfil.svg';
 
 export default function TabsLayout() {
     const insets = useSafeAreaInsets();
@@ -30,7 +34,7 @@ export default function TabsLayout() {
                 options={{
                     title: 'Inicio',
                     tabBarIcon: ({ color, size }) => (
-                        <SymbolView name="house.fill" size={size} tintColor={color} />
+                        <InicioIcono width={size} height={size} fill={color} />
                     ),
                 }}
             />
@@ -39,7 +43,7 @@ export default function TabsLayout() {
                 options={{
                     title: 'Restaurante',
                     tabBarIcon: ({ color, size }) => (
-                        <SymbolView name="fork.knife" size={size} tintColor={color} />
+                        <RestauranteIcono width={size} height={size} fill={color} />
                     ),
                 }}
             />
@@ -48,7 +52,7 @@ export default function TabsLayout() {
                 options={{
                     title: 'Vivero',
                     tabBarIcon: ({ color, size }) => (
-                        <SymbolView name="leaf.fill" size={size} tintColor={color} />
+                        <ViveroIcono width={size} height={size} fill={color} />
                     ),
                 }}
             />
@@ -57,7 +61,7 @@ export default function TabsLayout() {
                 options={{
                     title: 'Mi Jardín',
                     tabBarIcon: ({ color, size }) => (
-                        <SymbolView name="tree.fill" size={size} tintColor={color} />
+                        <JardinIcono width={size} height={size} fill={color} />
                     ),
                 }}
             />
@@ -66,7 +70,7 @@ export default function TabsLayout() {
                 options={{
                     title: 'Perfil',
                     tabBarIcon: ({ color, size }) => (
-                        <SymbolView name="person.fill" size={size} tintColor={color} />
+                        <PerfilIcono width={size} height={size} fill={color} />
                     ),
                 }}
             />
