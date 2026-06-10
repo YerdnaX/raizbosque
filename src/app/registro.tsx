@@ -1,7 +1,8 @@
-import { View, Text, TextInput, Pressable, StyleSheet, ImageBackground, ScrollView } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, ImageBackground, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useState } from "react";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { registro } from "../features/auth/services/authService";
 
 export default function Registro() {
     const [nombre, setNombre] = useState("");
@@ -11,8 +12,35 @@ export default function Registro() {
     const [confirmarContrasena, setConfirmarContrasena] = useState("");
     const [mostrarContrasena, setMostrarContrasena] = useState(false);
     const [mostrarConfirmar, setMostrarConfirmar] = useState(false);
-    const [aceptaTerminos, setAceptaTerminos] = useState(false);
+    const [estaCargando, setEstaCargando] = useState(false);
     const insets = useSafeAreaInsets();
+
+    async function manejarRegistro() {
+        if (!nombre || !correo || !contrasena || !confirmarContrasena) {
+            Alert.alert('Campos requeridos', 'Por favor complete todos los campos obligatorios.');
+            return;
+        }
+        if (contrasena !== confirmarContrasena) {
+            Alert.alert('Error', 'Las contraseñas no coinciden.');
+            return;
+        }
+
+        setEstaCargando(true);
+        try {
+            await registro(nombre, correo, contrasena, telefono || undefined);
+            Alert.alert('Cuenta creada', 'Tu cuenta fue creada correctamente.', [
+                { text: 'Iniciar Sesión', onPress: () => router.replace('/login') },
+            ]);
+        } catch (error: any) {
+            if (error?.response?.status === 409) {
+                Alert.alert('Correo en uso', 'Ya existe una cuenta con ese correo.');
+            } else {
+                Alert.alert('Error', 'No se pudo crear la cuenta. Intenta de nuevo.');
+            }
+        } finally {
+            setEstaCargando(false);
+        }
+    }
 
     return (
         <ImageBackground
@@ -102,8 +130,15 @@ export default function Registro() {
                         </View>
                     </View>
 
-                    <Pressable style={estilos.botonRegistrarse}>
-                        <Text style={estilos.botonRegistrarseTexto}>REGISTRARSE</Text>
+                    <Pressable
+                        style={[estilos.botonRegistrarse, estaCargando && { opacity: 0.7 }]}
+                        onPress={manejarRegistro}
+                        disabled={estaCargando}
+                    >
+                        {estaCargando
+                            ? <ActivityIndicator color="#ffffff" />
+                            : <Text style={estilos.botonRegistrarseTexto}>REGISTRARSE</Text>
+                        }
                     </Pressable>
 
                     <Pressable
@@ -194,43 +229,13 @@ const estilos = StyleSheet.create({
         fontSize: 13,
         color: '#737973',
     },
-    checkboxFila: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 12,
-        marginBottom: 24,
-        marginTop: 4,
-    },
-    checkbox: {
-        width: 20,
-        height: 20,
-        borderWidth: 1.5,
-        borderColor: '#8da082',
-        borderRadius: 4,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
-    checkboxActivo: {
-        backgroundColor: '#1b3022',
-        borderColor: '#1b3022',
-    },
-    checkboxMarca: {
-        color: '#ffffff',
-        fontSize: 13,
-        fontWeight: '700',
-        lineHeight: 16,
-    },
-    checkboxTexto: {
-        fontSize: 14,
-        color: '#434843',
-    },
     botonRegistrarse: {
         backgroundColor: '#1b3022',
         borderRadius: 999,
         paddingVertical: 16,
         alignItems: 'center',
         marginBottom: 16,
-        marginTop: 8
+        marginTop: 8,
     },
     botonRegistrarseTexto: {
         color: '#ffffff',

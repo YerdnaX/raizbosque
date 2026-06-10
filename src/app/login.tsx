@@ -45,7 +45,7 @@ export default function Login() {
                         />
                         <Pressable onPress={() => setMostrarContrasena(!mostrarContrasena)}>
                             <Text style={estilos.toggleContrasena}>
-                                {mostrarContrasena ? "Ocultar" : "Ver"}
+                                {mostrarContrasena ? "Ocultar" : "Mostrar"}
                             </Text>
                         </Pressable>
                     </View>
@@ -126,7 +126,7 @@ const estilos = StyleSheet.create({
         marginBottom: 16,
     },
     etiqueta: {
-        alignSelf: 'flex-start',
+        alignSelf: 'center',
         fontSize: 18,
         fontWeight: '500',
         color: '#434843',
@@ -159,7 +159,7 @@ const estilos = StyleSheet.create({
         paddingVertical: 0,
     },
     olvidaste: {
-        alignSelf: 'flex-end',
+        alignSelf: 'center',
         marginTop: 4,
         marginBottom: 24,
     },

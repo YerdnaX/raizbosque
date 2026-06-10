@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions } from "react-native";
+import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions, ImageBackground } from "react-native";
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -17,22 +17,24 @@ export default function Perfil() {
 
     return (
         <SafeAreaView style={estilos.contenedor} edges={['top']}>
-            <View style={estilos.encabezado}>
+            <ImageBackground
+                source={require('@/assets/images/login/topBar.png')}
+                style={estilos.encabezado}
+                resizeMode="cover"
+            >
                 <Pressable style={estilos.botonEncabezado}>
-                    <SymbolView name="line.3.horizontal" size={24} tintColor="#1c1c18" />
+                    <SymbolView name="line.3.horizontal" size={24} tintColor="#1b3022" />
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>RAÍCES</Text>
+                <Text style={estilos.encabezadoTitulo}>Mi Perfil</Text>
                 <Pressable style={estilos.botonEncabezado}>
-                    <CarritoIcono width={30} height={30} fill="#1c1c18" />
+                    <CarritoIcono width={30} height={30} fill="#1b3022" />
                 </Pressable>
-            </View>
+            </ImageBackground>
 
             <ScrollView
                 contentContainerStyle={estilos.scroll}
                 showsVerticalScrollIndicator={false}
             >
-                <Text style={estilos.tituloPagina}>Mi Perfil</Text>
-
                 <View style={estilos.tarjetaUsuario}>
                     <View style={[estilos.avatar, esHorizontal && { width: 64, height: 64 }]} />
                     <Text style={estilos.nombre}>[Nombre del Usuario]</Text>
@@ -82,11 +84,10 @@ const estilos = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#ffffff',
         paddingHorizontal: 20,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e2dc',
+        borderBottomColor: '#c8d4c0',
     },
     botonEncabezado: {
         padding: 4,

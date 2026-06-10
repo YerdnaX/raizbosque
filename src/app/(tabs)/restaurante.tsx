@@ -1,106 +1,113 @@
-import { View, Text, TextInput, Pressable, FlatList, StyleSheet } from "react-native";
-import { useState } from "react";
+import { View, Text, TextInput, Pressable, FlatList, StyleSheet, ActivityIndicator, ImageBackground, Image } from "react-native";
+import { useState, useMemo } from "react";
+import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
 import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
-
-type ItemCafe = {
-    id: string;
-    nombre: string;
-    descripcion: string;
-    precio: number;
-    categoria: string;
-};
-
-const ITEMS_CAFE: ItemCafe[] = [
-    { id: '1',  nombre: 'Café Americano',          descripcion: 'Caliente · 240ml',  precio: 3.50, categoria: 'Bebidas'  },
-    { id: '2',  nombre: 'Cappuccino',               descripcion: 'Caliente · 180ml',  precio: 4.50, categoria: 'Bebidas'  },
-    { id: '3',  nombre: 'Latte Helado',             descripcion: 'Frío · 350ml',      precio: 5.00, categoria: 'Bebidas'  },
-    { id: '4',  nombre: 'Té de Hierbas',            descripcion: 'Caliente · 240ml',  precio: 3.00, categoria: 'Bebidas'  },
-    { id: '5',  nombre: 'Brownie de Chocolate',     descripcion: 'Porción individual', precio: 5.00, categoria: 'Postres'  },
-    { id: '6',  nombre: 'Cheesecake',               descripcion: 'Con frutos rojos',  precio: 6.00, categoria: 'Postres'  },
-    { id: '7',  nombre: 'Tostadas con Aguacate',    descripcion: 'Pan artesanal',     precio: 8.00, categoria: 'Platos'   },
-    { id: '8',  nombre: 'Granola Bowl',             descripcion: 'Con yogur y miel',  precio: 7.50, categoria: 'Platos'   },
-    { id: '9',  nombre: 'Sándwich de Pavo',         descripcion: 'Con ensalada',      precio: 9.00, categoria: 'Platos'   },
-];
-
-const FILTROS = ['Todos', 'Bebidas', 'Postres', 'Platos'];
+import { useRestaurante } from '../../features/restaurante/hooks/useRestaurante';
 
 export default function Restaurante() {
+    const { items, estaCargando, error } = useRestaurante();
     const [busqueda, setBusqueda] = useState('');
     const [filtroActivo, setFiltroActivo] = useState('Todos');
 
-    const itemsFiltrados = ITEMS_CAFE.filter(item => {
-        const coincideBusqueda = item.nombre.toLowerCase().includes(busqueda.toLowerCase());
-        const coincideFiltro = filtroActivo === 'Todos' || item.categoria === filtroActivo;
+    const categorias = useMemo(
+        () => ['Todos', ...Array.from(new Set(items.map(i => i.NombreCategoria)))],
+        [items],
+    );
+
+    const itemsFiltrados = items.filter(item => {
+        const coincideBusqueda = item.Nombre.toLowerCase().includes(busqueda.toLowerCase());
+        const coincideFiltro = filtroActivo === 'Todos' || item.NombreCategoria === filtroActivo;
         return coincideBusqueda && coincideFiltro;
     });
 
     return (
         <SafeAreaView style={estilos.contenedor} edges={['top']}>
-            <View style={estilos.encabezado}>
+            <ImageBackground
+                source={require('@/assets/images/login/topBar.png')}
+                style={estilos.encabezado}
+                resizeMode="cover"
+            >
                 <Pressable style={estilos.botonEncabezado}>
-                    <SymbolView name="line.3.horizontal" size={24} tintColor="#1c1c18" />
+                    <SymbolView name="line.3.horizontal" size={24} tintColor="#1b3022" />
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>RAÍCES</Text>
+                <Text style={estilos.encabezadoTitulo}>Restaurante</Text>
                 <Pressable style={estilos.botonEncabezado}>
-                    <CarritoIcono width={30} height={30} fill="#1c1c18" />
+                    <CarritoIcono width={30} height={30} fill="#1b3022" />
                 </Pressable>
-            </View>
+            </ImageBackground>
 
-            <FlatList
-                data={itemsFiltrados}
-                keyExtractor={item => item.id}
-                numColumns={2}
-                contentContainerStyle={estilos.lista}
-                columnWrapperStyle={estilos.fila}
-                showsVerticalScrollIndicator={false}
-                ListHeaderComponent={
-                    <View style={estilos.cabecera}>
-                        <View style={estilos.barraBusqueda}>
-                            <SymbolView name="magnifyingglass" size={18} tintColor="#737973" />
-                            <TextInput
-                                style={estilos.inputBusqueda}
-                                placeholder="Buscar en el menú..."
-                                placeholderTextColor="#b0b0a8"
-                                value={busqueda}
-                                onChangeText={setBusqueda}
-                            />
+            {estaCargando ? (
+                <View style={estilos.centrado}>
+                    <ActivityIndicator size="large" color="#1b3022" />
+                </View>
+            ) : error ? (
+                <View style={estilos.centrado}>
+                    <Text style={estilos.errorTexto}>{error}</Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={itemsFiltrados}
+                    keyExtractor={item => item.IdProducto.toString()}
+                    numColumns={2}
+                    contentContainerStyle={estilos.lista}
+                    columnWrapperStyle={estilos.fila}
+                    showsVerticalScrollIndicator={false}
+                    ListHeaderComponent={
+                        <View style={estilos.cabecera}>
+                            <View style={estilos.barraBusqueda}>
+                                <SymbolView name="magnifyingglass" size={18} tintColor="#737973" />
+                                <TextInput
+                                    style={estilos.inputBusqueda}
+                                    placeholder="Buscar en el menú..."
+                                    placeholderTextColor="#b0b0a8"
+                                    value={busqueda}
+                                    onChangeText={setBusqueda}
+                                />
+                            </View>
+                            <View style={estilos.filtros}>
+                                {categorias.map(filtro => (
+                                    <Pressable
+                                        key={filtro}
+                                        style={[estilos.chip, filtroActivo === filtro && estilos.chipActivo]}
+                                        onPress={() => setFiltroActivo(filtro)}
+                                    >
+                                        <Text style={[estilos.chipTexto, filtroActivo === filtro && estilos.chipTextoActivo]}>
+                                            {filtro}
+                                        </Text>
+                                    </Pressable>
+                                ))}
+                            </View>
                         </View>
-                        <View style={estilos.filtros}>
-                            {FILTROS.map(filtro => (
-                                <Pressable
-                                    key={filtro}
-                                    style={[estilos.chip, filtroActivo === filtro && estilos.chipActivo]}
-                                    onPress={() => setFiltroActivo(filtro)}
-                                >
-                                    <Text style={[estilos.chipTexto, filtroActivo === filtro && estilos.chipTextoActivo]}>
-                                        {filtro}
-                                    </Text>
-                                </Pressable>
-                            ))}
-                        </View>
-                    </View>
-                }
-                ListEmptyComponent={
-                    <Text style={estilos.vacio}>No se encontraron plantas :c.</Text>
-                }
-                renderItem={({ item }) => (
-                    <View style={estilos.tarjeta}>
-                        <View style={estilos.imagenPlaceholder}>
-                            <SymbolView name="photo" size={32} tintColor="#b0b0a8" />
-                        </View>
-                        <Text style={estilos.nombreItem} numberOfLines={2}>{item.nombre}</Text>
-                        <Text style={estilos.descripcion} numberOfLines={1}>{item.descripcion}</Text>
-                        <View style={estilos.precioFila}>
-                            <Text style={estilos.precio}>${item.precio.toFixed(2)}</Text>
-                            <Pressable style={estilos.botonAgregar}>
-                                <Text style={estilos.botonAgregarTexto}>+</Text>
-                            </Pressable>
-                        </View>
-                    </View>
-                )}
-            />
+                    }
+                    ListEmptyComponent={
+                        <Text style={estilos.vacio}>No se encontraron items.</Text>
+                    }
+                    renderItem={({ item }) => (
+                        <Pressable
+                            style={estilos.tarjeta}
+                            onPress={() => router.push(`/plato/${item.IdProducto}` as any)}
+                        >
+                            <View style={estilos.imagenPlaceholder}>
+                                {item.Imagen && (
+                                    <Image source={{ uri: item.Imagen }} style={estilos.imagen} />
+                                )}
+                            </View>
+                            <Text style={estilos.nombreItem} numberOfLines={2}>{item.Nombre}</Text>
+                            {item.Descripcion && (
+                                <Text style={estilos.descripcion} numberOfLines={1}>{item.Descripcion}</Text>
+                            )}
+                            <View style={estilos.precioFila}>
+                                <Text style={estilos.precio}>₡{item.Precio.toLocaleString('es-CR')}</Text>
+                                <View style={estilos.botonAgregar}>
+                                    <Text style={estilos.botonAgregarTexto}>+</Text>
+                                </View>
+                            </View>
+                        </Pressable>
+                    )}
+                />
+            )}
         </SafeAreaView>
     );
 }
@@ -114,11 +121,10 @@ const estilos = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#ffffff',
         paddingHorizontal: 20,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e2dc',
+        borderBottomColor: '#c8d4c0',
     },
     botonEncabezado: {
         padding: 4,
@@ -128,6 +134,17 @@ const estilos = StyleSheet.create({
         fontWeight: '700',
         color: '#1c1c18',
         letterSpacing: 1,
+    },
+    centrado: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    errorTexto: {
+        fontSize: 14,
+        color: '#737973',
+        textAlign: 'center',
+        paddingHorizontal: 32,
     },
     cabecera: {
         paddingHorizontal: 16,
@@ -152,6 +169,7 @@ const estilos = StyleSheet.create({
     filtros: {
         flexDirection: 'row',
         gap: 8,
+        flexWrap: 'wrap',
     },
     chip: {
         borderWidth: 1,
@@ -219,7 +237,7 @@ const estilos = StyleSheet.create({
     precio: {
         fontSize: 16,
         fontWeight: '700',
-        color: '#1c1c18',
+        color: '#526349',
     },
     botonAgregar: {
         width: 28,
@@ -241,4 +259,9 @@ const estilos = StyleSheet.create({
         fontSize: 14,
         marginTop: 40,
     },
+    imagen: {
+        width: "100%",
+        height: "100%",
+        borderRadius: 8,
+        },
 });

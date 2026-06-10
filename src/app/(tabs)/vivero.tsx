@@ -1,109 +1,117 @@
-import { View, Text, TextInput, Pressable, FlatList, StyleSheet } from "react-native";
-import { useState } from "react";
+import { View, Text, TextInput, Pressable, FlatList, StyleSheet, ActivityIndicator, ImageBackground, Image } from "react-native";
+import { useState, useMemo } from "react";
+import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
 import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
-
-type Planta = {
-    id: string;
-    nombre: string;
-    riego: string;
-    precio: number;
-    categoria: string;
-};
-
-const PLANTAS: Planta[] = [
-    { id: '1', nombre: 'Monstera Deliciosa', riego: 'Alto',     precio: 35.00, categoria: 'Interior'   },
-    { id: '2', nombre: 'Ficus Lyrata',       riego: 'Medio',    precio: 45.00, categoria: 'Interior'   },
-    { id: '3', nombre: 'Sansevieria',        riego: 'Bajo',     precio: 20.00, categoria: 'Interior'   },
-    { id: '4', nombre: 'Cactus',             riego: 'Muy Bajo', precio: 15.00, categoria: 'Suculentas' },
-    { id: '5', nombre: 'Pothos',             riego: 'Medio',    precio: 18.00, categoria: 'Interior'   },
-    { id: '6', nombre: 'Lavanda',            riego: 'Bajo',     precio: 25.00, categoria: 'Exterior'   },
-    { id: '7', nombre: 'Echeveria',          riego: 'Muy Bajo', precio: 12.00, categoria: 'Suculentas' },
-    { id: '8', nombre: 'Helecho Boston',     riego: 'Alto',     precio: 22.00, categoria: 'Interior'   },
-    { id: '9', nombre: 'Rosario',            riego: 'Bajo',     precio: 14.00, categoria: 'Exterior'   },
-];
-
-const FILTROS = ['Todos', 'Interior', 'Exterior', 'Suculentas'];
+import { useVivero } from '../../features/vivero/hooks/useVivero';
 
 export default function Vivero() {
+    const { plantas, estaCargando, error } = useVivero();
     const [busqueda, setBusqueda] = useState('');
     const [filtroActivo, setFiltroActivo] = useState('Todos');
 
-    const plantasFiltradas = PLANTAS.filter(planta => {
-        const coincideBusqueda = planta.nombre.toLowerCase().includes(busqueda.toLowerCase());
-        const coincideFiltro = filtroActivo === 'Todos' || planta.categoria === filtroActivo;
+    const categorias = useMemo(
+        () => ['Todos', ...Array.from(new Set(plantas.map(p => p.NombreCategoria)))],
+        [plantas],
+    );
+
+    const plantasFiltradas = plantas.filter(planta => {
+        const coincideBusqueda = planta.Nombre.toLowerCase().includes(busqueda.toLowerCase());
+        const coincideFiltro = filtroActivo === 'Todos' || planta.NombreCategoria === filtroActivo;
         return coincideBusqueda && coincideFiltro;
     });
 
     return (
         <SafeAreaView style={estilos.contenedor} edges={['top']}>
-            <View style={estilos.encabezado}>
+            <ImageBackground
+                source={require('@/assets/images/login/topBar.png')}
+                style={estilos.encabezado}
+                resizeMode="cover"
+            >
                 <Pressable style={estilos.botonEncabezado}>
-                    <SymbolView name="line.3.horizontal" size={24} tintColor="#1c1c18" />
+                    <SymbolView name="line.3.horizontal" size={24} tintColor="#1b3022" />
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>RAÍCES</Text>
+                <Text style={estilos.encabezadoTitulo}>Vivero</Text>
                 <Pressable style={estilos.botonEncabezado}>
-                    <CarritoIcono width={30} height={30} fill="#1c1c18" />
+                    <CarritoIcono width={30} height={30} fill="#1b3022" />
                 </Pressable>
-            </View>
+            </ImageBackground>
 
-            <FlatList
-                data={plantasFiltradas}
-                keyExtractor={planta => planta.id}
-                numColumns={2}
-                contentContainerStyle={estilos.lista}
-                columnWrapperStyle={estilos.fila}
-                showsVerticalScrollIndicator={false}
-                ListHeaderComponent={
-                    <View style={estilos.cabecera}>
-                        <View style={estilos.barraBusqueda}>
-                            <SymbolView name="magnifyingglass" size={18} tintColor="#737973" />
-                            <TextInput
-                                style={estilos.inputBusqueda}
-                                placeholder="Buscar plantas..."
-                                placeholderTextColor="#b0b0a8"
-                                value={busqueda}
-                                onChangeText={setBusqueda}
-                            />
+            {estaCargando ? (
+                <View style={estilos.centrado}>
+                    <ActivityIndicator size="large" color="#1b3022" />
+                </View>
+            ) : error ? (
+                <View style={estilos.centrado}>
+                    <Text style={estilos.errorTexto}>{error}</Text>
+                </View>
+            ) : (
+                <FlatList
+                    data={plantasFiltradas}
+                    keyExtractor={planta => planta.IdProducto.toString()}
+                    numColumns={2}
+                    contentContainerStyle={estilos.lista}
+                    columnWrapperStyle={estilos.fila}
+                    showsVerticalScrollIndicator={false}
+                    ListHeaderComponent={
+                        <View style={estilos.cabecera}>
+                            <View style={estilos.barraBusqueda}>
+                                <SymbolView name="magnifyingglass" size={18} tintColor="#737973" />
+                                <TextInput
+                                    style={estilos.inputBusqueda}
+                                    placeholder="Buscar plantas..."
+                                    placeholderTextColor="#b0b0a8"
+                                    value={busqueda}
+                                    onChangeText={setBusqueda}
+                                />
+                            </View>
+                            <View style={estilos.filtros}>
+                                {categorias.map(filtro => (
+                                    <Pressable
+                                        key={filtro}
+                                        style={[estilos.chip, filtroActivo === filtro && estilos.chipActivo]}
+                                        onPress={() => setFiltroActivo(filtro)}
+                                    >
+                                        <Text style={[estilos.chipTexto, filtroActivo === filtro && estilos.chipTextoActivo]}>
+                                            {filtro}
+                                        </Text>
+                                    </Pressable>
+                                ))}
+                            </View>
                         </View>
-                        <View style={estilos.filtros}>
-                            {FILTROS.map(filtro => (
-                                <Pressable
-                                    key={filtro}
-                                    style={[estilos.chip, filtroActivo === filtro && estilos.chipActivo]}
-                                    onPress={() => setFiltroActivo(filtro)}
-                                >
-                                    <Text style={[estilos.chipTexto, filtroActivo === filtro && estilos.chipTextoActivo]}>
-                                        {filtro}
-                                    </Text>
-                                </Pressable>
-                            ))}
-                        </View>
-                    </View>
-                }
-                ListEmptyComponent={
-                    <Text style={estilos.vacio}>No se encontraron plantas.</Text>
-                }
-                renderItem={({ item }) => (
-                    <View style={estilos.tarjeta}>
-                        <View style={estilos.imagenPlaceholder}>
-                            <SymbolView name="photo" size={32} tintColor="#b0b0a8" />
-                        </View>
-                        <Text style={estilos.nombrePlanta} numberOfLines={2}>{item.nombre}</Text>
-                        <View style={estilos.riegoFila}>
-                            <SymbolView name="drop.fill" size={13} tintColor="#526349" />
-                            <Text style={estilos.riegoTexto}>{item.riego}</Text>
-                        </View>
-                        <View style={estilos.precioFila}>
-                            <Text style={estilos.precio}>${item.precio.toFixed(2)}</Text>
-                            <Pressable style={estilos.botonAgregar}>
-                                <Text style={estilos.botonAgregarTexto}>+</Text>
-                            </Pressable>
-                        </View>
-                    </View>
-                )}
-            />
+                    }
+                    ListEmptyComponent={
+                        <Text style={estilos.vacio}>No se encontraron plantas.</Text>
+                    }
+                    renderItem={({ item }) => (
+                        <Pressable
+                            style={estilos.tarjeta}
+                            onPress={() => router.push(`/planta/${item.IdProducto}`)}
+                        >
+                            <View style={estilos.imagenPlaceholder}>
+                                {item.Imagen && (
+                                    <Image source={{ uri: item.Imagen }} style={estilos.imagen} />
+                                )
+                                }
+                            </View>
+                            <Text style={estilos.nombrePlanta} numberOfLines={2}>{item.Nombre}</Text>
+                            {item.FrecuenciaRiego && (
+                                <View style={estilos.riegoFila}>
+                                    <SymbolView name="drop.fill" size={13} tintColor="#526349" />
+                                    <Text style={estilos.riegoTexto}>{item.FrecuenciaRiego}</Text>
+                                </View>
+                            )}
+                            <View style={estilos.precioFila}>
+                                <Text style={estilos.precio}>₡{item.Precio.toLocaleString('es-CR')}</Text>
+                                <View style={estilos.botonAgregar}>
+                                    <Text style={estilos.botonAgregarTexto}>+</Text>
+                                </View>
+                            </View>
+                        </Pressable>
+                    )}
+                />
+            )}
         </SafeAreaView>
     );
 }
@@ -117,11 +125,10 @@ const estilos = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#ffffff',
         paddingHorizontal: 20,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e2dc',
+        borderBottomColor: '#c8d4c0',
     },
     botonEncabezado: {
         padding: 4,
@@ -131,6 +138,17 @@ const estilos = StyleSheet.create({
         fontWeight: '700',
         color: '#1c1c18',
         letterSpacing: 1,
+    },
+    centrado: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    errorTexto: {
+        fontSize: 14,
+        color: '#737973',
+        textAlign: 'center',
+        paddingHorizontal: 32,
     },
     cabecera: {
         paddingHorizontal: 16,
@@ -155,6 +173,7 @@ const estilos = StyleSheet.create({
     filtros: {
         flexDirection: 'row',
         gap: 8,
+        flexWrap: 'wrap',
     },
     chip: {
         borderWidth: 1,
@@ -249,4 +268,8 @@ const estilos = StyleSheet.create({
         fontSize: 14,
         marginTop: 40,
     },
+    imagen: {
+        width: 32,
+        height: 32,
+        },
 });

@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions } from "react-native";
+import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions, ActivityIndicator, ImageBackground } from "react-native";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
@@ -7,13 +7,7 @@ import RestauranteIcono from '@/assets/icons/bottomBar/restaurante.svg';
 import ViveroIcono from '@/assets/icons/bottomBar/vivero.svg';
 import JardinIcono from '@/assets/icons/bottomBar/mi-jardin.svg';
 import PerfilIcono from '@/assets/icons/bottomBar/perfil.svg';
-
-const PLANTA_DEL_MES = {
-    nombre: 'Monstera Deliciosa',
-    descripcion: 'Ideal para interiores con luz indirecta. Sus hojas únicas dan vida a cualquier espacio.',
-    riego: 'Alto',
-    precio: 35.00,
-};
+import { useInicio } from '../../features/inicio/hooks/useInicio';
 
 const SECCIONES = [
     { titulo: 'Restaurante', ruta: '/(tabs)/restaurante', Icono: RestauranteIcono },
@@ -22,28 +16,33 @@ const SECCIONES = [
     { titulo: 'Mi Perfil',   ruta: '/(tabs)/perfil',      Icono: PerfilIcono      },
 ];
 
-const itemsCarrito = 3;
+const itemsCarrito = 0;
 
 export default function Inicio() {
     const { width, height } = useWindowDimensions();
     const esHorizontal = width > height;
+    const { plantaDelMes, estaCargando, error } = useInicio();
 
     return (
         <SafeAreaView style={estilos.contenedor} edges={['top']}>
-            <View style={estilos.encabezado}>
+            <ImageBackground
+                source={require('@/assets/images/login/topBar.png')}
+                style={estilos.encabezado}
+                resizeMode="cover"
+            >
                 <Pressable style={estilos.botonEncabezado}>
-                    <SymbolView name="line.3.horizontal" size={24} tintColor="#1c1c18" />
+                    <SymbolView name="line.3.horizontal" size={24} tintColor="#1b3022" />
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>RAÍCES</Text>
+                <Text style={estilos.encabezadoTitulo}>Inicio</Text>
                 <Pressable style={estilos.botonCarrito}>
-                    <CarritoIcono width={30} height={30} fill="#1c1c18" />
+                    <CarritoIcono width={30} height={30} fill="#1b3022" />
                     {itemsCarrito > 0 && (
                         <View style={estilos.badge}>
                             <Text style={estilos.badgeTexto}>{itemsCarrito}</Text>
                         </View>
                     )}
                 </Pressable>
-            </View>
+            </ImageBackground>
 
             <ScrollView
                 contentContainerStyle={estilos.scroll}
@@ -56,28 +55,44 @@ export default function Inicio() {
 
                 <View style={estilos.seccion}>
                     <Text style={estilos.seccionTitulo}>🌿 Planta del Mes</Text>
-                    <View style={estilos.tarjetaPlanta}>
-                        <View style={[estilos.imagenDestacada, esHorizontal && { height: 110 }]}>
-                            <SymbolView name="photo" size={esHorizontal ? 32 : 48} tintColor="#b0b0a8" />
+                    {estaCargando ? (
+                        <View style={estilos.tarjetaCargando}>
+                            <ActivityIndicator size="large" color="#1b3022" />
                         </View>
-                        <View style={estilos.infoPlanta}>
-                            <Text style={estilos.nombrePlanta}>{PLANTA_DEL_MES.nombre}</Text>
-                            <Text style={estilos.descripcionPlanta}>{PLANTA_DEL_MES.descripcion}</Text>
-                            <View style={estilos.riegoFila}>
-                                <SymbolView name="drop.fill" size={13} tintColor="#526349" />
-                                <Text style={estilos.riegoTexto}>Riego {PLANTA_DEL_MES.riego}</Text>
+                    ) : error || !plantaDelMes ? (
+                        <View style={estilos.tarjetaCargando}>
+                            <Text style={estilos.errorTexto}>
+                                {error ?? 'No hay planta del mes disponible.'}
+                            </Text>
+                        </View>
+                    ) : (
+                        <View style={estilos.tarjetaPlanta}>
+                            <View style={[estilos.imagenDestacada, esHorizontal && { height: 110 }]}>
+                                <SymbolView name="photo" size={esHorizontal ? 32 : 48} tintColor="#b0b0a8" />
                             </View>
-                            <View style={estilos.precioFila}>
-                                <Text style={estilos.precio}>${PLANTA_DEL_MES.precio.toFixed(2)}</Text>
-                                <Pressable
-                                    style={estilos.botonVerMas}
-                                    onPress={() => router.navigate('/(tabs)/vivero')}
-                                >
-                                    <Text style={estilos.botonVerMasTexto}>Ver en Vivero</Text>
-                                </Pressable>
+                            <View style={estilos.infoPlanta}>
+                                <Text style={estilos.nombrePlanta}>{plantaDelMes.Nombre}</Text>
+                                {plantaDelMes.Descripcion && (
+                                    <Text style={estilos.descripcionPlanta}>{plantaDelMes.Descripcion}</Text>
+                                )}
+                                {plantaDelMes.FrecuenciaRiego && (
+                                    <View style={estilos.riegoFila}>
+                                        <SymbolView name="drop.fill" size={13} tintColor="#526349" />
+                                        <Text style={estilos.riegoTexto}>Riego {plantaDelMes.FrecuenciaRiego}</Text>
+                                    </View>
+                                )}
+                                <View style={estilos.precioFila}>
+                                    <Text style={estilos.precio}>${plantaDelMes.Precio.toFixed(2)}</Text>
+                                    <Pressable
+                                        style={estilos.botonVerMas}
+                                        onPress={() => router.navigate('/(tabs)/vivero')}
+                                    >
+                                        <Text style={estilos.botonVerMasTexto}>Ver en Vivero</Text>
+                                    </Pressable>
+                                </View>
                             </View>
                         </View>
-                    </View>
+                    )}
                 </View>
 
                 <View style={estilos.seccion}>
@@ -108,11 +123,10 @@ const estilos = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        backgroundColor: '#ffffff',
         paddingHorizontal: 20,
         paddingVertical: 16,
         borderBottomWidth: 1,
-        borderBottomColor: '#e5e2dc',
+        borderBottomColor: '#c8d4c0',
     },
     botonEncabezado: {
         padding: 4,
@@ -168,6 +182,24 @@ const estilos = StyleSheet.create({
         fontSize: 18,
         fontWeight: '700',
         color: '#1c1c18',
+    },
+    tarjetaCargando: {
+        backgroundColor: '#ffffff',
+        borderRadius: 16,
+        height: 120,
+        justifyContent: 'center',
+        alignItems: 'center',
+        shadowColor: '#1b3022',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 2,
+    },
+    errorTexto: {
+        fontSize: 14,
+        color: '#737973',
+        textAlign: 'center',
+        paddingHorizontal: 24,
     },
     tarjetaPlanta: {
         backgroundColor: '#ffffff',
