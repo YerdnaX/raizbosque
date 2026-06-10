@@ -1,7 +1,8 @@
-import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
+import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { SafeAreaView } from "react-native-safe-area-context";
+import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 
 const opciones = [
     { titulo: 'Editar Perfil',      icono: 'pencil'      },
@@ -11,6 +12,9 @@ const opciones = [
 ] as const;
 
 export default function Perfil() {
+    const { width, height } = useWindowDimensions();
+    const esHorizontal = width > height;
+
     return (
         <SafeAreaView style={estilos.contenedor} edges={['top']}>
             <View style={estilos.encabezado}>
@@ -19,7 +23,7 @@ export default function Perfil() {
                 </Pressable>
                 <Text style={estilos.encabezadoTitulo}>RAÍCES</Text>
                 <Pressable style={estilos.botonEncabezado}>
-                    <Text>COSAS</Text>
+                    <CarritoIcono width={30} height={30} fill="#1c1c18" />
                 </Pressable>
             </View>
 
@@ -30,7 +34,7 @@ export default function Perfil() {
                 <Text style={estilos.tituloPagina}>Mi Perfil</Text>
 
                 <View style={estilos.tarjetaUsuario}>
-                    <View style={estilos.avatar} />
+                    <View style={[estilos.avatar, esHorizontal && { width: 64, height: 64 }]} />
                     <Text style={estilos.nombre}>[Nombre del Usuario]</Text>
                     <Text style={estilos.correo}>[correo.usuario@ejemplo.com]</Text>
                     <Pressable style={estilos.botonFoto}>

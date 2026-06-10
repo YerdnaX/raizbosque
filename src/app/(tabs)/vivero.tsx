@@ -2,6 +2,7 @@ import { View, Text, TextInput, Pressable, FlatList, StyleSheet } from "react-na
 import { useState } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
+import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 
 type Planta = {
     id: string;
@@ -43,7 +44,7 @@ export default function Vivero() {
                 </Pressable>
                 <Text style={estilos.encabezadoTitulo}>RAÍCES</Text>
                 <Pressable style={estilos.botonEncabezado}>
-                    <SymbolView name="cart" size={24} tintColor="#1c1c18" />
+                    <CarritoIcono width={30} height={30} fill="#1c1c18" />
                 </Pressable>
             </View>
 
@@ -197,7 +198,7 @@ const estilos = StyleSheet.create({
     imagenPlaceholder: {
         backgroundColor: '#e5e2dc',
         borderRadius: 8,
-        aspectRatio: 1,
+        height: 120,
         justifyContent: 'center',
         alignItems: 'center',
         marginBottom: 8,

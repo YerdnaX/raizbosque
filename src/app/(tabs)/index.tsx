@@ -1,7 +1,8 @@
-import { View, Text, Pressable, ScrollView, StyleSheet } from "react-native";
+import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions } from "react-native";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
+import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 import RestauranteIcono from '@/assets/icons/bottomBar/restaurante.svg';
 import ViveroIcono from '@/assets/icons/bottomBar/vivero.svg';
 import JardinIcono from '@/assets/icons/bottomBar/mi-jardin.svg';
@@ -24,6 +25,9 @@ const SECCIONES = [
 const itemsCarrito = 3;
 
 export default function Inicio() {
+    const { width, height } = useWindowDimensions();
+    const esHorizontal = width > height;
+
     return (
         <SafeAreaView style={estilos.contenedor} edges={['top']}>
             <View style={estilos.encabezado}>
@@ -32,7 +36,7 @@ export default function Inicio() {
                 </Pressable>
                 <Text style={estilos.encabezadoTitulo}>RAÍCES</Text>
                 <Pressable style={estilos.botonCarrito}>
-                    <SymbolView name="cart" size={24} tintColor="#1c1c18" />
+                    <CarritoIcono width={30} height={30} fill="#1c1c18" />
                     {itemsCarrito > 0 && (
                         <View style={estilos.badge}>
                             <Text style={estilos.badgeTexto}>{itemsCarrito}</Text>
@@ -46,15 +50,15 @@ export default function Inicio() {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={estilos.saludoSeccion}>
-                    <Text style={estilos.saludoTitulo}>¡Bienvenido!</Text>
+                    <Text style={[estilos.saludoTitulo, esHorizontal && { fontSize: 20 }]}>¡Bienvenido!</Text>
                     <Text style={estilos.saludoSubtitulo}>Descubre lo que Raíces tiene para vos hoy.</Text>
                 </View>
 
                 <View style={estilos.seccion}>
                     <Text style={estilos.seccionTitulo}>🌿 Planta del Mes</Text>
                     <View style={estilos.tarjetaPlanta}>
-                        <View style={estilos.imagenDestacada}>
-                            <SymbolView name="photo" size={48} tintColor="#b0b0a8" />
+                        <View style={[estilos.imagenDestacada, esHorizontal && { height: 110 }]}>
+                            <SymbolView name="photo" size={esHorizontal ? 32 : 48} tintColor="#b0b0a8" />
                         </View>
                         <View style={estilos.infoPlanta}>
                             <Text style={estilos.nombrePlanta}>{PLANTA_DEL_MES.nombre}</Text>
@@ -82,7 +86,7 @@ export default function Inicio() {
                         {SECCIONES.map((seccion) => (
                             <Pressable
                                 key={seccion.titulo}
-                                style={estilos.celdaCuadricula}
+                                style={[estilos.celdaCuadricula, esHorizontal && { width: '23%', aspectRatio: 1.2 }]}
                                 onPress={() => router.navigate(seccion.ruta as any)}
                             >
                                 <seccion.Icono width="100%" height="100%" fill="#1b3022" />
