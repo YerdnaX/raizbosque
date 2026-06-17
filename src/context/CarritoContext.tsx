@@ -17,6 +17,7 @@ type CarritoContextType = {
     agregarAlCarrito: (idProducto: number, precio: number) => Promise<void>;
     actualizarCantidad: (idDetalle: number, cantidad: number) => Promise<void>;
     eliminarDelCarrito: (idDetalle: number) => Promise<void>;
+    limpiarCarrito: () => void;
 };
 
 const CarritoContext = createContext<CarritoContextType | null>(null);
@@ -82,6 +83,10 @@ export function CarritoProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    function limpiarCarrito() {
+        setItems([]);
+    }
+
     async function eliminarDelCarrito(idDetalle: number) {
         try {
             await eliminarItemService(idDetalle);
@@ -92,7 +97,7 @@ export function CarritoProvider({ children }: { children: ReactNode }) {
     }
 
     return (
-        <CarritoContext.Provider value={{ items, totalItems, total, estaCargando, agregarAlCarrito, actualizarCantidad, eliminarDelCarrito }}>
+        <CarritoContext.Provider value={{ items, totalItems, total, estaCargando, agregarAlCarrito, actualizarCantidad, eliminarDelCarrito, limpiarCarrito }}>
             {children}
         </CarritoContext.Provider>
     );

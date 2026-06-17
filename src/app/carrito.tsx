@@ -74,7 +74,7 @@ export default function Carrito() {
                                 ₡{total.toLocaleString('es-CR', { minimumFractionDigits: 2 })}
                             </Text>
                         </View>
-                        <Pressable style={estilos.botonFinalizar}>
+                        <Pressable style={estilos.botonFinalizar} onPress={() => router.push('/checkout')}>
                             <Text style={estilos.botonFinalizarTexto}>FINALIZAR COMPRA</Text>
                         </Pressable>
                     </View>
