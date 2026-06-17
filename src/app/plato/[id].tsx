@@ -180,7 +180,7 @@ const estilos = StyleSheet.create({
         padding: 4,
     },
     fondoAtras: {
-        backgroundColor: '#1c1c18',
+        backgroundColor: '#6b7068',
         borderRadius: 999,
         width: 44,
         height: 44,
