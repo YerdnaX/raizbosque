@@ -5,12 +5,17 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUsuario } from "../../context/UsuarioContext";
 import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 
-const opcionesExtras = [
-    { titulo: 'Mis Direcciones',       icono: 'mappin'     },
-    { titulo: 'Reservaciones',         icono: 'calendar'   },
-    { titulo: 'Historial de Compras',  icono: 'bag'        },
-    { titulo: 'Cambiar Contraseña',    icono: 'key'        },
-] as const;
+type Opcion = {
+    titulo: string;
+    icono: string;
+    ruta?: string;
+};
+
+const opcionesExtras: Opcion[] = [
+    { titulo: 'Cambiar Contraseña',   icono: 'lock',     ruta: '/cambiar-contrasena' },
+    { titulo: 'Reservaciones',        icono: 'calendar' },
+    { titulo: 'Historial de Compras', icono: 'bag'      },
+];
 
 export default function Perfil() {
     const insets = useSafeAreaInsets();
@@ -21,6 +26,8 @@ export default function Perfil() {
     const nombreCompleto = usuario
         ? [usuario.Nombre, usuario.Apellidos].filter(Boolean).join(' ')
         : '';
+
+    const primeraLetra = usuario?.Nombre?.[0]?.toUpperCase() ?? '?';
 
     function manejarCerrarSesion() {
         cerrarSesion();
@@ -48,7 +55,16 @@ export default function Perfil() {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={estilos.tarjetaUsuario}>
-                    <View style={[estilos.avatar, esHorizontal && { width: 64, height: 64 }]} />
+                    <ImageBackground
+                        source={require('@/assets/images/fotoperfil.png')}
+                        style={[estilos.avatar, esHorizontal && { width: 64, height: 64 }]}
+                        imageStyle={estilos.avatarImagen}
+                        resizeMode="cover"
+                    >
+                        <Text style={[estilos.avatarLetra, esHorizontal && { fontSize: 26 }]}>
+                            {primeraLetra}
+                        </Text>
+                    </ImageBackground>
                     <Text style={estilos.nombre}>{nombreCompleto}</Text>
                     <Text style={estilos.correo}>{usuario?.Correo ?? ''}</Text>
                     <Pressable
@@ -62,8 +78,11 @@ export default function Perfil() {
                 <View style={estilos.listaOpciones}>
                     {opcionesExtras.map((opcion, indice) => (
                         <View key={opcion.titulo}>
-                            <Pressable style={estilos.opcion}>
-                                <SymbolView name={opcion.icono} size={22} tintColor="#434843" />
+                            <Pressable
+                                style={estilos.opcion}
+                                onPress={() => opcion.ruta ? router.push(opcion.ruta as any) : undefined}
+                            >
+                                <SymbolView name={opcion.icono as any} size={22} tintColor="#434843" />
                                 <Text style={estilos.opcionTexto}>{opcion.titulo}</Text>
                                 <SymbolView name="chevron.right" size={16} tintColor="#737973" />
                             </Pressable>
@@ -133,8 +152,18 @@ const estilos = StyleSheet.create({
         width: 100,
         height: 100,
         borderRadius: 16,
-        backgroundColor: '#e5e2dc',
         marginBottom: 4,
+        justifyContent: 'center',
+        alignItems: 'center',
+        overflow: 'hidden',
+    },
+    avatarImagen: {
+        borderRadius: 16,
+    },
+    avatarLetra: {
+        fontSize: 42,
+        fontWeight: '700',
+        color: '#1b3022',
     },
     nombre: {
         fontSize: 18,
@@ -179,7 +208,6 @@ const estilos = StyleSheet.create({
         gap: 16,
     },
     opcionTexto: {
-        textAlign: 'center',
         flex: 1,
         fontSize: 16,
         fontWeight: '500',

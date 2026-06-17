@@ -26,3 +26,14 @@ export async function actualizarPerfil(
 ): Promise<void> {
     await apiClient.put(`/usuarios/${idUsuario}`, datos);
 }
+
+export async function cambiarContrasena(
+    idUsuario: number,
+    contrasenaActual: string,
+    contrasenaNueva: string,
+): Promise<void> {
+    await apiClient.put(`/usuarios/${idUsuario}/cambiar-contrasena`, {
+        contrasenaActual,
+        contrasenaNueva,
+    });
+}

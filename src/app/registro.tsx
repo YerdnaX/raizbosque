@@ -22,6 +22,10 @@ export default function Registro() {
             Alert.alert('Campos requeridos', 'Por favor complete todos los campos obligatorios.');
             return;
         }
+        if (contrasena.length < 4) {
+            Alert.alert('Contraseña muy corta', 'La contraseña debe tener al menos 4 caracteres.');
+            return;
+        }
         if (contrasena !== confirmarContrasena) {
             Alert.alert('Error', 'Las contraseñas no coinciden.');
             return;
