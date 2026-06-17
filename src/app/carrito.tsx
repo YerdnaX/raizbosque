@@ -1,4 +1,4 @@
-import { View, Text, Pressable, FlatList, StyleSheet, ActivityIndicator, ImageBackground, Alert, Image } from "react-native";
+import { View, Text, Pressable, FlatList, StyleSheet, ActivityIndicator, ImageBackground, Image } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
@@ -11,20 +11,9 @@ export default function Carrito() {
     const insets = useSafeAreaInsets();
     const { items, total, totalItems, estaCargando, actualizarCantidad, eliminarDelCarrito } = useCarrito();
 
-    function confirmarEliminar(idDetalle: number) {
-        Alert.alert(
-            'Eliminar artículo',
-            '¿Deseas eliminar este artículo del carrito?',
-            [
-                { text: 'Cancelar', style: 'cancel' },
-                { text: 'Eliminar', style: 'destructive', onPress: () => eliminarDelCarrito(idDetalle) },
-            ],
-        );
-    }
-
     function manejarDecrementar(item: ItemCarrito) {
         if (item.Cantidad <= 1) {
-            confirmarEliminar(item.IdDetalle);
+            eliminarDelCarrito(item.IdDetalle);
         } else {
             actualizarCantidad(item.IdDetalle, item.Cantidad - 1);
         }
@@ -71,7 +60,7 @@ export default function Carrito() {
                                 item={item}
                                 onIncrementar={() => actualizarCantidad(item.IdDetalle, item.Cantidad + 1)}
                                 onDecrementar={() => manejarDecrementar(item)}
-                                onEliminar={() => confirmarEliminar(item.IdDetalle)}
+                                onEliminar={() => eliminarDelCarrito(item.IdDetalle)}
                             />
                         )}
                     />
@@ -114,22 +103,23 @@ function TarjetaItem({ item, onIncrementar, onDecrementar, onEliminar }: Tarjeta
                 )}
             </View>
             <View style={estilos.infoItem}>
-                <View style={estilos.nombreFila}>
-                    <Text style={estilos.nombreItem} numberOfLines={2}>{item.Nombre}</Text>
-                    <Pressable onPress={onEliminar} style={estilos.botonEliminar}>
-                        <SymbolView name="trash" size={18} tintColor="#ba1a1a" />
-                    </Pressable>
-                </View>
+                <Text style={estilos.nombreItem} numberOfLines={2}>{item.Nombre}</Text>
                 <Text style={estilos.precioUnitario}>
                     ₡{item.PrecioUnitario.toLocaleString('es-CR')} c/u
                 </Text>
                 <View style={estilos.controlFila}>
                     <View style={estilos.controles}>
-                        <Pressable style={estilos.botonControl} onPress={onDecrementar}>
+                        <Pressable
+                            style={({ pressed }) => [estilos.botonControl, pressed && estilos.botonPresionado]}
+                            onPress={onDecrementar}
+                        >
                             <Text style={estilos.botonControlTexto}>−</Text>
                         </Pressable>
                         <Text style={estilos.cantidad}>{item.Cantidad}</Text>
-                        <Pressable style={estilos.botonControl} onPress={onIncrementar}>
+                        <Pressable
+                            style={({ pressed }) => [estilos.botonControl, pressed && estilos.botonPresionado]}
+                            onPress={onIncrementar}
+                        >
                             <Text style={estilos.botonControlTexto}>+</Text>
                         </Pressable>
                     </View>
@@ -138,6 +128,12 @@ function TarjetaItem({ item, onIncrementar, onDecrementar, onEliminar }: Tarjeta
                     </Text>
                 </View>
             </View>
+            <Pressable
+                onPress={onEliminar}
+                style={({ pressed }) => [estilos.botonEliminar, pressed && estilos.botonPresionado]}
+            >
+                <SymbolView name="trash" size={18} tintColor="#ba1a1a" />
+            </Pressable>
         </View>
     );
 }
@@ -248,20 +244,20 @@ const estilos = StyleSheet.create({
         flex: 1,
         gap: 4,
     },
-    nombreFila: {
-        flexDirection: 'row',
-        alignItems: 'flex-start',
-        justifyContent: 'space-between',
-        gap: 8,
-    },
     nombreItem: {
-        flex: 1,
         fontSize: 14,
         fontWeight: '600',
         color: '#1c1c18',
     },
     botonEliminar: {
-        padding: 2,
+        position: 'absolute',
+        top: 8,
+        right: 8,
+        padding: 6,
+    },
+    botonPresionado: {
+        opacity: 0.5,
+        transform: [{ scale: 0.88 }],
     },
     precioUnitario: {
         fontSize: 13,

@@ -112,7 +112,11 @@ export default function Productos() {
                             <View style={estilos.precioFila}>
                                 <Text style={estilos.precio}>₡{item.Precio.toLocaleString('es-CR')}</Text>
                                 <Pressable
-                                    style={estilos.botonAgregar}
+                                    style={({ pressed }) => [
+                                        estilos.botonAgregar,
+                                        pressed && estilos.botonAgregarPresionado,
+                                    ]}
+                                    android_ripple={{ color: '#1b3022', borderless: false }}
                                     onPress={() => agregarAlCarrito(item.IdProducto, item.Precio)}
                                 >
                                     <Text style={estilos.botonAgregarTexto}>+</Text>
@@ -274,6 +278,10 @@ const estilos = StyleSheet.create({
         borderColor: '#c3c8c1',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    botonAgregarPresionado: {
+        opacity: 0.5,
+        transform: [{ scale: 0.90 }],
     },
     botonAgregarTexto: {
         fontSize: 18,
