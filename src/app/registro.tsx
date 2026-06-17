@@ -18,8 +18,16 @@ export default function Registro() {
     const insets = useSafeAreaInsets();
 
     async function manejarRegistro() {
-        if (!nombre || !apellidos || !correo || !contrasena || !confirmarContrasena) {
+        if (!nombre || !apellidos || !correo || !telefono || !contrasena || !confirmarContrasena) {
             Alert.alert('Campos requeridos', 'Por favor complete todos los campos obligatorios.');
+            return;
+        }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correo)) {
+            Alert.alert('Correo inválido', 'Ingrese un correo válido (ej. correo@ejemplo.com).');
+            return;
+        }
+        if (!/^\d{8}$/.test(telefono)) {
+            Alert.alert('Teléfono inválido', 'El número debe tener exactamente 8 dígitos numéricos.');
             return;
         }
         if (contrasena.length < 4) {
@@ -38,7 +46,7 @@ export default function Registro() {
                 apellidos,
                 correo,
                 contrasena,
-                telefono: telefono || undefined,
+                telefono,
                 direccion: direccion || undefined,
             });
             Alert.alert('Cuenta creada', 'Tu cuenta fue creada correctamente.', [
@@ -108,14 +116,15 @@ export default function Registro() {
                     </View>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Teléfono</Text>
+                        <Text style={estilos.etiqueta}>Teléfono <Text style={estilos.requerido}>*</Text></Text>
                         <TextInput
                             style={estilos.input}
-                            placeholder="+506 8888 8888"
+                            placeholder="88888888"
                             placeholderTextColor="#b0b0a8"
                             value={telefono}
-                            onChangeText={setTelefono}
-                            keyboardType="phone-pad"
+                            onChangeText={(t) => setTelefono(t.replace(/[^0-9]/g, ''))}
+                            keyboardType="numeric"
+                            maxLength={8}
                         />
                     </View>
 

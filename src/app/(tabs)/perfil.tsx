@@ -116,6 +116,14 @@ export default function Perfil() {
                     />
                     <Text style={estilos.cerrarSesionTexto}>Cerrar Sesión</Text>
                 </Pressable>
+
+                <Pressable
+                    style={estilos.botonAcercaDe}
+                    android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
+                    onPress={() => router.push('/acerca-de')}
+                >
+                    <Text style={estilos.acercaDeTexto}>Hecho con ❤️ Wilberth Mora</Text>
+                </Pressable>
             </ScrollView>
         </View>
     );
@@ -264,5 +272,13 @@ const estilos = StyleSheet.create({
         color: '#ffffff',
         fontSize: 10,
         fontWeight: '700',
+    },
+    botonAcercaDe: {
+        alignItems: 'center',
+        paddingVertical: 8,
+    },
+    acercaDeTexto: {
+        fontSize: 12,
+        color: '#9ca09a',
     },
 });
