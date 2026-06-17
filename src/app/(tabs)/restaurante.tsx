@@ -6,10 +6,12 @@ import { SymbolView } from "expo-symbols";
 import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 import { useRestaurante } from '../../features/restaurante/hooks/useRestaurante';
 import { urlImagen } from '../../utils/urlImagen';
+import { useCarrito } from '../../context/CarritoContext';
 
 export default function Restaurante() {
     const insets = useSafeAreaInsets();
     const { items, estaCargando, error } = useRestaurante();
+    const { agregarAlCarrito, totalItems } = useCarrito();
     const [busqueda, setBusqueda] = useState('');
     const [filtroActivo, setFiltroActivo] = useState('Todos');
 
@@ -35,8 +37,15 @@ export default function Restaurante() {
                     <SymbolView name="line.3.horizontal" size={24} tintColor="#1b3022" />
                 </Pressable>
                 <Text style={estilos.encabezadoTitulo}>Restaurante</Text>
-                <Pressable style={estilos.botonEncabezado}>
-                    <CarritoIcono width={30} height={30} fill="#1b3022" />
+                <Pressable style={estilos.botonEncabezado} onPress={() => router.push('/carrito')}>
+                    <View>
+                        <CarritoIcono width={30} height={30} fill="#1b3022" />
+                        {totalItems > 0 && (
+                            <View style={estilos.badge}>
+                                <Text style={estilos.badgeTexto}>{totalItems > 9 ? '9+' : totalItems}</Text>
+                            </View>
+                        )}
+                    </View>
                 </Pressable>
             </ImageBackground>
 
@@ -102,9 +111,12 @@ export default function Restaurante() {
                             )}
                             <View style={estilos.precioFila}>
                                 <Text style={estilos.precio}>₡{item.Precio.toLocaleString('es-CR')}</Text>
-                                <View style={estilos.botonAgregar}>
+                                <Pressable
+                                    style={estilos.botonAgregar}
+                                    onPress={() => agregarAlCarrito(item.IdProducto, item.Precio)}
+                                >
                                     <Text style={estilos.botonAgregarTexto}>+</Text>
-                                </View>
+                                </Pressable>
                             </View>
                         </Pressable>
                     )}
@@ -262,8 +274,25 @@ const estilos = StyleSheet.create({
         marginTop: 40,
     },
     imagen: {
-        width: "100%",
-        height: "100%",
+        width: '100%',
+        height: '100%',
         borderRadius: 8,
-        },
+    },
+    badge: {
+        position: 'absolute',
+        top: -4,
+        right: -6,
+        backgroundColor: '#1b3022',
+        borderRadius: 999,
+        minWidth: 16,
+        height: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 3,
+    },
+    badgeTexto: {
+        color: '#ffffff',
+        fontSize: 10,
+        fontWeight: '700',
+    },
 });

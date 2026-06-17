@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useUsuario } from "../../context/UsuarioContext";
+import { useCarrito } from "../../context/CarritoContext";
 import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 
 type Opcion = {
@@ -22,6 +23,7 @@ export default function Perfil() {
     const { width, height } = useWindowDimensions();
     const esHorizontal = width > height;
     const { usuario, cerrarSesion } = useUsuario();
+    const { totalItems } = useCarrito();
 
     const nombreCompleto = usuario
         ? [usuario.Nombre, usuario.Apellidos].filter(Boolean).join(' ')
@@ -45,8 +47,15 @@ export default function Perfil() {
                     <SymbolView name="line.3.horizontal" size={24} tintColor="#1b3022" />
                 </Pressable>
                 <Text style={estilos.encabezadoTitulo}>Mi Perfil</Text>
-                <Pressable style={estilos.botonEncabezado}>
-                    <CarritoIcono width={30} height={30} fill="#1b3022" />
+                <Pressable style={estilos.botonEncabezado} onPress={() => router.push('/carrito')}>
+                    <View>
+                        <CarritoIcono width={30} height={30} fill="#1b3022" />
+                        {totalItems > 0 && (
+                            <View style={estilos.badge}>
+                                <Text style={estilos.badgeTexto}>{totalItems > 9 ? '9+' : totalItems}</Text>
+                            </View>
+                        )}
+                    </View>
                 </Pressable>
             </ImageBackground>
 
@@ -233,5 +242,22 @@ const estilos = StyleSheet.create({
         fontSize: 15,
         fontWeight: '600',
         color: '#ba1a1a',
+    },
+    badge: {
+        position: 'absolute',
+        top: -4,
+        right: -6,
+        backgroundColor: '#1b3022',
+        borderRadius: 999,
+        minWidth: 16,
+        height: 16,
+        justifyContent: 'center',
+        alignItems: 'center',
+        paddingHorizontal: 3,
+    },
+    badgeTexto: {
+        color: '#ffffff',
+        fontSize: 10,
+        fontWeight: '700',
     },
 });

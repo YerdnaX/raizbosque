@@ -2,6 +2,7 @@ import { Stack } from 'expo-router';
 import { StatusBar, Dimensions } from 'react-native';
 import { useEffect } from 'react';
 import { UsuarioProvider } from '../context/UsuarioContext';
+import { CarritoProvider } from '../context/CarritoContext';
 
 export default function Layout() {
     useEffect(() => {
@@ -17,7 +18,9 @@ export default function Layout() {
 
     return (
         <UsuarioProvider>
-            <Stack screenOptions={{ headerShown: false }} />
+            <CarritoProvider>
+                <Stack screenOptions={{ headerShown: false }} />
+            </CarritoProvider>
         </UsuarioProvider>
     );
 }

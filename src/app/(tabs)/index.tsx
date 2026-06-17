@@ -9,6 +9,7 @@ import JardinIcono from '@/assets/icons/bottomBar/mi-jardin.svg';
 import PerfilIcono from '@/assets/icons/bottomBar/perfil.svg';
 import { useInicio } from '../../features/inicio/hooks/useInicio';
 import { urlImagen } from '../../utils/urlImagen';
+import { useCarrito } from '../../context/CarritoContext';
 
 const SECCIONES = [
     { titulo: 'Restaurante', ruta: '/(tabs)/restaurante', Icono: RestauranteIcono },
@@ -17,13 +18,12 @@ const SECCIONES = [
     { titulo: 'Mi Perfil',   ruta: '/(tabs)/perfil',      Icono: PerfilIcono      },
 ];
 
-const itemsCarrito = 0;
-
 export default function Inicio() {
     const insets = useSafeAreaInsets();
     const { width, height } = useWindowDimensions();
     const esHorizontal = width > height;
     const { plantaDelMes, estaCargando, error } = useInicio();
+    const { totalItems } = useCarrito();
 
     return (
         <View style={estilos.contenedor}>
@@ -36,13 +36,15 @@ export default function Inicio() {
                     <SymbolView name="line.3.horizontal" size={24} tintColor="#1b3022" />
                 </Pressable>
                 <Text style={estilos.encabezadoTitulo}>Inicio</Text>
-                <Pressable style={estilos.botonCarrito}>
-                    <CarritoIcono width={30} height={30} fill="#1b3022" />
-                    {itemsCarrito > 0 && (
-                        <View style={estilos.badge}>
-                            <Text style={estilos.badgeTexto}>{itemsCarrito}</Text>
-                        </View>
-                    )}
+                <Pressable style={estilos.botonCarrito} onPress={() => router.push('/carrito')}>
+                    <View>
+                        <CarritoIcono width={30} height={30} fill="#1b3022" />
+                        {totalItems > 0 && (
+                            <View style={estilos.badge}>
+                                <Text style={estilos.badgeTexto}>{totalItems > 9 ? '9+' : totalItems}</Text>
+                            </View>
+                        )}
+                    </View>
                 </Pressable>
             </ImageBackground>
 
@@ -147,9 +149,9 @@ const estilos = StyleSheet.create({
     },
     badge: {
         position: 'absolute',
-        top: 0,
-        right: 0,
-        backgroundColor: '#ba1a1a',
+        top: -4,
+        right: -6,
+        backgroundColor: '#1b3022',
         borderRadius: 999,
         minWidth: 16,
         height: 16,
