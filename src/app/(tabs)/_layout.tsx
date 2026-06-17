@@ -62,7 +62,7 @@ export default function TabsLayout() {
                 options={{
                     title: 'Productos',
                     tabBarIcon: ({ color, size }) => (
-                        <ProductosIcono width={size} height={size} fill={color} />
+                        <ProductosIcono width={size} height={size} color={color} />
                     ),
                 }}
             />

@@ -211,7 +211,11 @@ export default function Inicio() {
                                 android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                                 onPress={() => router.navigate(seccion.ruta as any)}
                             >
-                                <seccion.Icono width="100%" height="100%" fill="#1b3022" />
+                                {seccion.titulo === 'Productos' ? (
+                                    <seccion.Icono width="100%" height="100%" color="#1b3022" />
+                                ) : (
+                                    <seccion.Icono width="100%" height="100%" fill="#1b3022" />
+                                )}
                             </Pressable>
                         ))}
                     </View>
