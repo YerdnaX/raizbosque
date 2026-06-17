@@ -15,7 +15,9 @@ function Encabezado() {
         <>
             <ImageBackground source={IMAGEN_TOPBAR} style={[estilos.encabezado, { paddingTop: insets.top }]} resizeMode="cover">
                 <Pressable style={estilos.botonAtras} onPress={() => router.back()}>
-                    <AtrasIcono width={56} height={56} fill="#000000" />
+                    <View style={estilos.fondoAtras}>
+                        <AtrasIcono width={24} height={24} fill="#ffffff" />
+                    </View>
                 </Pressable>
                 <Text style={estilos.encabezadoTitulo}>RAÍCES</Text>
                 <Pressable style={estilos.botonEncabezado}>
@@ -165,6 +167,19 @@ const estilos = StyleSheet.create({
     },
     botonAtras: {
         padding: 4,
+    },
+    fondoAtras: {
+        backgroundColor: '#1c1c18',
+        borderRadius: 999,
+        width: 44,
+        height: 44,
+        justifyContent: 'center',
+        alignItems: 'center',
+        elevation: 3,
+        shadowColor: '#000000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 4,
     },
     encabezadoTitulo: {
         fontSize: 18,

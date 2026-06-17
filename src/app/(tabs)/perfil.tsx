@@ -2,21 +2,30 @@ import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions, Ima
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { useUsuario } from "../../context/UsuarioContext";
 import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 
-const opciones = [
-    { titulo: 'Editar Perfil',      icono: 'pencil'      },
-    { titulo: 'Mis Direcciones',    icono: 'mappin'      },
-    { titulo: 'Reservaciones',    icono: 'mappin'      },
-    { titulo: 'Métodos de Pago',    icono: 'creditcard'  },
-    { titulo: 'Historial de Compras',    icono: 'history'  },
-    { titulo: 'Configuración',      icono: 'gearshape'   },
+const opcionesExtras = [
+    { titulo: 'Mis Direcciones',       icono: 'mappin'     },
+    { titulo: 'Reservaciones',         icono: 'calendar'   },
+    { titulo: 'Historial de Compras',  icono: 'bag'        },
+    { titulo: 'Cambiar Contraseña',    icono: 'key'        },
 ] as const;
 
 export default function Perfil() {
     const insets = useSafeAreaInsets();
     const { width, height } = useWindowDimensions();
     const esHorizontal = width > height;
+    const { usuario, cerrarSesion } = useUsuario();
+
+    const nombreCompleto = usuario
+        ? [usuario.Nombre, usuario.Apellidos].filter(Boolean).join(' ')
+        : '';
+
+    function manejarCerrarSesion() {
+        cerrarSesion();
+        router.replace('/login');
+    }
 
     return (
         <View style={estilos.contenedor}>
@@ -40,22 +49,25 @@ export default function Perfil() {
             >
                 <View style={estilos.tarjetaUsuario}>
                     <View style={[estilos.avatar, esHorizontal && { width: 64, height: 64 }]} />
-                    <Text style={estilos.nombre}>[Nombre del Usuario]</Text>
-                    <Text style={estilos.correo}>[correo.usuario@ejemplo.com]</Text>
-                    <Pressable style={estilos.botonFoto}>
-                        <Text style={estilos.botonFotoTexto}>EDITAR FOTO</Text>
+                    <Text style={estilos.nombre}>{nombreCompleto}</Text>
+                    <Text style={estilos.correo}>{usuario?.Correo ?? ''}</Text>
+                    <Pressable
+                        style={estilos.botonEditar}
+                        onPress={() => router.push('/editar-perfil')}
+                    >
+                        <Text style={estilos.botonEditarTexto}>EDITAR PERFIL</Text>
                     </Pressable>
                 </View>
 
                 <View style={estilos.listaOpciones}>
-                    {opciones.map((opcion, indice) => (
+                    {opcionesExtras.map((opcion, indice) => (
                         <View key={opcion.titulo}>
                             <Pressable style={estilos.opcion}>
                                 <SymbolView name={opcion.icono} size={22} tintColor="#434843" />
                                 <Text style={estilos.opcionTexto}>{opcion.titulo}</Text>
                                 <SymbolView name="chevron.right" size={16} tintColor="#737973" />
                             </Pressable>
-                            {indice < opciones.length - 1 && (
+                            {indice < opcionesExtras.length - 1 && (
                                 <View style={estilos.divisor} />
                             )}
                         </View>
@@ -64,7 +76,7 @@ export default function Perfil() {
 
                 <Pressable
                     style={estilos.botonCerrarSesion}
-                    onPress={() => router.replace('/login')}
+                    onPress={manejarCerrarSesion}
                 >
                     <SymbolView
                         name="rectangle.portrait.and.arrow.right"
@@ -105,12 +117,6 @@ const estilos = StyleSheet.create({
         padding: 20,
         gap: 16,
     },
-    tituloPagina: {
-        fontSize: 28,
-        fontWeight: '700',
-        color: '#1c1c18',
-        marginBottom: 4,
-    },
     tarjetaUsuario: {
         backgroundColor: '#ffffff',
         borderRadius: 16,
@@ -142,14 +148,14 @@ const estilos = StyleSheet.create({
         textAlign: 'center',
         marginBottom: 8,
     },
-    botonFoto: {
+    botonEditar: {
         borderWidth: 1,
         borderColor: '#c3c8c1',
         borderRadius: 8,
         paddingVertical: 10,
         paddingHorizontal: 32,
     },
-    botonFotoTexto: {
+    botonEditarTexto: {
         fontSize: 13,
         fontWeight: '600',
         color: '#1c1c18',
@@ -173,6 +179,7 @@ const estilos = StyleSheet.create({
         gap: 16,
     },
     opcionTexto: {
+        textAlign: 'center',
         flex: 1,
         fontSize: 16,
         fontWeight: '500',

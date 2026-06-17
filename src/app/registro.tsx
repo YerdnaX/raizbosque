@@ -6,8 +6,10 @@ import { registro } from "../features/auth/services/authService";
 
 export default function Registro() {
     const [nombre, setNombre] = useState("");
+    const [apellidos, setApellidos] = useState("");
     const [correo, setCorreo] = useState("");
     const [telefono, setTelefono] = useState("");
+    const [direccion, setDireccion] = useState("");
     const [contrasena, setContrasena] = useState("");
     const [confirmarContrasena, setConfirmarContrasena] = useState("");
     const [mostrarContrasena, setMostrarContrasena] = useState(false);
@@ -16,7 +18,7 @@ export default function Registro() {
     const insets = useSafeAreaInsets();
 
     async function manejarRegistro() {
-        if (!nombre || !correo || !contrasena || !confirmarContrasena) {
+        if (!nombre || !apellidos || !correo || !contrasena || !confirmarContrasena) {
             Alert.alert('Campos requeridos', 'Por favor complete todos los campos obligatorios.');
             return;
         }
@@ -27,7 +29,14 @@ export default function Registro() {
 
         setEstaCargando(true);
         try {
-            await registro(nombre, correo, contrasena, telefono || undefined);
+            await registro({
+                nombre,
+                apellidos,
+                correo,
+                contrasena,
+                telefono: telefono || undefined,
+                direccion: direccion || undefined,
+            });
             Alert.alert('Cuenta creada', 'Tu cuenta fue creada correctamente.', [
                 { text: 'Iniciar Sesión', onPress: () => router.replace('/login') },
             ]);
@@ -58,10 +67,10 @@ export default function Registro() {
                     <Text style={estilos.subtitulo}>Completa tus datos para registrarte.</Text>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Nombre Completo</Text>
+                        <Text style={estilos.etiqueta}>Nombre <Text style={estilos.requerido}>*</Text></Text>
                         <TextInput
                             style={estilos.input}
-                            placeholder="Ej. Juan Santamaria"
+                            placeholder="Ej. Juan"
                             placeholderTextColor="#b0b0a8"
                             value={nombre}
                             onChangeText={setNombre}
@@ -70,7 +79,19 @@ export default function Registro() {
                     </View>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Correo Electrónico</Text>
+                        <Text style={estilos.etiqueta}>Apellidos <Text style={estilos.requerido}>*</Text></Text>
+                        <TextInput
+                            style={estilos.input}
+                            placeholder="Ej. Santamaría Pérez"
+                            placeholderTextColor="#b0b0a8"
+                            value={apellidos}
+                            onChangeText={setApellidos}
+                            autoCapitalize="words"
+                        />
+                    </View>
+
+                    <View style={estilos.campo}>
+                        <Text style={estilos.etiqueta}>Correo Electrónico <Text style={estilos.requerido}>*</Text></Text>
                         <TextInput
                             style={estilos.input}
                             placeholder="correo@ejemplo.com"
@@ -95,7 +116,20 @@ export default function Registro() {
                     </View>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Contraseña</Text>
+                        <Text style={estilos.etiqueta}>Dirección</Text>
+                        <TextInput
+                            style={[estilos.input, estilos.inputMultilinea]}
+                            placeholder="Tu dirección"
+                            placeholderTextColor="#b0b0a8"
+                            value={direccion}
+                            onChangeText={setDireccion}
+                            multiline
+                            numberOfLines={2}
+                        />
+                    </View>
+
+                    <View style={estilos.campo}>
+                        <Text style={estilos.etiqueta}>Contraseña <Text style={estilos.requerido}>*</Text></Text>
                         <View style={estilos.inputContrasena}>
                             <TextInput
                                 style={estilos.inputDentro}
@@ -113,7 +147,7 @@ export default function Registro() {
                     </View>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Confirmar Contraseña</Text>
+                        <Text style={estilos.etiqueta}>Confirmar Contraseña <Text style={estilos.requerido}>*</Text></Text>
                         <View style={estilos.inputContrasena}>
                             <TextInput
                                 style={estilos.inputDentro}
@@ -165,6 +199,7 @@ const estilos = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         padding: 20,
+        paddingBottom: 40,
     },
     tarjeta: {
         backgroundColor: '#ffffff',
@@ -199,6 +234,9 @@ const estilos = StyleSheet.create({
         color: '#434843',
         marginBottom: 8,
     },
+    requerido: {
+        color: '#ba1a1a',
+    },
     input: {
         backgroundColor: '#fefcf8',
         borderColor: '#8da082',
@@ -208,6 +246,11 @@ const estilos = StyleSheet.create({
         paddingVertical: 12,
         fontSize: 16,
         color: '#1c1c18',
+    },
+    inputMultilinea: {
+        borderRadius: 16,
+        textAlignVertical: 'top',
+        minHeight: 72,
     },
     inputContrasena: {
         flexDirection: 'row',

@@ -1,13 +1,39 @@
-import { View, Text, TextInput, Pressable, StyleSheet, ImageBackground, ScrollView } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, ImageBackground, ScrollView, ActivityIndicator, Alert } from "react-native";
 import { useState } from "react";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { login } from "../features/auth/services/authService";
+import { useUsuario } from "../context/UsuarioContext";
 
 export default function Login() {
     const [correo, setCorreo] = useState("");
     const [contrasena, setContrasena] = useState("");
     const [mostrarContrasena, setMostrarContrasena] = useState(false);
+    const [estaCargando, setEstaCargando] = useState(false);
     const insets = useSafeAreaInsets();
+    const { guardarUsuario } = useUsuario();
+
+    async function manejarLogin() {
+        if (!correo || !contrasena) {
+            Alert.alert('Campos requeridos', 'Por favor complete todos los campos.');
+            return;
+        }
+
+        setEstaCargando(true);
+        try {
+            const usuario = await login(correo, contrasena);
+            guardarUsuario(usuario);
+            router.replace('/(tabs)/perfil');
+        } catch (error: any) {
+            if (error?.response?.status === 401) {
+                Alert.alert('Credenciales incorrectas', 'Correo o contraseña incorrectos.');
+            } else {
+                Alert.alert('Error', 'No se pudo iniciar sesión. Intenta de nuevo.');
+            }
+        } finally {
+            setEstaCargando(false);
+        }
+    }
 
     return (
         <ImageBackground
@@ -31,6 +57,7 @@ export default function Login() {
                         onChangeText={setCorreo}
                         keyboardType="email-address"
                         autoCapitalize="none"
+                        placeholderTextColor="#b0b0a8"
                     />
                 </View>
 
@@ -42,6 +69,7 @@ export default function Login() {
                             value={contrasena}
                             onChangeText={setContrasena}
                             secureTextEntry={!mostrarContrasena}
+                            placeholderTextColor="#b0b0a8"
                         />
                         <Pressable onPress={() => setMostrarContrasena(!mostrarContrasena)}>
                             <Text style={estilos.toggleContrasena}>
@@ -59,16 +87,14 @@ export default function Login() {
                 </Pressable>
 
                 <Pressable
-                    style={estilos.botonEntrar}
-                    onPress={() => {
-                        if (estanVacios(correo, contrasena)) {
-                            alert("Por favor, complete todos los campos.");
-                        } else {
-                            router.replace('/(tabs)/perfil');
-                        }
-                    }}
+                    style={[estilos.botonEntrar, estaCargando && { opacity: 0.7 }]}
+                    onPress={manejarLogin}
+                    disabled={estaCargando}
                 >
-                    <Text style={estilos.botonEntrarTexto}>ENTRAR</Text>
+                    {estaCargando
+                        ? <ActivityIndicator color="#ffffff" />
+                        : <Text style={estilos.botonEntrarTexto}>ENTRAR</Text>
+                    }
                 </Pressable>
                 <Pressable
                     style={estilos.botonRegistrarse}
@@ -81,10 +107,6 @@ export default function Login() {
             </ScrollView>
         </ImageBackground>
     );
-}
-
-function estanVacios(correo: string, contrasena: string) {
-    return correo === "" || contrasena === "";
 }
 
 const estilos = StyleSheet.create({
@@ -194,39 +216,6 @@ const estilos = StyleSheet.create({
         fontSize: 14,
         fontWeight: '600',
         letterSpacing: 1,
-    },
-    separador: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        marginBottom: 24,
-    },
-    linea: {
-        flex: 1,
-        height: 1,
-        backgroundColor: '#c3c8c1',
-    },
-    separadorTexto: {
-        marginHorizontal: 12,
-        fontSize: 13,
-        color: '#737973',
-    },
-    botonesRedes: {
-        flexDirection: 'row',
-        justifyContent: 'center',
-        gap: 16,
-    },
-    botonRed: {
-        borderWidth: 1,
-        borderColor: '#c3c8c1',
-        borderRadius: 8,
-        width: '45%',
-        paddingVertical: 12,
-        alignItems: 'center',
-    },
-    botonRedTexto: {
-        fontSize: 16,
-        color: '#1c1c18',
-        fontWeight: '500',
     },
     toggleContrasena: {
         fontSize: 13,

@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar, Dimensions } from 'react-native';
 import { useEffect } from 'react';
+import { UsuarioProvider } from '../context/UsuarioContext';
 
 export default function Layout() {
     useEffect(() => {
@@ -14,5 +15,9 @@ export default function Layout() {
         return () => sub.remove();
     }, []);
 
-    return <Stack screenOptions={{ headerShown: false }} />;
+    return (
+        <UsuarioProvider>
+            <Stack screenOptions={{ headerShown: false }} />
+        </UsuarioProvider>
+    );
 }

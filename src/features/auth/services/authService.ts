@@ -9,16 +9,20 @@ export async function login(correo: string, contrasena: string): Promise<Usuario
     return respuesta.data.usuario;
 }
 
-export async function registro(
-    nombreCompleto: string,
-    correo: string,
-    contrasena: string,
-    telefono?: string,
+export async function registro(datos: {
+    nombre: string;
+    apellidos: string;
+    correo: string;
+    contrasena: string;
+    telefono?: string;
+    direccion?: string;
+}): Promise<void> {
+    await apiClient.post('/auth/registro', datos);
+}
+
+export async function actualizarPerfil(
+    idUsuario: number,
+    datos: { nombre: string; apellidos: string; telefono: string; direccion: string },
 ): Promise<void> {
-    await apiClient.post('/auth/registro', {
-        nombreCompleto,
-        correo,
-        contrasena,
-        telefono,
-    });
+    await apiClient.put(`/usuarios/${idUsuario}`, datos);
 }
