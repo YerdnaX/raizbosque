@@ -14,7 +14,7 @@ type Opcion = {
 
 const opcionesExtras: Opcion[] = [
     { titulo: 'Cambiar Contraseña',   icono: 'lock',     ruta: '/cambiar-contrasena' },
-    { titulo: 'Reservaciones',        icono: 'calendar' },
+    { titulo: 'Reservaciones',        icono: 'calendar',  ruta: '/reservaciones' },
     { titulo: 'Historial de Compras', icono: 'bag',      ruta: '/historial' },
 ];
 
