@@ -6,7 +6,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
-import AtrasIcono from '@/assets/icons/atras.svg';
 import { useUsuario } from '../context/UsuarioContext';
 import {
     obtenerReservaciones,
@@ -97,18 +96,18 @@ export default function Reservaciones() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.back()}>
+                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(255,255,255,0.22)', foreground: true }} onPress={() => router.back()}>
                     <View style={estilos.fondoAtras}>
-                        <AtrasIcono width={24} height={24} fill="#ffffff" />
+                        <Text style={estilos.botonAtrasTexto}>‹</Text>
                     </View>
                 </Pressable>
                 <Text style={estilos.encabezadoTitulo}>Reservaciones</Text>
                 <Pressable
                     style={estilos.botonNueva}
-                    android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
+                    android_ripple={{ color: 'rgba(255,255,255,0.22)', foreground: true }}
                     onPress={() => router.push('/nueva-reservacion')}
                 >
-                    <SymbolView name="plus" size={20} tintColor="#ffffff" />
+                    <Text style={estilos.botonNuevaTexto}>+</Text>
                 </Pressable>
             </ImageBackground>
 
@@ -240,19 +239,33 @@ const estilos = StyleSheet.create({
         borderBottomWidth: 1,
         borderBottomColor: '#c8d4c0',
     },
-    botonAtras: { padding: 4 },
-    fondoAtras: {
-        backgroundColor: '#6b7068',
+    botonAtras: {
         borderRadius: 999,
-        width: 44,
-        height: 44,
+        overflow: 'hidden',
+    },
+    fondoAtras: {
+        backgroundColor: 'rgba(27,48,34,0.46)',
+        borderRadius: 999,
+        width: 46,
+        height: 46,
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 3,
-        shadowColor: '#000',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.80)',
+        elevation: 4,
+        shadowColor: '#1b3022',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
+        shadowOpacity: 0.22,
+        shadowRadius: 6,
+    },
+    botonAtrasTexto: {
+        color: '#ffffff',
+        fontSize: 30,
+        fontWeight: '700',
+        lineHeight: 34,
+        textAlign: 'center',
+        marginLeft: -1,
+        marginTop: -1,
     },
     encabezadoTitulo: {
         fontSize: 18,
@@ -261,17 +274,28 @@ const estilos = StyleSheet.create({
         letterSpacing: 0.5,
     },
     botonNueva: {
-        backgroundColor: '#6b7068',
+        backgroundColor: 'rgba(27,48,34,0.46)',
         borderRadius: 999,
-        width: 44,
-        height: 44,
+        width: 46,
+        height: 46,
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 3,
-        shadowColor: '#000000',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.80)',
+        overflow: 'hidden',
+        elevation: 4,
+        shadowColor: '#1b3022',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
+        shadowOpacity: 0.22,
+        shadowRadius: 6,
+    },
+    botonNuevaTexto: {
+        color: '#ffffff',
+        fontSize: 28,
+        fontWeight: '700',
+        lineHeight: 30,
+        textAlign: 'center',
+        marginTop: -1,
     },
     centrado: {
         flex: 1,

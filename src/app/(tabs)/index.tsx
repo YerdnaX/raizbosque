@@ -7,23 +7,42 @@ import RestauranteIcono from '@/assets/icons/bottomBar/restaurante.svg';
 import ViveroIcono from '@/assets/icons/bottomBar/vivero.svg';
 import JardinIcono from '@/assets/icons/bottomBar/mi-jardin.svg';
 import PerfilIcono from '@/assets/icons/bottomBar/perfil.svg';
+import ProductosIcono from '@/assets/icons/bottomBar/productos.svg';
 import { useInicio } from '../../features/inicio/hooks/useInicio';
 import { urlImagen } from '../../utils/urlImagen';
 import { useCarrito } from '../../context/CarritoContext';
+import { useUsuario } from '../../context/UsuarioContext';
+import type { Reservacion } from '../../features/reservaciones/types/reservacion';
+
+const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+
+function formatearFechaReserva(fechaISO: string, hora: string): string {
+    const [, mes, dia] = fechaISO.split('-');
+    return `${parseInt(dia)} ${MESES[parseInt(mes) - 1]} · ${hora} Hrs`;
+}
+
+const ESTADO_COLOR: Record<string, { fondo: string; texto: string }> = {
+    Pendiente:  { fondo: '#fff3cd', texto: '#856404' },
+    Confirmada: { fondo: '#d1e7dd', texto: '#0a3622' },
+    Completada: { fondo: '#e5e2dc', texto: '#434843' },
+    Cancelada:  { fondo: '#f8d7da', texto: '#842029' },
+};
 
 const SECCIONES = [
     { titulo: 'Restaurante', ruta: '/(tabs)/restaurante', Icono: RestauranteIcono },
     { titulo: 'Vivero',      ruta: '/(tabs)/vivero',      Icono: ViveroIcono      },
     { titulo: 'Mi Jardín',   ruta: '/(tabs)/jardin',      Icono: JardinIcono      },
     { titulo: 'Mi Perfil',   ruta: '/(tabs)/perfil',      Icono: PerfilIcono      },
+    { titulo: 'Productos',    ruta: '/(tabs)/productos',    Icono: ProductosIcono },
 ];
 
 export default function Inicio() {
     const insets = useSafeAreaInsets();
     const { width, height } = useWindowDimensions();
     const esHorizontal = width > height;
-    const { plantaDelMes, estaCargando, error } = useInicio();
+    const { plantaDelMes, platoDelDia, proximasReservaciones, estaCargando, error } = useInicio();
     const { totalItems } = useCarrito();
+    const { usuario } = useUsuario();
 
     return (
         <View style={estilos.contenedor}>
@@ -53,10 +72,13 @@ export default function Inicio() {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={estilos.saludoSeccion}>
-                    <Text style={[estilos.saludoTitulo, esHorizontal && { fontSize: 20 }]}>¡Bienvenido!</Text>
+                    <Text style={[estilos.saludoTitulo, esHorizontal && { fontSize: 20 }]}>
+                        {usuario ? `¡Hola, ${usuario.Nombre}!` : '¡Bienvenido!'}
+                    </Text>
                     <Text style={estilos.saludoSubtitulo}>Descubre lo que Raíces tiene para vos hoy.</Text>
                 </View>
 
+                {/* Planta del Mes */}
                 <View style={estilos.seccion}>
                     <Text style={estilos.seccionTitulo}>🌿 Planta del Mes 🌿</Text>
                     {estaCargando ? (
@@ -88,7 +110,7 @@ export default function Inicio() {
                                     </View>
                                 )}
                                 <View style={estilos.precioFila}>
-                                    <Text style={estilos.precio}>${plantaDelMes.Precio.toFixed(2)}</Text>
+                                    <Text style={estilos.precio}>₡{plantaDelMes.Precio.toLocaleString('es-CR')}</Text>
                                     <Pressable
                                         style={estilos.botonVerMas}
                                         android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
@@ -102,6 +124,83 @@ export default function Inicio() {
                     )}
                 </View>
 
+                {/* Plato del Día */}
+                <View style={estilos.seccion}>
+                    <Text style={estilos.seccionTitulo}>🍽️ Plato del Día</Text>
+                    {estaCargando ? (
+                        <View style={estilos.tarjetaCargando}>
+                            <ActivityIndicator size="large" color="#1b3022" />
+                        </View>
+                    ) : !platoDelDia ? (
+                        <View style={estilos.tarjetaCargando}>
+                            <Text style={estilos.errorTexto}>No hay plato del día disponible.</Text>
+                        </View>
+                    ) : (
+                        <View style={estilos.tarjetaPlato}>
+                            <View style={[estilos.imagenDestacada, esHorizontal && { height: 110 }]}>
+                                {urlImagen(platoDelDia.Imagen) ? (
+                                    <Image source={{ uri: urlImagen(platoDelDia.Imagen)! }} style={estilos.imagen} />
+                                ) : null}
+                            </View>
+                            <View style={estilos.infoPlanta}>
+                                <View style={estilos.tagCategoria}>
+                                    <Text style={estilos.tagCategoriaTexto}>{platoDelDia.NombreCategoria}</Text>
+                                </View>
+                                <Text style={estilos.nombrePlanta}>{platoDelDia.Nombre}</Text>
+                                {platoDelDia.Descripcion && (
+                                    <Text style={estilos.descripcionPlanta} numberOfLines={2}>
+                                        {platoDelDia.Descripcion}
+                                    </Text>
+                                )}
+                                <View style={estilos.precioFila}>
+                                    <Text style={estilos.precio}>₡{platoDelDia.Precio.toLocaleString('es-CR')}</Text>
+                                    <Pressable
+                                        style={[estilos.botonVerMas, { backgroundColor: '#526349' }]}
+                                        android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
+                                        onPress={() => router.navigate('/(tabs)/restaurante')}
+                                    >
+                                        <Text style={estilos.botonVerMasTexto}>Ver Menú</Text>
+                                    </Pressable>
+                                </View>
+                            </View>
+                        </View>
+                    )}
+                </View>
+
+                {/* Próximas Reservaciones */}
+                {usuario && (
+                    <View style={estilos.seccion}>
+                        <View style={estilos.seccionEncabezado}>
+                            <Text style={estilos.seccionTitulo}>📅 Próximas Reservaciones</Text>
+                            <Pressable
+                                android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
+                                onPress={() => router.push('/reservaciones')}
+                            >
+                                <Text style={estilos.verTodas}>Ver todas</Text>
+                            </Pressable>
+                        </View>
+
+                        {proximasReservaciones.length === 0 ? (
+                            <Pressable
+                                style={estilos.tarjetaVaciaReserva}
+                                android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
+                                onPress={() => router.push('/nueva-reservacion')}
+                            >
+                                <SymbolView name="calendar.badge.plus" size={28} tintColor="#9ca09a" />
+                                <Text style={estilos.reservaVaciaTexto}>Sin reservaciones próximas</Text>
+                                <Text style={estilos.reservaVaciaSubtexto}>Toca para crear una</Text>
+                            </Pressable>
+                        ) : (
+                            <View style={estilos.listaReservas}>
+                                {proximasReservaciones.map(r => (
+                                    <TarjetaReserva key={r.IdReservacion} reservacion={r} />
+                                ))}
+                            </View>
+                        )}
+                    </View>
+                )}
+
+                {/* Explorar */}
                 <View style={estilos.seccion}>
                     <Text style={estilos.seccionTitulo}>Explorar</Text>
                     <View style={estilos.cuadricula}>
@@ -118,6 +217,31 @@ export default function Inicio() {
                     </View>
                 </View>
             </ScrollView>
+        </View>
+    );
+}
+
+function TarjetaReserva({ reservacion }: { reservacion: Reservacion }) {
+    const config = ESTADO_COLOR[reservacion.Estado] ?? { fondo: '#e5e2dc', texto: '#434843' };
+    return (
+        <View style={estilos.tarjetaReserva}>
+            <View style={estilos.reservaFila}>
+                <SymbolView name="calendar" size={16} tintColor="#526349" />
+                <Text style={estilos.reservaFechaTexto}>
+                    {formatearFechaReserva(reservacion.FechaReservacion, reservacion.HoraReservacion)}
+                </Text>
+            </View>
+            <View style={estilos.reservaFila}>
+                <SymbolView name="person.2" size={16} tintColor="#526349" />
+                <Text style={estilos.reservaPersonasTexto}>
+                    {reservacion.CantidadPersonas} persona{reservacion.CantidadPersonas !== 1 ? 's' : ''}
+                </Text>
+                <View style={[estilos.estadoBadge, { backgroundColor: config.fondo }]}>
+                    <Text style={[estilos.estadoBadgeTexto, { color: config.texto }]}>
+                        {reservacion.Estado}
+                    </Text>
+                </View>
+            </View>
         </View>
     );
 }
@@ -186,10 +310,20 @@ const estilos = StyleSheet.create({
     seccion: {
         gap: 12,
     },
+    seccionEncabezado: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+    },
     seccionTitulo: {
         fontSize: 18,
         fontWeight: '700',
         color: '#1c1c18',
+    },
+    verTodas: {
+        fontSize: 13,
+        color: '#526349',
+        fontWeight: '600',
     },
     tarjetaCargando: {
         backgroundColor: '#ffffff',
@@ -219,6 +353,16 @@ const estilos = StyleSheet.create({
         shadowRadius: 8,
         elevation: 2,
     },
+    tarjetaPlato: {
+        backgroundColor: '#ffffff',
+        borderRadius: 16,
+        overflow: 'hidden',
+        shadowColor: '#1b3022',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.06,
+        shadowRadius: 8,
+        elevation: 2,
+    },
     imagenDestacada: {
         backgroundColor: '#e5e2dc',
         height: 180,
@@ -228,6 +372,18 @@ const estilos = StyleSheet.create({
     infoPlanta: {
         padding: 16,
         gap: 8,
+    },
+    tagCategoria: {
+        alignSelf: 'flex-start',
+        backgroundColor: '#e8f0e5',
+        borderRadius: 999,
+        paddingHorizontal: 12,
+        paddingVertical: 4,
+    },
+    tagCategoriaTexto: {
+        fontSize: 12,
+        color: '#526349',
+        fontWeight: '600',
     },
     nombrePlanta: {
         fontSize: 18,
@@ -271,6 +427,69 @@ const estilos = StyleSheet.create({
         fontSize: 13,
         fontWeight: '600',
     },
+    // Reservaciones
+    listaReservas: {
+        gap: 10,
+    },
+    tarjetaReserva: {
+        backgroundColor: '#ffffff',
+        borderRadius: 12,
+        padding: 14,
+        gap: 8,
+        shadowColor: '#1b3022',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 1,
+    },
+    reservaFila: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    reservaFechaTexto: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#1c1c18',
+        flex: 1,
+    },
+    reservaPersonasTexto: {
+        fontSize: 13,
+        color: '#434843',
+        flex: 1,
+    },
+    estadoBadge: {
+        paddingHorizontal: 10,
+        paddingVertical: 4,
+        borderRadius: 999,
+    },
+    estadoBadgeTexto: {
+        fontSize: 11,
+        fontWeight: '600',
+    },
+    tarjetaVaciaReserva: {
+        backgroundColor: '#ffffff',
+        borderRadius: 12,
+        padding: 20,
+        alignItems: 'center',
+        gap: 6,
+        overflow: 'hidden',
+        shadowColor: '#1b3022',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 4,
+        elevation: 1,
+    },
+    reservaVaciaTexto: {
+        fontSize: 14,
+        fontWeight: '600',
+        color: '#434843',
+    },
+    reservaVaciaSubtexto: {
+        fontSize: 12,
+        color: '#9ca09a',
+    },
+    // Explorar
     cuadricula: {
         flexDirection: 'row',
         flexWrap: 'wrap',
@@ -290,31 +509,9 @@ const estilos = StyleSheet.create({
         elevation: 2,
         padding: 35,
     },
-    iconoFondo: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-    },
-    etiquetaCelda: {
-        backgroundColor: 'rgba(255, 255, 255, 0.88)',
-        paddingVertical: 10,
-        paddingHorizontal: 14,
-    },
-    tituloSeccion: {
-        fontSize: 14,
-        fontWeight: '700',
-        color: '#1c1c18',
-    },
-    subtituloSeccion: {
-        fontSize: 11,
-        color: '#737973',
-        textAlign: 'center',
-    },
     imagen: {
         width: "100%",
         height: "100%",
         borderRadius: 8,
-        },
+    },
 });

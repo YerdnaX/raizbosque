@@ -2,7 +2,6 @@ import { View, Text, TextInput, Pressable, StyleSheet, ScrollView, ActivityIndic
 import { useState } from "react";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import AtrasIcono from '@/assets/icons/atras.svg';
 import { actualizarPerfil } from "../features/auth/services/authService";
 import { useUsuario } from "../context/UsuarioContext";
 
@@ -44,9 +43,9 @@ export default function EditarPerfil() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.back()}>
+                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(255,255,255,0.22)', foreground: true }} onPress={() => router.back()}>
                     <View style={estilos.fondoAtras}>
-                        <AtrasIcono width={24} height={24} fill="#ffffff" />
+                        <Text style={estilos.botonAtrasTexto}>‹</Text>
                     </View>
                 </Pressable>
                 <Text style={estilos.encabezadoTitulo}>Editar Perfil</Text>
@@ -155,20 +154,32 @@ const estilos = StyleSheet.create({
         borderBottomColor: '#c8d4c0',
     },
     botonAtras: {
-        padding: 4,
+        borderRadius: 999,
+        overflow: 'hidden',
     },
     fondoAtras: {
-        backgroundColor: '#6b7068',
+        backgroundColor: 'rgba(27,48,34,0.46)',
         borderRadius: 999,
-        width: 44,
-        height: 44,
+        width: 46,
+        height: 46,
         justifyContent: 'center',
         alignItems: 'center',
-        elevation: 3,
-        shadowColor: '#000000',
+        borderWidth: 1,
+        borderColor: 'rgba(255,255,255,0.80)',
+        elevation: 4,
+        shadowColor: '#1b3022',
         shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.25,
-        shadowRadius: 4,
+        shadowOpacity: 0.22,
+        shadowRadius: 6,
+    },
+    botonAtrasTexto: {
+        color: '#ffffff',
+        fontSize: 30,
+        fontWeight: '700',
+        lineHeight: 34,
+        textAlign: 'center',
+        marginLeft: -1,
+        marginTop: -1,
     },
     encabezadoTitulo: {
         fontSize: 18,
