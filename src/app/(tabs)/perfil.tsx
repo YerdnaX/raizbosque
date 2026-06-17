@@ -15,7 +15,7 @@ type Opcion = {
 const opcionesExtras: Opcion[] = [
     { titulo: 'Cambiar Contraseña',   icono: 'lock',     ruta: '/cambiar-contrasena' },
     { titulo: 'Reservaciones',        icono: 'calendar' },
-    { titulo: 'Historial de Compras', icono: 'bag'      },
+    { titulo: 'Historial de Compras', icono: 'bag',      ruta: '/historial' },
 ];
 
 export default function Perfil() {
