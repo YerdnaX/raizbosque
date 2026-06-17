@@ -14,7 +14,7 @@ type CarritoContextType = {
     totalItems: number;
     total: number;
     estaCargando: boolean;
-    agregarAlCarrito: (idProducto: number, precio: number) => Promise<void>;
+    agregarAlCarrito: (idProducto: number, precio: number) => Promise<boolean>;
     actualizarCantidad: (idDetalle: number, cantidad: number) => Promise<void>;
     eliminarDelCarrito: (idDetalle: number) => Promise<void>;
     limpiarCarrito: () => void;
@@ -61,16 +61,18 @@ export function CarritoProvider({ children }: { children: ReactNode }) {
         }
     }
 
-    async function agregarAlCarrito(idProducto: number, precio: number) {
+    async function agregarAlCarrito(idProducto: number, precio: number): Promise<boolean> {
         if (!usuario) {
             Alert.alert('Inicia sesión', 'Debes iniciar sesión para agregar productos al carrito.');
-            return;
+            return false;
         }
         try {
             await agregarItemService(usuario.IdUsuario, idProducto, precio);
             await recargarCarrito();
+            return true;
         } catch {
             Alert.alert('Error', 'No se pudo agregar al carrito. Intenta de nuevo.');
+            return false;
         }
     }
 

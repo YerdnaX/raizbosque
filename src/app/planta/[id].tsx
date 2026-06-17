@@ -1,4 +1,4 @@
-import { View, Text, Pressable, ScrollView, StyleSheet, ActivityIndicator, ImageBackground, Image } from "react-native";
+import { View, Text, Pressable, ScrollView, StyleSheet, ActivityIndicator, ImageBackground, Image, Alert } from "react-native";
 import { useLocalSearchParams, router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
@@ -7,6 +7,8 @@ import AtrasIcono from '@/assets/icons/atras.svg';
 import { useDetallePlanta } from '../../features/vivero/hooks/useDetallePlanta';
 import { urlImagen } from '../../utils/urlImagen';
 import { useCarrito } from '../../context/CarritoContext';
+import { useUsuario } from '../../context/UsuarioContext';
+import { agregarAlJardin } from '../../features/jardin/services/jardinService';
 
 const IMAGEN_TOPBAR = require('@/assets/images/login/topBar.png');
 
@@ -41,6 +43,24 @@ export default function DetallePlanta() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const { planta, estaCargando, error } = useDetallePlanta(Number(id));
     const { agregarAlCarrito } = useCarrito();
+    const { usuario } = useUsuario();
+
+    async function manejarAgregarJardin() {
+        if (!usuario) {
+            Alert.alert('Inicia sesión', 'Debes iniciar sesión para agregar plantas a tu jardín.');
+            return;
+        }
+        try {
+            const { yaExiste } = await agregarAlJardin(usuario.IdUsuario, Number(id));
+            if (yaExiste) {
+                Alert.alert('Ya está en tu jardín', `${planta?.Nombre} ya se encuentra en tu jardín.`);
+            } else {
+                Alert.alert('¡Agregada!', `${planta?.Nombre} fue agregada a tu jardín.`);
+            }
+        } catch {
+            Alert.alert('Error', 'No se pudo agregar la planta al jardín.');
+        }
+    }
 
     if (estaCargando) {
         return (
@@ -148,11 +168,16 @@ export default function DetallePlanta() {
             <View style={estilos.botonesAbajo}>
                 <Pressable
                     style={estilos.botonComprar}
-                    onPress={() => agregarAlCarrito(Number(id), planta.Precio)}
+                    onPress={async () => {
+                        const agregado = await agregarAlCarrito(Number(id), planta.Precio);
+                        if (agregado) {
+                            Alert.alert('¡Agregado!', `${planta.Nombre} fue agregado al carrito.`);
+                        }
+                    }}
                 >
                     <Text style={estilos.botonComprarTexto}>COMPRAR</Text>
                 </Pressable>
-                <Pressable style={estilos.botonJardin}>
+                <Pressable style={estilos.botonJardin} onPress={manejarAgregarJardin}>
                     <SymbolView name="leaf.fill" size={16} tintColor="#1b3022" />
                     <Text style={estilos.botonJardinTexto}>AGREGAR A MI JARDÍN</Text>
                 </Pressable>
