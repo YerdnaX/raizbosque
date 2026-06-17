@@ -44,7 +44,7 @@ export default function EditarPerfil() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonAtras} onPress={() => router.back()}>
+                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.back()}>
                     <View style={estilos.fondoAtras}>
                         <AtrasIcono width={24} height={24} fill="#ffffff" />
                     </View>
@@ -117,6 +117,7 @@ export default function EditarPerfil() {
 
                 <Pressable
                     style={[estilos.botonGuardar, estaCargando && { opacity: 0.7 }]}
+                    android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                     onPress={manejarGuardar}
                     disabled={estaCargando}
                 >
@@ -237,6 +238,7 @@ const estilos = StyleSheet.create({
         paddingVertical: 16,
         alignItems: 'center',
         width: '90%',
+        overflow: 'hidden',
     },
     botonGuardarTexto: {
         color: '#ffffff',

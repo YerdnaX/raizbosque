@@ -46,6 +46,7 @@ export default function Jardin() {
         return (
             <Pressable
                 style={estilos.tarjeta}
+                android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                 onLongPress={() => confirmarEliminar(item.IdJardin, item.Nombre)}
             >
                 <View style={estilos.imagenContenedor}>
@@ -93,11 +94,11 @@ export default function Jardin() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonEncabezado}>
+                <Pressable style={estilos.botonEncabezado} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}>
                     <SymbolView name="line.3.horizontal" size={24} tintColor="#1b3022" />
                 </Pressable>
                 <Text style={estilos.encabezadoTitulo}>RAÍCES</Text>
-                <Pressable style={estilos.botonEncabezado} onPress={() => router.push('/carrito')}>
+                <Pressable style={estilos.botonEncabezado} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.push('/carrito')}>
                     <View>
                         <CarritoIcono width={30} height={30} fill="#1b3022" />
                         {totalItems > 0 && (
@@ -132,7 +133,7 @@ export default function Jardin() {
                                     <Text style={estilos.titulo}>Mi Jardín</Text>
                                     <Text style={estilos.subtitulo}>Tus plantas actuales.</Text>
                                 </View>
-                                <Pressable style={estilos.botonAgregar} onPress={() => router.push('/vivero')}>
+                                <Pressable style={estilos.botonAgregar} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={() => router.push('/vivero')}>
                                     <Text style={estilos.botonAgregarTexto}>+ AGREGAR</Text>
                                 </Pressable>
                             </View>
@@ -231,6 +232,7 @@ const estilos = StyleSheet.create({
         borderRadius: 8,
         paddingHorizontal: 16,
         paddingVertical: 10,
+        overflow: 'hidden',
     },
     botonAgregarTexto: {
         fontSize: 13,
@@ -253,6 +255,7 @@ const estilos = StyleSheet.create({
         shadowOpacity: 0.06,
         shadowRadius: 6,
         elevation: 2,
+        overflow: 'hidden',
     },
     imagenContenedor: {
         borderRadius: 8,

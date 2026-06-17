@@ -32,11 +32,11 @@ export default function Inicio() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonEncabezado}>
+                <Pressable style={estilos.botonEncabezado} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}>
                     <SymbolView name="line.3.horizontal" size={24} tintColor="#1b3022" />
                 </Pressable>
                 <Text style={estilos.encabezadoTitulo}>Inicio</Text>
-                <Pressable style={estilos.botonCarrito} onPress={() => router.push('/carrito')}>
+                <Pressable style={estilos.botonCarrito} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.push('/carrito')}>
                     <View>
                         <CarritoIcono width={30} height={30} fill="#1b3022" />
                         {totalItems > 0 && (
@@ -91,6 +91,7 @@ export default function Inicio() {
                                     <Text style={estilos.precio}>${plantaDelMes.Precio.toFixed(2)}</Text>
                                     <Pressable
                                         style={estilos.botonVerMas}
+                                        android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                                         onPress={() => router.navigate('/(tabs)/vivero')}
                                     >
                                         <Text style={estilos.botonVerMasTexto}>Ver en Vivero</Text>
@@ -108,6 +109,7 @@ export default function Inicio() {
                             <Pressable
                                 key={seccion.titulo}
                                 style={[estilos.celdaCuadricula, esHorizontal && { width: '23%', aspectRatio: 1.2 }]}
+                                android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                                 onPress={() => router.navigate(seccion.ruta as any)}
                             >
                                 <seccion.Icono width="100%" height="100%" fill="#1b3022" />
@@ -262,6 +264,7 @@ const estilos = StyleSheet.create({
         borderRadius: 999,
         paddingVertical: 10,
         paddingHorizontal: 20,
+        overflow: 'hidden',
     },
     botonVerMasTexto: {
         color: '#ffffff',

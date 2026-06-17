@@ -84,7 +84,7 @@ export default function Checkout() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonAtras} onPress={() => router.back()}>
+                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.back()}>
                     <View style={estilos.fondoAtras}>
                         <AtrasIcono width={24} height={24} fill="#ffffff" />
                     </View>
@@ -149,6 +149,7 @@ export default function Checkout() {
 
                     <Pressable
                         style={[estilos.opcionEntrega, metodoEntrega === 'Tienda' && estilos.opcionEntregaActiva]}
+                        android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                         onPress={() => setMetodoEntrega('Tienda')}
                     >
                         <View style={estilos.opcionEntregaIzq}>
@@ -167,6 +168,7 @@ export default function Checkout() {
 
                     <Pressable
                         style={[estilos.opcionEntrega, metodoEntrega === 'Domicilio' && estilos.opcionEntregaActiva]}
+                        android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                         onPress={() => setMetodoEntrega('Domicilio')}
                     >
                         <View style={estilos.opcionEntregaIzq}>
@@ -198,6 +200,7 @@ export default function Checkout() {
                                 <>
                                     <Pressable
                                         style={estilos.opcionDireccion}
+                                        android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                                         onPress={() => setUsarDireccionGuardada(true)}
                                     >
                                         <View style={[estilos.radio, usarDireccionGuardada && estilos.radioActivo]}>
@@ -211,6 +214,7 @@ export default function Checkout() {
 
                                     <Pressable
                                         style={estilos.opcionDireccion}
+                                        android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                                         onPress={() => setUsarDireccionGuardada(false)}
                                     >
                                         <View style={[estilos.radio, !usarDireccionGuardada && estilos.radioActivo]}>
@@ -292,6 +296,7 @@ export default function Checkout() {
                 </View>
                 <Pressable
                     style={[estilos.botonConfirmar, estaProcesando && estilos.botonConfirmarDesactivado]}
+                    android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                     onPress={confirmarCompra}
                     disabled={estaProcesando}
                 >
@@ -405,6 +410,7 @@ const estilos = StyleSheet.create({
         borderRadius: 10,
         padding: 12,
         gap: 12,
+        overflow: 'hidden',
     },
     opcionEntregaActiva: {
         borderColor: '#1b3022',
@@ -580,6 +586,7 @@ const estilos = StyleSheet.create({
         paddingHorizontal: 20,
         alignItems: 'center',
         flex: 1,
+        overflow: 'hidden',
     },
     botonConfirmarDesactivado: {
         backgroundColor: '#8da082',

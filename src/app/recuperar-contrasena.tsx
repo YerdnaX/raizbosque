@@ -38,6 +38,7 @@ export default function RecuperarContrasena() {
 
                     <Pressable
                         style={estilos.botonEnviar}
+                        android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                         onPress={() => {
                             if (correo === "") {
                                 alert("Por favor, ingresa tu correo electrónico.");
@@ -49,6 +50,7 @@ export default function RecuperarContrasena() {
 
                     <Pressable
                         style={estilos.enlace}
+                        android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
                         onPress={() => router.back()}
                     >
                         <Text style={estilos.enlaceTexto}>Volver al inicio de sesión</Text>
@@ -119,6 +121,7 @@ const estilos = StyleSheet.create({
         paddingVertical: 16,
         alignItems: 'center',
         marginBottom: 16,
+        overflow: 'hidden',
     },
     botonEnviarTexto: {
         color: '#ffffff',

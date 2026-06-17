@@ -43,11 +43,11 @@ export default function Perfil() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonEncabezado}>
+                <Pressable style={estilos.botonEncabezado} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}>
                     <SymbolView name="line.3.horizontal" size={24} tintColor="#1b3022" />
                 </Pressable>
                 <Text style={estilos.encabezadoTitulo}>Mi Perfil</Text>
-                <Pressable style={estilos.botonEncabezado} onPress={() => router.push('/carrito')}>
+                <Pressable style={estilos.botonEncabezado} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.push('/carrito')}>
                     <View>
                         <CarritoIcono width={30} height={30} fill="#1b3022" />
                         {totalItems > 0 && (
@@ -78,6 +78,7 @@ export default function Perfil() {
                     <Text style={estilos.correo}>{usuario?.Correo ?? ''}</Text>
                     <Pressable
                         style={estilos.botonEditar}
+                        android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                         onPress={() => router.push('/editar-perfil')}
                     >
                         <Text style={estilos.botonEditarTexto}>EDITAR PERFIL</Text>
@@ -89,6 +90,7 @@ export default function Perfil() {
                         <View key={opcion.titulo}>
                             <Pressable
                                 style={estilos.opcion}
+                                android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                                 onPress={() => opcion.ruta ? router.push(opcion.ruta as any) : undefined}
                             >
                                 <SymbolView name={opcion.icono as any} size={22} tintColor="#434843" />
@@ -104,6 +106,7 @@ export default function Perfil() {
 
                 <Pressable
                     style={estilos.botonCerrarSesion}
+                    android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                     onPress={manejarCerrarSesion}
                 >
                     <SymbolView
@@ -192,6 +195,7 @@ const estilos = StyleSheet.create({
         borderRadius: 8,
         paddingVertical: 10,
         paddingHorizontal: 32,
+        overflow: 'hidden',
     },
     botonEditarTexto: {
         fontSize: 13,
@@ -237,6 +241,7 @@ const estilos = StyleSheet.create({
         paddingVertical: 14,
         gap: 10,
         backgroundColor: '#ffffff',
+        overflow: 'hidden',
     },
     cerrarSesionTexto: {
         fontSize: 15,

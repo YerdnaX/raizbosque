@@ -142,7 +142,7 @@ export default function Registro() {
                                 secureTextEntry={!mostrarContrasena}
                                 placeholderTextColor="#b0b0a8"
                             />
-                            <Pressable onPress={() => setMostrarContrasena(!mostrarContrasena)}>
+                            <Pressable android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => setMostrarContrasena(!mostrarContrasena)}>
                                 <Text style={estilos.toggle}>
                                     {mostrarContrasena ? "Ocultar" : "Ver"}
                                 </Text>
@@ -160,7 +160,7 @@ export default function Registro() {
                                 secureTextEntry={!mostrarConfirmar}
                                 placeholderTextColor="#b0b0a8"
                             />
-                            <Pressable onPress={() => setMostrarConfirmar(!mostrarConfirmar)}>
+                            <Pressable android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => setMostrarConfirmar(!mostrarConfirmar)}>
                                 <Text style={estilos.toggle}>
                                     {mostrarConfirmar ? "Ocultar" : "Ver"}
                                 </Text>
@@ -170,6 +170,7 @@ export default function Registro() {
 
                     <Pressable
                         style={[estilos.botonRegistrarse, estaCargando && { opacity: 0.7 }]}
+                        android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                         onPress={manejarRegistro}
                         disabled={estaCargando}
                     >
@@ -181,6 +182,7 @@ export default function Registro() {
 
                     <Pressable
                         style={estilos.enlace}
+                        android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
                         onPress={() => router.replace('/login')}
                     >
                         <Text style={estilos.enlaceTexto}>
@@ -283,6 +285,7 @@ const estilos = StyleSheet.create({
         alignItems: 'center',
         marginBottom: 16,
         marginTop: 8,
+        overflow: 'hidden',
     },
     botonRegistrarseTexto: {
         color: '#ffffff',

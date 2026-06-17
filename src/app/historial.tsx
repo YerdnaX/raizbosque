@@ -67,7 +67,7 @@ export default function Historial() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonAtras} onPress={() => router.back()}>
+                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.back()}>
                     <View style={estilos.fondoAtras}>
                         <AtrasIcono width={24} height={24} fill="#ffffff" />
                     </View>
@@ -83,6 +83,7 @@ export default function Historial() {
                         <Pressable
                             key={f}
                             style={[estilos.chip, filtro === f && estilos.chipActivo]}
+                            android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                             onPress={() => setFiltro(f)}
                         >
                             <Text style={[estilos.chipTexto, filtro === f && estilos.chipTextoActivo]}>
@@ -100,7 +101,7 @@ export default function Historial() {
             ) : error ? (
                 <View style={estilos.centrado}>
                     <Text style={estilos.errorTexto}>{error}</Text>
-                    <Pressable style={estilos.botonReintentar} onPress={cargarHistorial}>
+                    <Pressable style={estilos.botonReintentar} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={cargarHistorial}>
                         <Text style={estilos.botonReintentarTexto}>Reintentar</Text>
                     </Pressable>
                 </View>
@@ -143,7 +144,7 @@ export default function Historial() {
                                     </Text>
                                     <Text style={estilos.modalFecha}>{formatearFecha(compraDetalle.FechaCompra)}</Text>
                                 </View>
-                                <Pressable onPress={() => setCompraDetalle(null)} style={estilos.modalCerrar}>
+                                <Pressable onPress={() => setCompraDetalle(null)} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} style={estilos.modalCerrar}>
                                     <SymbolView name="xmark" size={18} tintColor="#434843" />
                                 </Pressable>
                             </View>
@@ -246,7 +247,7 @@ function TarjetaCompra({ compra, onVerDetalle }: { compra: Compra; onVerDetalle:
             </View>
 
             <View style={estilos.tarjetaAcciones}>
-                <Pressable style={estilos.botonDetalle} onPress={onVerDetalle}>
+                <Pressable style={estilos.botonDetalle} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={onVerDetalle}>
                     <Text style={estilos.botonDetalleTexto}>Ver detalles</Text>
                 </Pressable>
             </View>
@@ -306,6 +307,7 @@ const estilos = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 7,
         backgroundColor: '#ffffff',
+        overflow: 'hidden',
     },
     chipActivo: {
         backgroundColor: '#1b3022',
@@ -337,6 +339,7 @@ const estilos = StyleSheet.create({
         borderRadius: 8,
         paddingVertical: 10,
         paddingHorizontal: 24,
+        overflow: 'hidden',
     },
     botonReintentarTexto: {
         color: '#1b3022',

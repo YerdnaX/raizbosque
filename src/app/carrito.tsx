@@ -26,7 +26,7 @@ export default function Carrito() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonAtras} onPress={() => router.back()}>
+                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.back()}>
                     <View style={estilos.fondoAtras}>
                         <AtrasIcono width={24} height={24} fill="#ffffff" />
                     </View>
@@ -44,7 +44,7 @@ export default function Carrito() {
                     <SymbolView name="cart" size={56} tintColor="#c3c8c1" />
                     <Text style={estilos.vacioTitulo}>Carrito vacío</Text>
                     <Text style={estilos.vacioSubtitulo}>Agrega productos desde el vivero o restaurante.</Text>
-                    <Pressable style={estilos.botonExplorar} onPress={() => router.back()}>
+                    <Pressable style={estilos.botonExplorar} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={() => router.back()}>
                         <Text style={estilos.botonExplorarTexto}>Explorar</Text>
                     </Pressable>
                 </View>
@@ -74,7 +74,7 @@ export default function Carrito() {
                                 ₡{total.toLocaleString('es-CR', { minimumFractionDigits: 2 })}
                             </Text>
                         </View>
-                        <Pressable style={estilos.botonFinalizar} onPress={() => router.push('/checkout')}>
+                        <Pressable style={estilos.botonFinalizar} android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }} onPress={() => router.push('/checkout')}>
                             <Text style={estilos.botonFinalizarTexto}>FINALIZAR COMPRA</Text>
                         </Pressable>
                     </View>
@@ -111,6 +111,7 @@ function TarjetaItem({ item, onIncrementar, onDecrementar, onEliminar }: Tarjeta
                     <View style={estilos.controles}>
                         <Pressable
                             style={({ pressed }) => [estilos.botonControl, pressed && estilos.botonPresionado]}
+                            android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
                             onPress={onDecrementar}
                         >
                             <Text style={estilos.botonControlTexto}>−</Text>
@@ -118,6 +119,7 @@ function TarjetaItem({ item, onIncrementar, onDecrementar, onEliminar }: Tarjeta
                         <Text style={estilos.cantidad}>{item.Cantidad}</Text>
                         <Pressable
                             style={({ pressed }) => [estilos.botonControl, pressed && estilos.botonPresionado]}
+                            android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
                             onPress={onIncrementar}
                         >
                             <Text style={estilos.botonControlTexto}>+</Text>
@@ -130,6 +132,7 @@ function TarjetaItem({ item, onIncrementar, onDecrementar, onEliminar }: Tarjeta
             </View>
             <Pressable
                 onPress={onEliminar}
+                android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
                 style={({ pressed }) => [estilos.botonEliminar, pressed && estilos.botonPresionado]}
             >
                 <SymbolView name="trash" size={18} tintColor="#ba1a1a" />
@@ -202,6 +205,7 @@ const estilos = StyleSheet.create({
         borderRadius: 999,
         paddingVertical: 10,
         paddingHorizontal: 32,
+        overflow: 'hidden',
     },
     botonExplorarTexto: {
         color: '#1b3022',
@@ -330,6 +334,7 @@ const estilos = StyleSheet.create({
         borderRadius: 8,
         paddingVertical: 16,
         alignItems: 'center',
+        overflow: 'hidden',
     },
     botonFinalizarTexto: {
         color: '#ffffff',

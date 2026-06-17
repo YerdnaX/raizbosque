@@ -16,13 +16,13 @@ function Encabezado() {
     return (
         <>
             <ImageBackground source={IMAGEN_TOPBAR} style={[estilos.encabezado, { paddingTop: insets.top }]} resizeMode="cover">
-                <Pressable style={estilos.botonAtras} onPress={() => router.back()}>
+                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.back()}>
                     <View style={estilos.fondoAtras}>
                         <AtrasIcono width={24} height={24} fill="#ffffff" />
                     </View>
                 </Pressable>
                 <Text style={estilos.encabezadoTitulo}>RAÍCES</Text>
-                <Pressable style={estilos.botonEncabezado} onPress={() => router.push('/carrito')}>
+                <Pressable style={estilos.botonEncabezado} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.push('/carrito')}>
                     <View>
                         <CarritoIcono width={30} height={30} fill="#1b3022" />
                         {totalItems > 0 && (
@@ -60,7 +60,7 @@ export default function DetallePlato() {
                 <Encabezado />
                 <View style={estilos.centrado}>
                     <Text style={estilos.errorTexto}>{error ?? 'Producto no encontrado.'}</Text>
-                    <Pressable style={estilos.botonVolver} onPress={() => router.back()}>
+                    <Pressable style={estilos.botonVolver} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={() => router.back()}>
                         <Text style={estilos.botonVolverTexto}>Volver al Menú</Text>
                     </Pressable>
                 </View>
@@ -149,6 +149,7 @@ export default function DetallePlato() {
             <View style={estilos.botonesAbajo}>
                 <Pressable
                     style={estilos.botonAgregar}
+                    android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                     onPress={() => agregarAlCarrito(Number(id), item.Precio)}
                 >
                     <SymbolView name="cart.fill.badge.plus" size={18} tintColor="#ffffff" />
@@ -222,6 +223,7 @@ const estilos = StyleSheet.create({
         borderRadius: 999,
         paddingVertical: 10,
         paddingHorizontal: 24,
+        overflow: 'hidden',
     },
     botonVolverTexto: {
         color: '#1b3022',
@@ -366,6 +368,7 @@ const estilos = StyleSheet.create({
         borderRadius: 8,
         paddingVertical: 16,
         gap: 10,
+        overflow: 'hidden',
     },
     botonAgregarTexto: {
         color: '#ffffff',

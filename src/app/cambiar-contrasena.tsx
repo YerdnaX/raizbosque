@@ -59,7 +59,7 @@ export default function CambiarContrasena() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonAtras} onPress={() => router.back()}>
+                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.back()}>
                     <View style={estilos.fondoAtras}>
                         <AtrasIcono width={24} height={24} fill="#ffffff" />
                     </View>
@@ -84,7 +84,7 @@ export default function CambiarContrasena() {
                                 secureTextEntry={!verActual}
                                 placeholderTextColor="#b0b0a8"
                             />
-                            <Pressable onPress={() => setVerActual(!verActual)}>
+                            <Pressable android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => setVerActual(!verActual)}>
                                 <Text style={estilos.toggle}>{verActual ? 'Ocultar' : 'Ver'}</Text>
                             </Pressable>
                         </View>
@@ -103,7 +103,7 @@ export default function CambiarContrasena() {
                                 secureTextEntry={!verNueva}
                                 placeholderTextColor="#b0b0a8"
                             />
-                            <Pressable onPress={() => setVerNueva(!verNueva)}>
+                            <Pressable android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => setVerNueva(!verNueva)}>
                                 <Text style={estilos.toggle}>{verNueva ? 'Ocultar' : 'Ver'}</Text>
                             </Pressable>
                         </View>
@@ -121,7 +121,7 @@ export default function CambiarContrasena() {
                                 secureTextEntry={!verConfirmar}
                                 placeholderTextColor="#b0b0a8"
                             />
-                            <Pressable onPress={() => setVerConfirmar(!verConfirmar)}>
+                            <Pressable android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => setVerConfirmar(!verConfirmar)}>
                                 <Text style={estilos.toggle}>{verConfirmar ? 'Ocultar' : 'Ver'}</Text>
                             </Pressable>
                         </View>
@@ -130,6 +130,7 @@ export default function CambiarContrasena() {
 
                 <Pressable
                     style={[estilos.botonCambiar, estaCargando && { opacity: 0.7 }]}
+                    android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                     onPress={manejarCambio}
                     disabled={estaCargando}
                 >
@@ -250,6 +251,7 @@ const estilos = StyleSheet.create({
         paddingVertical: 16,
         alignItems: 'center',
         width: '90%',
+        overflow: 'hidden',
     },
     botonCambiarTexto: {
         color: '#ffffff',

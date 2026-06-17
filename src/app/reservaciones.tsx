@@ -97,7 +97,7 @@ export default function Reservaciones() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonAtras} onPress={() => router.back()}>
+                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.back()}>
                     <View style={estilos.fondoAtras}>
                         <AtrasIcono width={24} height={24} fill="#ffffff" />
                     </View>
@@ -105,6 +105,7 @@ export default function Reservaciones() {
                 <Text style={estilos.encabezadoTitulo}>Reservaciones</Text>
                 <Pressable
                     style={estilos.botonNueva}
+                    android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
                     onPress={() => router.push('/nueva-reservacion')}
                 >
                     <SymbolView name="plus" size={20} tintColor="#ffffff" />
@@ -118,7 +119,7 @@ export default function Reservaciones() {
             ) : error ? (
                 <View style={estilos.centrado}>
                     <Text style={estilos.errorTexto}>{error}</Text>
-                    <Pressable style={estilos.botonReintentar} onPress={cargarReservaciones}>
+                    <Pressable style={estilos.botonReintentar} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={cargarReservaciones}>
                         <Text style={estilos.botonReintentarTexto}>Reintentar</Text>
                     </Pressable>
                 </View>
@@ -129,6 +130,7 @@ export default function Reservaciones() {
                     <Text style={estilos.vacioSubtitulo}>Aún no tienes reservaciones.</Text>
                     <Pressable
                         style={estilos.botonCrearVacio}
+                        android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                         onPress={() => router.push('/nueva-reservacion')}
                     >
                         <Text style={estilos.botonCrearVacioTexto}>Crear Reservación</Text>
@@ -219,7 +221,7 @@ function TarjetaReservacion({ reservacion, onCancelar, puedeCancel }: TarjetaPro
             ) : null}
 
             {puedeCancel && reservacion.Estado !== 'Cancelada' && (
-                <Pressable style={estilos.botonCancelar} onPress={onCancelar}>
+                <Pressable style={estilos.botonCancelar} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={onCancelar}>
                     <Text style={estilos.botonCancelarTexto}>Cancelar Reserva</Text>
                 </Pressable>
             )}
@@ -285,6 +287,7 @@ const estilos = StyleSheet.create({
         borderRadius: 8,
         paddingVertical: 10,
         paddingHorizontal: 24,
+        overflow: 'hidden',
     },
     botonReintentarTexto: { color: '#1b3022', fontWeight: '600', fontSize: 14 },
     vacioTitulo: { fontSize: 17, fontWeight: '700', color: '#1c1c18', marginTop: 8 },
@@ -295,6 +298,7 @@ const estilos = StyleSheet.create({
         borderRadius: 8,
         paddingVertical: 12,
         paddingHorizontal: 28,
+        overflow: 'hidden',
     },
     botonCrearVacioTexto: { color: '#ffffff', fontWeight: '700', fontSize: 14 },
     scroll: { padding: 16, gap: 24 },
@@ -330,6 +334,7 @@ const estilos = StyleSheet.create({
         borderRadius: 8,
         paddingVertical: 11,
         alignItems: 'center',
+        overflow: 'hidden',
     },
     botonCancelarTexto: { fontSize: 13, fontWeight: '600', color: '#434843' },
 });

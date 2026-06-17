@@ -33,11 +33,11 @@ export default function Productos() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonEncabezado}>
+                <Pressable style={estilos.botonEncabezado} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}>
                     <SymbolView name="line.3.horizontal" size={24} tintColor="#1b3022" />
                 </Pressable>
                 <Text style={estilos.encabezadoTitulo}>Productos</Text>
-                <Pressable style={estilos.botonEncabezado} onPress={() => router.push('/carrito')}>
+                <Pressable style={estilos.botonEncabezado} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.push('/carrito')}>
                     <View>
                         <CarritoIcono width={30} height={30} fill="#1b3022" />
                         {totalItems > 0 && (
@@ -82,6 +82,7 @@ export default function Productos() {
                                     <Pressable
                                         key={filtro}
                                         style={[estilos.chip, filtroActivo === filtro && estilos.chipActivo]}
+                                        android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                                         onPress={() => setFiltroActivo(filtro)}
                                     >
                                         <Text style={[estilos.chipTexto, filtroActivo === filtro && estilos.chipTextoActivo]}>
@@ -98,6 +99,7 @@ export default function Productos() {
                     renderItem={({ item }) => (
                         <Pressable
                             style={estilos.tarjeta}
+                            android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                             onPress={() => router.push(`/planta/${item.IdProducto}`)}
                         >
                             <View style={estilos.imagenPlaceholder}>
@@ -116,7 +118,7 @@ export default function Productos() {
                                         estilos.botonAgregar,
                                         pressed && estilos.botonAgregarPresionado,
                                     ]}
-                                    android_ripple={{ color: '#1b3022', borderless: false }}
+                                    android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                                     onPress={() => agregarAlCarrito(item.IdProducto, item.Precio)}
                                 >
                                     <Text style={estilos.botonAgregarTexto}>+</Text>
@@ -196,6 +198,7 @@ const estilos = StyleSheet.create({
         paddingHorizontal: 14,
         paddingVertical: 6,
         backgroundColor: '#ffffff',
+        overflow: 'hidden',
     },
     chipActivo: {
         backgroundColor: '#1b3022',
@@ -227,6 +230,7 @@ const estilos = StyleSheet.create({
         shadowOpacity: 0.06,
         shadowRadius: 6,
         elevation: 2,
+        overflow: 'hidden',
     },
     imagenPlaceholder: {
         backgroundColor: '#e5e2dc',
@@ -278,6 +282,7 @@ const estilos = StyleSheet.create({
         borderColor: '#c3c8c1',
         justifyContent: 'center',
         alignItems: 'center',
+        overflow: 'hidden',
     },
     botonAgregarPresionado: {
         opacity: 0.5,

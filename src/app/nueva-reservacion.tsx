@@ -160,7 +160,7 @@ export default function NuevaReservacion() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonAtras} onPress={() => router.back()}>
+                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.back()}>
                     <View style={estilos.fondoAtras}>
                         <AtrasIcono width={24} height={24} fill="#ffffff" />
                     </View>
@@ -180,6 +180,7 @@ export default function NuevaReservacion() {
                     <View style={estilos.contador}>
                         <Pressable
                             style={[estilos.botonContador, personas <= 1 && estilos.botonContadorDesactivado]}
+                            android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                             onPress={() => setPersonas(p => Math.max(1, p - 1))}
                             disabled={personas <= 1}
                         >
@@ -190,6 +191,7 @@ export default function NuevaReservacion() {
                         </View>
                         <Pressable
                             style={[estilos.botonContador, personas >= 20 && estilos.botonContadorDesactivado]}
+                            android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                             onPress={() => setPersonas(p => Math.min(20, p + 1))}
                             disabled={personas >= 20}
                         >
@@ -245,6 +247,7 @@ export default function NuevaReservacion() {
                                     <Pressable
                                         key={idx}
                                         style={estilos.calCelda}
+                                        android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
                                         onPress={() => seleccionarDia(dia)}
                                         disabled={deshabilitado}
                                     >
@@ -325,6 +328,7 @@ export default function NuevaReservacion() {
             <View style={estilos.pie}>
                 <Pressable
                     style={[estilos.botonConfirmar, estaProcesando && estilos.botonConfirmarDesactivado]}
+                    android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                     onPress={confirmar}
                     disabled={estaProcesando}
                 >
@@ -394,6 +398,7 @@ export default function NuevaReservacion() {
                                             estado === 'no-disponible'                && estilos.chipNoDisponible,
                                             seleccionado                              && estilos.chipSeleccionado,
                                         ]}
+                                        android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                                         onPress={() => estado !== 'no-disponible' && setHoraSeleccionada(hora)}
                                         disabled={estado === 'no-disponible'}
                                     >
@@ -435,6 +440,7 @@ export default function NuevaReservacion() {
                         {/* Continuar */}
                         <Pressable
                             style={[estilos.botonContinuar, !horaSeleccionada && estilos.botonContinuarDesactivado]}
+                            android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                             onPress={() => horaSeleccionada && setMostrarHorario(false)}
                             disabled={!horaSeleccionada}
                         >
@@ -490,6 +496,7 @@ const estilos = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 4,
+        overflow: 'hidden',
     },
     botonContadorDesactivado: { borderColor: '#e5e2dc', backgroundColor: '#f8f7f4' },
     botonContadorTexto: { fontSize: 22, color: '#1c1c18', lineHeight: 28 },
@@ -603,6 +610,7 @@ const estilos = StyleSheet.create({
         borderRadius: 8,
         paddingVertical: 16,
         alignItems: 'center',
+        overflow: 'hidden',
     },
     botonConfirmarDesactivado: { backgroundColor: '#8da082' },
     botonConfirmarTexto: { color: '#ffffff', fontSize: 14, fontWeight: '700', letterSpacing: 0.5 },
@@ -652,6 +660,7 @@ const estilos = StyleSheet.create({
         paddingVertical: 9,
         borderRadius: 8,
         alignItems: 'center',
+        overflow: 'hidden',
     },
     segmentoBtnActivo: {
         backgroundColor: '#ffffff',
@@ -679,6 +688,7 @@ const estilos = StyleSheet.create({
         justifyContent: 'center',
         gap: 3,
         minHeight: 58,
+        overflow: 'hidden',
     },
     chipDisponible:    { backgroundColor: '#ffffff',  borderColor: '#c3c8c1' },
     chipCasiLleno:     { backgroundColor: '#fffbe6',  borderColor: '#e5a000' },
@@ -711,6 +721,7 @@ const estilos = StyleSheet.create({
         borderRadius: 8,
         paddingVertical: 16,
         alignItems: 'center',
+        overflow: 'hidden',
     },
     botonContinuarDesactivado: { backgroundColor: '#8da082' },
     botonContinuarTexto: { color: '#ffffff', fontSize: 14, fontWeight: '700', letterSpacing: 0.5 },

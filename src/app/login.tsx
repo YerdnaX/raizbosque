@@ -71,7 +71,7 @@ export default function Login() {
                             secureTextEntry={!mostrarContrasena}
                             placeholderTextColor="#b0b0a8"
                         />
-                        <Pressable onPress={() => setMostrarContrasena(!mostrarContrasena)}>
+                        <Pressable android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => setMostrarContrasena(!mostrarContrasena)}>
                             <Text style={estilos.toggleContrasena}>
                                 {mostrarContrasena ? "Ocultar" : "Mostrar"}
                             </Text>
@@ -81,6 +81,7 @@ export default function Login() {
 
                 <Pressable
                     style={estilos.olvidaste}
+                    android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
                     onPress={() => router.push('/recuperar-contrasena')}
                 >
                     <Text style={estilos.olvidasteTexto}>¿Olvidaste tu contraseña?</Text>
@@ -88,6 +89,7 @@ export default function Login() {
 
                 <Pressable
                     style={[estilos.botonEntrar, estaCargando && { opacity: 0.7 }]}
+                    android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                     onPress={manejarLogin}
                     disabled={estaCargando}
                 >
@@ -98,6 +100,7 @@ export default function Login() {
                 </Pressable>
                 <Pressable
                     style={estilos.botonRegistrarse}
+                    android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                     onPress={() => router.push('/registro')}
                 >
                     <Text style={estilos.botonRegistrarseTexto}>REGISTRARSE</Text>
@@ -196,6 +199,7 @@ const estilos = StyleSheet.create({
         paddingVertical: 16,
         alignItems: 'center',
         marginBottom: 12,
+        overflow: 'hidden',
     },
     botonEntrarTexto: {
         color: '#ffffff',
@@ -210,6 +214,7 @@ const estilos = StyleSheet.create({
         paddingVertical: 16,
         alignItems: 'center',
         marginBottom: 24,
+        overflow: 'hidden',
     },
     botonRegistrarseTexto: {
         color: '#1b3022',
