@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, StyleSheet, ImageBackground, ScrollView, ActivityIndicator, Alert } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, ImageBackground, ScrollView, ActivityIndicator } from "react-native";
 import { useState } from "react";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -6,29 +6,38 @@ import { login } from "../features/auth/services/authService";
 import { useUsuario } from "../context/UsuarioContext";
 
 export default function Login() {
-    const [correo, setCorreo] = useState("");
+    const [identificador, setIdentificador] = useState("");
     const [contrasena, setContrasena] = useState("");
     const [mostrarContrasena, setMostrarContrasena] = useState(false);
     const [estaCargando, setEstaCargando] = useState(false);
+    const [error, setError] = useState('');
     const insets = useSafeAreaInsets();
     const { guardarUsuario } = useUsuario();
 
     async function manejarLogin() {
-        if (!correo || !contrasena) {
-            Alert.alert('Campos requeridos', 'Por favor complete todos los campos.');
+        setError('');
+        if (!identificador || !contrasena) {
+            setError('Por favor completa todos los campos.');
             return;
         }
 
         setEstaCargando(true);
         try {
-            const usuario = await login(correo, contrasena);
+            const usuario = await login(identificador, contrasena);
             guardarUsuario(usuario);
             router.replace('/(tabs)/perfil');
         } catch (error: any) {
-            if (error?.response?.status === 401) {
-                Alert.alert('Credenciales incorrectas', 'Correo o contraseña incorrectos.');
+            const cod = error?.response?.data?.codigo;
+            const status = error?.response?.status;
+            if (cod === 'ACCOUNT_LOCKED') {
+                router.push('/cuenta-bloqueada' as any);
+            } else if (cod === 'PASSWORD_EXPIRED') {
+                const correo = error?.response?.data?.correo ?? '';
+                router.push({ pathname: '/contrasena-vencida' as any, params: { correo } });
+            } else if (status === 401 || cod === 'INVALID_CREDENTIALS') {
+                setError('Correo, nombre de usuario o contraseña incorrectos.');
             } else {
-                Alert.alert('Error', 'No se pudo iniciar sesión. Intenta de nuevo.');
+                setError('No se pudo iniciar sesión. Intenta de nuevo.');
             }
         } finally {
             setEstaCargando(false);
@@ -45,83 +54,86 @@ export default function Login() {
                 contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]}
                 keyboardShouldPersistTaps="handled"
             >
-            <View style={estilos.tarjeta}>
-                <Text style={estilos.titulo}>RAÍCES BOSQUE</Text>
-                <Text style={estilos.subtitulo}>Iniciar Sesión</Text>
+                <View style={estilos.tarjeta}>
+                    <Text style={estilos.titulo}>RAÍCES BOSQUE</Text>
+                    <Text style={estilos.subtitulo}>Iniciar Sesión</Text>
 
-                <View style={estilos.campo}>
-                    <Text style={estilos.etiqueta}>Correo Electrónico</Text>
-                    <TextInput
-                        style={estilos.input}
-                        value={correo}
-                        onChangeText={setCorreo}
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        placeholderTextColor="#b0b0a8"
-                    />
-                </View>
-
-                <View style={estilos.campo}>
-                    <Text style={estilos.etiqueta}>Contraseña</Text>
-                    <View style={estilos.inputContrasena}>
+                    <View style={estilos.campo}>
+                        <Text style={estilos.etiqueta}>Correo o nombre de usuario</Text>
                         <TextInput
-                            style={estilos.inputDentro}
-                            value={contrasena}
-                            onChangeText={setContrasena}
-                            secureTextEntry={!mostrarContrasena}
+                            style={[estilos.input, error ? estilos.inputError : null]}
+                            value={identificador}
+                            onChangeText={v => { setIdentificador(v); setError(''); }}
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                            placeholder="correo@ejemplo.com o usuario123"
                             placeholderTextColor="#b0b0a8"
                         />
-                        <Pressable android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => setMostrarContrasena(!mostrarContrasena)}>
-                            <Text style={estilos.toggleContrasena}>
-                                {mostrarContrasena ? "Ocultar" : "Mostrar"}
-                            </Text>
+                    </View>
+
+                    <View style={estilos.campo}>
+                        <Text style={estilos.etiqueta}>Contraseña</Text>
+                        <View style={[estilos.inputContrasena, error ? estilos.inputError : null]}>
+                            <TextInput
+                                style={estilos.inputDentro}
+                                value={contrasena}
+                                onChangeText={v => { setContrasena(v); setError(''); }}
+                                secureTextEntry={!mostrarContrasena}
+                                placeholderTextColor="#b0b0a8"
+                            />
+                            <Pressable android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => setMostrarContrasena(!mostrarContrasena)}>
+                                <Text style={estilos.toggleContrasena}>
+                                    {mostrarContrasena ? "Ocultar" : "Mostrar"}
+                                </Text>
+                            </Pressable>
+                        </View>
+                    </View>
+
+                    {error ? <Text style={estilos.mensajeError}>{error}</Text> : null}
+
+                    <View style={estilos.enlaces}>
+                        <Pressable
+                            android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
+                            onPress={() => router.push('/recuperar-contrasena' as any)}
+                        >
+                            <Text style={estilos.enlaceTexto}>¿Olvidaste tu contraseña?</Text>
+                        </Pressable>
+                        <Pressable
+                            android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
+                            onPress={() => router.push('/recuperar-usuario' as any)}
+                        >
+                            <Text style={estilos.enlaceTexto}>¿Olvidaste tu usuario?</Text>
                         </Pressable>
                     </View>
+
+                    <Pressable
+                        style={[estilos.botonEntrar, estaCargando && { opacity: 0.7 }]}
+                        android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
+                        onPress={manejarLogin}
+                        disabled={estaCargando}
+                    >
+                        {estaCargando
+                            ? <ActivityIndicator color="#ffffff" />
+                            : <Text style={estilos.botonEntrarTexto}>ENTRAR</Text>
+                        }
+                    </Pressable>
+
+                    <Pressable
+                        style={estilos.botonRegistrarse}
+                        android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
+                        onPress={() => router.push('/registro' as any)}
+                    >
+                        <Text style={estilos.botonRegistrarseTexto}>REGISTRARSE</Text>
+                    </Pressable>
                 </View>
-
-                <Pressable
-                    style={estilos.olvidaste}
-                    android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
-                    onPress={() => router.push('/recuperar-contrasena')}
-                >
-                    <Text style={estilos.olvidasteTexto}>¿Olvidaste tu contraseña?</Text>
-                </Pressable>
-
-                <Pressable
-                    style={[estilos.botonEntrar, estaCargando && { opacity: 0.7 }]}
-                    android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
-                    onPress={manejarLogin}
-                    disabled={estaCargando}
-                >
-                    {estaCargando
-                        ? <ActivityIndicator color="#ffffff" />
-                        : <Text style={estilos.botonEntrarTexto}>ENTRAR</Text>
-                    }
-                </Pressable>
-                <Pressable
-                    style={estilos.botonRegistrarse}
-                    android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
-                    onPress={() => router.push('/registro')}
-                >
-                    <Text style={estilos.botonRegistrarseTexto}>REGISTRARSE</Text>
-                </Pressable>
-
-            </View>
             </ScrollView>
         </ImageBackground>
     );
 }
 
 const estilos = StyleSheet.create({
-    fondo: {
-        flex: 1,
-    },
-    contenedor: {
-        flexGrow: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
+    fondo: { flex: 1 },
+    contenedor: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
     tarjeta: {
         backgroundColor: '#ffffff',
         borderRadius: 24,
@@ -133,97 +145,20 @@ const estilos = StyleSheet.create({
         shadowRadius: 16,
         elevation: 4,
     },
-    titulo: {
-        fontSize: 32,
-        fontWeight: '700',
-        color: '#1c1c18',
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    subtitulo: {
-        fontSize: 18,
-        fontWeight: '600',
-        color: '#1c1c18',
-        textAlign: 'center',
-        marginBottom: 20,
-    },
-    campo: {
-        marginBottom: 16,
-    },
-    etiqueta: {
-        alignSelf: 'center',
-        fontSize: 18,
-        fontWeight: '500',
-        color: '#434843',
-        marginBottom: 8,
-    },
-    input: {
-        backgroundColor: '#fefcf8',
-        borderColor: '#8da082',
-        borderWidth: 1,
-        borderRadius: 24,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-        fontSize: 16,
-        color: '#1c1c18',
-    },
-    inputContrasena: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#fefcf8',
-        borderColor: '#8da082',
-        borderWidth: 1,
-        borderRadius: 24,
-        paddingHorizontal: 16,
-        paddingVertical: 12,
-    },
-    inputDentro: {
-        flex: 1,
-        fontSize: 16,
-        color: '#1c1c18',
-        paddingVertical: 0,
-    },
-    olvidaste: {
-        alignSelf: 'center',
-        marginTop: 4,
-        marginBottom: 24,
-    },
-    olvidasteTexto: {
-        fontSize: 13,
-        color: '#526349',
-        textDecorationLine: 'underline',
-    },
-    botonEntrar: {
-        backgroundColor: '#1b3022',
-        borderRadius: 999,
-        paddingVertical: 16,
-        alignItems: 'center',
-        marginBottom: 12,
-        overflow: 'hidden',
-    },
-    botonEntrarTexto: {
-        color: '#ffffff',
-        fontSize: 14,
-        fontWeight: '600',
-        letterSpacing: 1,
-    },
-    botonRegistrarse: {
-        borderWidth: 1.5,
-        borderColor: '#1b3022',
-        borderRadius: 999,
-        paddingVertical: 16,
-        alignItems: 'center',
-        marginBottom: 24,
-        overflow: 'hidden',
-    },
-    botonRegistrarseTexto: {
-        color: '#1b3022',
-        fontSize: 14,
-        fontWeight: '600',
-        letterSpacing: 1,
-    },
-    toggleContrasena: {
-        fontSize: 13,
-        color: '#737973',
-    },
+    titulo: { fontSize: 32, fontWeight: '700', color: '#1c1c18', textAlign: 'center', marginBottom: 20 },
+    subtitulo: { fontSize: 18, fontWeight: '600', color: '#1c1c18', textAlign: 'center', marginBottom: 20 },
+    campo: { marginBottom: 16 },
+    etiqueta: { alignSelf: 'center', fontSize: 16, fontWeight: '500', color: '#434843', marginBottom: 8 },
+    input: { backgroundColor: '#fefcf8', borderColor: '#8da082', borderWidth: 1, borderRadius: 24, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, color: '#1c1c18' },
+    inputError: { borderColor: '#ba1a1a' },
+    inputContrasena: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fefcf8', borderColor: '#8da082', borderWidth: 1, borderRadius: 24, paddingHorizontal: 16, paddingVertical: 12 },
+    inputDentro: { flex: 1, fontSize: 16, color: '#1c1c18', paddingVertical: 0 },
+    toggleContrasena: { fontSize: 13, color: '#737973' },
+    mensajeError: { fontSize: 13, color: '#ba1a1a', marginBottom: 8, textAlign: 'center' },
+    enlaces: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 12 },
+    enlaceTexto: { fontSize: 12, color: '#526349', textDecorationLine: 'underline' },
+    botonEntrar: { backgroundColor: '#1b3022', borderRadius: 999, paddingVertical: 16, alignItems: 'center', marginBottom: 12, overflow: 'hidden' },
+    botonEntrarTexto: { color: '#ffffff', fontSize: 14, fontWeight: '600', letterSpacing: 1 },
+    botonRegistrarse: { borderWidth: 1.5, borderColor: '#1b3022', borderRadius: 999, paddingVertical: 16, alignItems: 'center', overflow: 'hidden' },
+    botonRegistrarseTexto: { color: '#1b3022', fontSize: 14, fontWeight: '600', letterSpacing: 1 },
 });

@@ -3,6 +3,9 @@ import { StatusBar, Dimensions } from 'react-native';
 import { useEffect } from 'react';
 import { UsuarioProvider } from '../context/UsuarioContext';
 import { CarritoProvider } from '../context/CarritoContext';
+import { RegistroProvider } from '../context/RegistroContext';
+import { RecuperarContrasenaProvider } from '../context/RecuperarContrasenaContext';
+import { RecuperarUsuarioProvider } from '../context/RecuperarUsuarioContext';
 
 export default function Layout() {
     useEffect(() => {
@@ -19,7 +22,13 @@ export default function Layout() {
     return (
         <UsuarioProvider>
             <CarritoProvider>
-                <Stack screenOptions={{ headerShown: false }} />
+                <RegistroProvider>
+                    <RecuperarContrasenaProvider>
+                        <RecuperarUsuarioProvider>
+                            <Stack screenOptions={{ headerShown: false }} />
+                        </RecuperarUsuarioProvider>
+                    </RecuperarContrasenaProvider>
+                </RegistroProvider>
             </CarritoProvider>
         </UsuarioProvider>
     );
