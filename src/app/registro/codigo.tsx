@@ -39,8 +39,17 @@ export default function RegistroCodigo() {
         try {
             await enviarCodigoRegistro(datos.correo);
             setMensajeExito('Nuevo código enviado al correo.');
-        } catch {
-            setError('No se pudo reenviar el código. Intenta de nuevo.');
+        } catch (e: any) {
+            const cod = e?.response?.data?.codigo;
+            if (cod === 'EMAIL_NETWORK_ERROR') {
+                setError('No fue posible conectar al servicio de correo. Intenta más tarde.');
+            } else if (e?.code === 'ECONNABORTED') {
+                setError('El servidor tardó demasiado en responder. Intenta nuevamente.');
+            } else if (!e?.response) {
+                setError('Sin conexión con el servidor. Verifica internet e intenta otra vez.');
+            } else {
+                setError('No se pudo reenviar el código. Intenta de nuevo.');
+            }
         } finally {
             setReenviando(false);
         }

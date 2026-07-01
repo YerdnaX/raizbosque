@@ -26,6 +26,12 @@ export default function RegistroCorreo() {
             const codigo = e?.response?.data?.codigo;
             if (codigo === 'EMAIL_ALREADY_EXISTS') {
                 setError('Ya existe una cuenta con ese correo');
+            } else if (codigo === 'EMAIL_NETWORK_ERROR') {
+                setError('No se pudo conectar al servicio de correo. Intenta de nuevo en unos minutos.');
+            } else if (e?.code === 'ECONNABORTED') {
+                setError('El servidor tardó demasiado en responder. Intenta nuevamente.');
+            } else if (!e?.response) {
+                setError('Sin conexión con el servidor. Verifica internet e intenta otra vez.');
             } else {
                 setError('No se pudo enviar el código. Intenta de nuevo.');
             }
