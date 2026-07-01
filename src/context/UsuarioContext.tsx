@@ -5,6 +5,7 @@ type UsuarioContextType = {
     usuario: Usuario | null;
     guardarUsuario: (u: Usuario) => void;
     cerrarSesion: () => void;
+    actualizarTotp2FA: (activo: boolean) => void;
 };
 
 const UsuarioContext = createContext<UsuarioContextType | null>(null);
@@ -20,8 +21,12 @@ export function UsuarioProvider({ children }: { children: React.ReactNode }) {
         setUsuario(null);
     }
 
+    function actualizarTotp2FA(activo: boolean) {
+        setUsuario(prev => prev ? { ...prev, TieneTotp2FA: activo } : null);
+    }
+
     return (
-        <UsuarioContext.Provider value={{ usuario, guardarUsuario, cerrarSesion }}>
+        <UsuarioContext.Provider value={{ usuario, guardarUsuario, cerrarSesion, actualizarTotp2FA }}>
             {children}
         </UsuarioContext.Provider>
     );

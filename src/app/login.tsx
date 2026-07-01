@@ -1,8 +1,8 @@
-import { View, Text, TextInput, Pressable, StyleSheet, ImageBackground, ScrollView, ActivityIndicator } from "react-native";
+import { View, Text, TextInput, Pressable, StyleSheet, ImageBackground, ScrollView, ActivityIndicator, Modal, KeyboardAvoidingView, Platform } from "react-native";
 import { useState } from "react";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { login } from "../features/auth/services/authService";
+import { login, verificarCodigo2FALogin } from "../features/auth/services/authService";
 import { useUsuario } from "../context/UsuarioContext";
 
 export default function Login() {
@@ -14,6 +14,12 @@ export default function Login() {
     const insets = useSafeAreaInsets();
     const { guardarUsuario } = useUsuario();
 
+    // Estado para el paso de 2FA
+    const [userId2FA, setUserId2FA] = useState<number | null>(null);
+    const [codigo2FA, setCodigo2FA] = useState('');
+    const [cargando2FA, setCargando2FA] = useState(false);
+    const [error2FA, setError2FA] = useState('');
+
     async function manejarLogin() {
         setError('');
         if (!identificador || !contrasena) {
@@ -23,9 +29,13 @@ export default function Login() {
 
         setEstaCargando(true);
         try {
-            const usuario = await login(identificador, contrasena);
-            guardarUsuario(usuario);
-            router.replace('/(tabs)/perfil');
+            const resultado = await login(identificador, contrasena);
+            if (resultado.requires2FA) {
+                setUserId2FA(resultado.userId);
+            } else {
+                guardarUsuario(resultado.usuario);
+                router.replace('/(tabs)/perfil');
+            }
         } catch (error: any) {
             const cod = error?.response?.data?.codigo;
             const status = error?.response?.status;
@@ -42,6 +52,35 @@ export default function Login() {
         } finally {
             setEstaCargando(false);
         }
+    }
+
+    async function manejarVerificar2FA() {
+        setError2FA('');
+        if (!codigo2FA || codigo2FA.length !== 6) {
+            setError2FA('Ingresa el código de 6 dígitos.');
+            return;
+        }
+        setCargando2FA(true);
+        try {
+            const usuario = await verificarCodigo2FALogin(userId2FA!, codigo2FA);
+            guardarUsuario(usuario);
+            router.replace('/(tabs)/perfil');
+        } catch (e: any) {
+            const cod = e?.response?.data?.codigo;
+            if (cod === 'INVALID_2FA_CODE') {
+                setError2FA('Código inválido. Inténtalo nuevamente.');
+            } else {
+                setError2FA('No se pudo verificar el código. Intenta de nuevo.');
+            }
+        } finally {
+            setCargando2FA(false);
+        }
+    }
+
+    function cancelar2FA() {
+        setUserId2FA(null);
+        setCodigo2FA('');
+        setError2FA('');
     }
 
     return (
@@ -127,6 +166,58 @@ export default function Login() {
                     </Pressable>
                 </View>
             </ScrollView>
+
+            {/* Modal de verificación 2FA */}
+            <Modal
+                visible={userId2FA !== null}
+                transparent
+                animationType="fade"
+                onRequestClose={cancelar2FA}
+            >
+                <KeyboardAvoidingView
+                    style={estilos.modalFondo}
+                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+                >
+                    <View style={estilos.modalTarjeta}>
+                        <Text style={estilos.modalTitulo}>Verificación en dos pasos</Text>
+                        <Text style={estilos.modalSubtitulo}>
+                            Abre Google Authenticator e ingresa el código de 6 dígitos para tu cuenta.
+                        </Text>
+
+                        <TextInput
+                            style={[estilos.input, estilos.inputCodigo, error2FA ? estilos.inputError : null]}
+                            value={codigo2FA}
+                            onChangeText={v => { setCodigo2FA(v.replace(/\D/g, '')); setError2FA(''); }}
+                            keyboardType="number-pad"
+                            maxLength={6}
+                            placeholder="000000"
+                            placeholderTextColor="#b0b0a8"
+                        />
+
+                        {error2FA ? <Text style={estilos.mensajeError}>{error2FA}</Text> : null}
+
+                        <Pressable
+                            style={[estilos.botonEntrar, cargando2FA && { opacity: 0.7 }]}
+                            android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
+                            onPress={manejarVerificar2FA}
+                            disabled={cargando2FA}
+                        >
+                            {cargando2FA
+                                ? <ActivityIndicator color="#ffffff" />
+                                : <Text style={estilos.botonEntrarTexto}>VERIFICAR</Text>
+                            }
+                        </Pressable>
+
+                        <Pressable
+                            style={estilos.botonRegistrarse}
+                            android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
+                            onPress={cancelar2FA}
+                        >
+                            <Text style={estilos.botonRegistrarseTexto}>CANCELAR</Text>
+                        </Pressable>
+                    </View>
+                </KeyboardAvoidingView>
+            </Modal>
         </ImageBackground>
     );
 }
@@ -150,6 +241,7 @@ const estilos = StyleSheet.create({
     campo: { marginBottom: 16 },
     etiqueta: { alignSelf: 'center', fontSize: 16, fontWeight: '500', color: '#434843', marginBottom: 8 },
     input: { backgroundColor: '#fefcf8', borderColor: '#8da082', borderWidth: 1, borderRadius: 24, paddingHorizontal: 16, paddingVertical: 12, fontSize: 16, color: '#1c1c18' },
+    inputCodigo: { textAlign: 'center', letterSpacing: 4, fontSize: 22, marginBottom: 8 },
     inputError: { borderColor: '#ba1a1a' },
     inputContrasena: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#fefcf8', borderColor: '#8da082', borderWidth: 1, borderRadius: 24, paddingHorizontal: 16, paddingVertical: 12 },
     inputDentro: { flex: 1, fontSize: 16, color: '#1c1c18', paddingVertical: 0 },
@@ -161,4 +253,9 @@ const estilos = StyleSheet.create({
     botonEntrarTexto: { color: '#ffffff', fontSize: 14, fontWeight: '600', letterSpacing: 1 },
     botonRegistrarse: { borderWidth: 1.5, borderColor: '#1b3022', borderRadius: 999, paddingVertical: 16, alignItems: 'center', overflow: 'hidden' },
     botonRegistrarseTexto: { color: '#1b3022', fontSize: 14, fontWeight: '600', letterSpacing: 1 },
+    // Modal 2FA
+    modalFondo: { flex: 1, backgroundColor: 'rgba(27,48,34,0.55)', justifyContent: 'center', alignItems: 'center', padding: 24 },
+    modalTarjeta: { backgroundColor: '#ffffff', borderRadius: 24, padding: 28, width: '100%', shadowColor: '#1b3022', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 16, elevation: 8 },
+    modalTitulo: { fontSize: 20, fontWeight: '700', color: '#1c1c18', textAlign: 'center', marginBottom: 10 },
+    modalSubtitulo: { fontSize: 14, color: '#737973', textAlign: 'center', marginBottom: 20, lineHeight: 20 },
 });

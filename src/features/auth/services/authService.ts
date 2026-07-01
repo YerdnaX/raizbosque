@@ -3,12 +3,22 @@ import type { Usuario } from '../types/usuario';
 
 // ─── Login ────────────────────────────────────────────────────────────────────
 
-export async function login(identificador: string, contrasena: string): Promise<Usuario> {
-    const respuesta = await apiClient.post<{ success: boolean; usuario: Usuario }>('/auth/login', {
-        identificador,
-        contrasena,
-    });
-    return respuesta.data.usuario;
+export type LoginRespuesta =
+    | { requires2FA: false; usuario: Usuario }
+    | { requires2FA: true; userId: number };
+
+export async function login(identificador: string, contrasena: string): Promise<LoginRespuesta> {
+    const respuesta = await apiClient.post<{
+        success?: boolean;
+        requires2FA?: boolean;
+        usuario?: Usuario;
+        userId?: number;
+    }>('/auth/login', { identificador, contrasena });
+
+    if (respuesta.data.requires2FA) {
+        return { requires2FA: true, userId: respuesta.data.userId! };
+    }
+    return { requires2FA: false, usuario: respuesta.data.usuario! };
 }
 
 // ─── Registro multi-paso ──────────────────────────────────────────────────────
@@ -113,4 +123,24 @@ export async function cambiarContrasena(
     contrasenaNueva: string,
 ): Promise<void> {
     await apiClient.put(`/usuarios/${idUsuario}/cambiar-contrasena`, { contrasenaActual, contrasenaNueva });
+}
+
+// ─── Verificación en dos pasos (2FA) ─────────────────────────────────────────
+
+export async function verificarCodigo2FALogin(userId: number, code: string): Promise<Usuario> {
+    const r = await apiClient.post<{ success: boolean; usuario: Usuario }>('/auth/2fa/verify-login', { userId, code });
+    return r.data.usuario;
+}
+
+export async function iniciar2FA(idUsuario: number): Promise<{ qrImage: string }> {
+    const r = await apiClient.post<{ success: boolean; qrImage: string }>('/auth/2fa/setup', { idUsuario });
+    return r.data;
+}
+
+export async function activar2FA(idUsuario: number, code: string): Promise<void> {
+    await apiClient.post('/auth/2fa/enable', { idUsuario, code });
+}
+
+export async function desactivar2FA(idUsuario: number, code: string): Promise<void> {
+    await apiClient.post('/auth/2fa/disable', { idUsuario, code });
 }
