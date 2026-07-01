@@ -18,6 +18,7 @@
     "expo-symbols": "~56.0.6",
     "expo-system-ui": "~56.0.5",
     "expo-web-browser": "~56.0.5",
+    "qrcode": "^1.5.4",
     "react": "19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.85.3",
@@ -27,7 +28,8 @@
     "react-native-screens": "4.25.2",
     "react-native-svg": "15.15.4",
     "react-native-web": "~0.21.0",
-    "react-native-worklets": "0.8.3"
+    "react-native-worklets": "0.8.3",
+    "speakeasy": "^2.0.0"
   },
   "devDependencies": {
     "@types/react": "~19.2.2",
@@ -40,7 +42,7 @@
     "ios": "expo start --ios",
     "web": "expo start --web",
     "lint": "expo lint",
-    "listarsimuladoresandroid":  "%LOCALAPPDATA%\\Android\\Sdk\\emulator\\emulator.exe -list-avds",
+    "listarsimuladoresandroid": "%LOCALAPPDATA%\\Android\\Sdk\\emulator\\emulator.exe -list-avds",
     "lanzarsimuladorandroid": "%LOCALAPPDATA%\\Android\\Sdk\\emulator\\emulator.exe -avd Medium_Phone"
   },
   "private": true
