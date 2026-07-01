@@ -1,18 +1,21 @@
-import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions, ImageBackground, Modal, Image, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform } from "react-native";
+import {
+    View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions, ImageBackground,
+    Modal, Image, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform,
+} from "react-native";
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useState } from "react";
 import { useUsuario } from "../../context/UsuarioContext";
 import { useCarrito } from "../../context/CarritoContext";
-import { iniciar2FA, activar2FA, desactivar2FA } from "../../features/auth/services/authService";
+import {
+    iniciarConfiguracion2FA,
+    verificarActivacion2FA,
+    desactivar2FA,
+} from "../../features/auth/services/authService";
 import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 
-type Opcion = {
-    titulo: string;
-    icono: string;
-    ruta?: string;
-};
+type Opcion = { titulo: string; icono: string; ruta?: string };
 
 const opcionesExtras: Opcion[] = [
     { titulo: 'Cambiar Contraseña',   icono: 'lock',     ruta: '/cambiar-contrasena' },
@@ -20,7 +23,12 @@ const opcionesExtras: Opcion[] = [
     { titulo: 'Historial de Compras', icono: 'bag',      ruta: '/historial' },
 ];
 
-type Fase2FA = 'activar' | 'desactivar' | null;
+type Fase =
+    | null
+    | 'elegir-metodo'        // selección: Google Auth o Personal
+    | 'google-qr'            // muestra QR + clave manual + campo código
+    | 'personal-instruccion' // instrucciones para abrir raizbosqueotp
+    | 'desactivar';          // desactivar 2FA activo
 
 export default function Perfil() {
     const insets = useSafeAreaInsets();
@@ -29,104 +37,98 @@ export default function Perfil() {
     const { usuario, cerrarSesion, actualizarTotp2FA } = useUsuario();
     const { totalItems } = useCarrito();
 
-    // Estado de modal 2FA
-    const [fase2FA, setFase2FA] = useState<Fase2FA>(null);
+    // Modal 2FA
+    const [fase, setFase] = useState<Fase>(null);
     const [qrImagen, setQrImagen] = useState('');
-    const [codigo2FA, setCodigo2FA] = useState('');
-    const [cargando2FA, setCargando2FA] = useState(false);
-    const [error2FA, setError2FA] = useState('');
-    const [exito2FA, setExito2FA] = useState('');
-    const [cargandoQR, setCargandoQR] = useState(false);
+    const [claveManual, setClaveManual] = useState('');
+    const [codigo, setCodigo] = useState('');
+    const [contrasena2FA, setContrasena2FA] = useState('');
+    const [cargando, setCargando] = useState(false);
+    const [error, setError] = useState('');
+    const [exito, setExito] = useState('');
 
-    const nombreCompleto = usuario
-        ? [usuario.Nombre, usuario.Apellidos].filter(Boolean).join(' ')
-        : '';
+    const nombreCompleto = usuario ? [usuario.Nombre, usuario.Apellidos].filter(Boolean).join(' ') : '';
+    const primeraLetra   = usuario?.Nombre?.[0]?.toUpperCase() ?? '?';
+    const tieneTotp2FA   = usuario?.TieneTotp2FA ?? false;
+    const metodo2FA      = usuario?.MetodoTotp2FA ?? null;
 
-    const primeraLetra = usuario?.Nombre?.[0]?.toUpperCase() ?? '?';
-    const tieneTotp2FA = usuario?.TieneTotp2FA ?? false;
-
-    function manejarCerrarSesion() {
-        cerrarSesion();
-        router.replace('/login');
+    function cerrarModal() {
+        setFase(null); setQrImagen(''); setClaveManual('');
+        setCodigo(''); setContrasena2FA(''); setError(''); setExito('');
     }
 
-    async function abrirActivar2FA() {
-        setCargandoQR(true);
-        setError2FA('');
-        setCodigo2FA('');
-        setExito2FA('');
-        setFase2FA('activar');
+    function resetearEstado() {
+        setCodigo(''); setContrasena2FA(''); setError(''); setExito('');
+    }
+
+    function manejarCerrarSesion() { cerrarSesion(); router.replace('/login'); }
+
+    // ─── Activar 2FA ──────────────────────────────────────────────────────────
+
+    async function elegirGoogleAuth() {
+        resetearEstado();
+        setCargando(true);
         try {
-            const { qrImage } = await iniciar2FA(usuario!.IdUsuario);
-            setQrImagen(qrImage);
-        } catch {
-            setError2FA('No se pudo iniciar la configuración. Intenta de nuevo.');
-        } finally {
-            setCargandoQR(false);
-        }
+            const { qrImage, manualKey } = await iniciarConfiguracion2FA(usuario!.IdUsuario, 'GOOGLE_AUTHENTICATOR');
+            setQrImagen(qrImage ?? '');
+            setClaveManual(manualKey ?? '');
+            setFase('google-qr');
+        } catch (e: any) {
+            const cod = e?.response?.data?.codigo;
+            if (cod === '2FA_YA_ACTIVO') setError('Ya tienes 2FA activo. Desactívalo primero.');
+            else setError('No se pudo iniciar la configuración. Intenta de nuevo.');
+            setFase('elegir-metodo');
+        } finally { setCargando(false); }
     }
 
-    function abrirDesactivar2FA() {
-        setCodigo2FA('');
-        setError2FA('');
-        setExito2FA('');
-        setFase2FA('desactivar');
-    }
-
-    function cerrarModal2FA() {
-        setFase2FA(null);
-        setQrImagen('');
-        setCodigo2FA('');
-        setError2FA('');
-        setExito2FA('');
-    }
-
-    async function manejarActivar2FA() {
-        setError2FA('');
-        if (!codigo2FA || codigo2FA.length !== 6) {
-            setError2FA('Ingresa el código de 6 dígitos.');
-            return;
-        }
-        setCargando2FA(true);
+    async function elegirPersonalAuth() {
+        resetearEstado();
+        setCargando(true);
         try {
-            await activar2FA(usuario!.IdUsuario, codigo2FA);
+            await iniciarConfiguracion2FA(usuario!.IdUsuario, 'PERSONAL_AUTHENTICATOR');
+            setFase('personal-instruccion');
+        } catch (e: any) {
+            const cod = e?.response?.data?.codigo;
+            if (cod === '2FA_YA_ACTIVO') setError('Ya tienes 2FA activo. Desactívalo primero.');
+            else setError('No se pudo iniciar la configuración. Intenta de nuevo.');
+            setFase('elegir-metodo');
+        } finally { setCargando(false); }
+    }
+
+    async function manejarVerificarActivacion() {
+        setError('');
+        if (!codigo || codigo.length !== 6) { setError('Ingresa el código de 6 dígitos.'); return; }
+        setCargando(true);
+        try {
+            await verificarActivacion2FA(usuario!.IdUsuario, codigo);
             actualizarTotp2FA(true);
-            setExito2FA('¡Verificación en dos pasos activada correctamente!');
-            setTimeout(cerrarModal2FA, 1800);
+            setExito('¡Verificación en dos pasos activada correctamente!');
+            setTimeout(cerrarModal, 1800);
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
-            if (cod === 'INVALID_2FA_CODE') {
-                setError2FA('Código inválido. Inténtalo nuevamente.');
-            } else {
-                setError2FA('No se pudo activar. Intenta de nuevo.');
-            }
-        } finally {
-            setCargando2FA(false);
-        }
+            if (cod === 'INVALID_2FA_CODE') setError('Código inválido. Inténtalo nuevamente.');
+            else setError('No se pudo activar. Intenta de nuevo.');
+        } finally { setCargando(false); }
     }
 
-    async function manejarDesactivar2FA() {
-        setError2FA('');
-        if (!codigo2FA || codigo2FA.length !== 6) {
-            setError2FA('Ingresa el código de 6 dígitos.');
-            return;
-        }
-        setCargando2FA(true);
+    // ─── Desactivar 2FA ───────────────────────────────────────────────────────
+
+    async function manejarDesactivar() {
+        setError('');
+        if (!contrasena2FA) { setError('Ingresa tu contraseña actual.'); return; }
+        if (!codigo || codigo.length !== 6) { setError('Ingresa el código de 6 dígitos de tu app autenticadora.'); return; }
+        setCargando(true);
         try {
-            await desactivar2FA(usuario!.IdUsuario, codigo2FA);
+            await desactivar2FA(usuario!.IdUsuario, contrasena2FA, codigo);
             actualizarTotp2FA(false);
-            setExito2FA('Verificación en dos pasos desactivada.');
-            setTimeout(cerrarModal2FA, 1800);
+            setExito('Verificación en dos pasos desactivada.');
+            setTimeout(cerrarModal, 1800);
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
-            if (cod === 'INVALID_2FA_CODE') {
-                setError2FA('Código inválido. Inténtalo nuevamente.');
-            } else {
-                setError2FA('No se pudo desactivar. Intenta de nuevo.');
-            }
-        } finally {
-            setCargando2FA(false);
-        }
+            if (cod === 'INVALID_2FA_CODE') setError('Código OTP inválido. Inténtalo nuevamente.');
+            else if (cod === 'INVALID_CREDENTIALS') setError('Contraseña incorrecta.');
+            else setError('No se pudo desactivar. Intenta de nuevo.');
+        } finally { setCargando(false); }
     }
 
     return (
@@ -144,18 +146,14 @@ export default function Perfil() {
                     <View>
                         <CarritoIcono width={30} height={30} fill="#1b3022" />
                         {totalItems > 0 && (
-                            <View style={estilos.badge}>
-                                <Text style={estilos.badgeTexto}>{totalItems > 9 ? '9+' : totalItems}</Text>
-                            </View>
+                            <View style={estilos.badge}><Text style={estilos.badgeTexto}>{totalItems > 9 ? '9+' : totalItems}</Text></View>
                         )}
                     </View>
                 </Pressable>
             </ImageBackground>
 
-            <ScrollView
-                contentContainerStyle={estilos.scroll}
-                showsVerticalScrollIndicator={false}
-            >
+            <ScrollView contentContainerStyle={estilos.scroll} showsVerticalScrollIndicator={false}>
+                {/* ── Tarjeta de usuario ── */}
                 <View style={estilos.tarjetaUsuario}>
                     <ImageBackground
                         source={require('@/assets/images/fotoperfil.png')}
@@ -163,29 +161,20 @@ export default function Perfil() {
                         imageStyle={estilos.avatarImagen}
                         resizeMode="cover"
                     >
-                        <Text style={[estilos.avatarLetra, esHorizontal && { fontSize: 26 }]}>
-                            {primeraLetra}
-                        </Text>
+                        <Text style={[estilos.avatarLetra, esHorizontal && { fontSize: 26 }]}>{primeraLetra}</Text>
                     </ImageBackground>
                     <Text style={estilos.nombre}>{nombreCompleto}</Text>
                     <Text style={estilos.correo}>{usuario?.Correo ?? ''}</Text>
-                    <Pressable
-                        style={estilos.botonEditar}
-                        android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
-                        onPress={() => router.push('/editar-perfil')}
-                    >
+                    <Pressable style={estilos.botonEditar} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={() => router.push('/editar-perfil')}>
                         <Text style={estilos.botonEditarTexto}>EDITAR PERFIL</Text>
                     </Pressable>
                 </View>
 
+                {/* ── Opciones ── */}
                 <View style={estilos.listaOpciones}>
                     {opcionesExtras.map((opcion) => (
                         <View key={opcion.titulo}>
-                            <Pressable
-                                style={estilos.opcion}
-                                android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
-                                onPress={() => opcion.ruta ? router.push(opcion.ruta as any) : undefined}
-                            >
+                            <Pressable style={estilos.opcion} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={() => opcion.ruta ? router.push(opcion.ruta as any) : undefined}>
                                 <SymbolView name={opcion.icono as any} size={22} tintColor="#434843" />
                                 <Text style={estilos.opcionTexto}>{opcion.titulo}</Text>
                                 <SymbolView name="chevron.right" size={16} tintColor="#737973" />
@@ -194,126 +183,189 @@ export default function Perfil() {
                         </View>
                     ))}
 
-                    {/* Opción: Verificación en dos pasos */}
+                    {/* Seguridad – 2FA */}
                     <Pressable
                         style={estilos.opcion}
                         android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
-                        onPress={tieneTotp2FA ? abrirDesactivar2FA : abrirActivar2FA}
+                        onPress={() => { resetearEstado(); setFase(tieneTotp2FA ? 'desactivar' : 'elegir-metodo'); }}
                     >
                         <SymbolView name="lock.shield" size={22} tintColor="#434843" />
                         <View style={estilos.opcionConEstado}>
                             <Text style={estilos.opcionTexto}>Verificación en dos pasos</Text>
                             <Text style={tieneTotp2FA ? estilos.estadoActivo : estilos.estadoInactivo}>
-                                {tieneTotp2FA ? 'Activa' : 'Inactiva'}
+                                {tieneTotp2FA
+                                    ? (metodo2FA === 'PERSONAL_AUTHENTICATOR' ? 'Activa · Raíces OTP' : 'Activa · Google Authenticator')
+                                    : 'Inactiva'}
                             </Text>
                         </View>
                         <SymbolView name="chevron.right" size={16} tintColor="#737973" />
                     </Pressable>
                 </View>
 
-                <Pressable
-                    style={estilos.botonCerrarSesion}
-                    android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
-                    onPress={manejarCerrarSesion}
-                >
-                    <SymbolView
-                        name="rectangle.portrait.and.arrow.right"
-                        size={20}
-                        tintColor="#ba1a1a"
-                    />
+                <Pressable style={estilos.botonCerrarSesion} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={manejarCerrarSesion}>
+                    <SymbolView name="rectangle.portrait.and.arrow.right" size={20} tintColor="#ba1a1a" />
                     <Text style={estilos.cerrarSesionTexto}>Cerrar Sesión</Text>
                 </Pressable>
 
-                <Pressable
-                    style={estilos.botonAcercaDe}
-                    android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
-                    onPress={() => router.push('/acerca-de')}
-                >
+                <Pressable style={estilos.botonAcercaDe} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.push('/acerca-de')}>
                     <Text style={estilos.acercaDeTexto}>Hecho con ❤️ Wilberth Mora</Text>
                 </Pressable>
             </ScrollView>
 
-            {/* Modal: Configurar / Desactivar 2FA */}
-            <Modal
-                visible={fase2FA !== null}
-                transparent
-                animationType="slide"
-                onRequestClose={cerrarModal2FA}
-            >
-                <KeyboardAvoidingView
-                    style={estilos.modalFondo}
-                    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-                >
+            {/* ════════════════════ MODAL 2FA ════════════════════ */}
+            <Modal visible={fase !== null} transparent animationType="slide" onRequestClose={cerrarModal}>
+                <KeyboardAvoidingView style={estilos.modalFondo} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
                     <View style={estilos.modalTarjeta}>
-                        <Text style={estilos.modalTitulo}>
-                            {fase2FA === 'activar' ? 'Configurar Google Authenticator' : 'Desactivar verificación en dos pasos'}
-                        </Text>
 
-                        {fase2FA === 'activar' && (
+                        {/* ─ Elegir método ─ */}
+                        {fase === 'elegir-metodo' && (
                             <>
-                                <Text style={estilos.modalSubtitulo}>
-                                    Escanea el código QR con la app Google Authenticator y luego ingresa el código generado para activar la verificación en dos pasos.
-                                </Text>
-                                <View style={estilos.qrContenedor}>
-                                    {cargandoQR
-                                        ? <ActivityIndicator color="#1b3022" size="large" />
-                                        : qrImagen
-                                            ? <Image source={{ uri: qrImagen }} style={estilos.qrImagen} resizeMode="contain" />
-                                            : null
-                                    }
-                                </View>
-                            </>
-                        )}
-
-                        {fase2FA === 'desactivar' && (
-                            <Text style={estilos.modalSubtitulo}>
-                                Ingresa el código actual de Google Authenticator para confirmar que deseas desactivar la verificación en dos pasos.
-                            </Text>
-                        )}
-
-                        {exito2FA ? (
-                            <Text style={estilos.textoExito}>{exito2FA}</Text>
-                        ) : (
-                            <>
-                                <Text style={estilos.modalEtiqueta}>Código de 6 dígitos</Text>
-                                <TextInput
-                                    style={[estilos.inputCodigo, error2FA ? estilos.inputCodigoError : null]}
-                                    value={codigo2FA}
-                                    onChangeText={v => { setCodigo2FA(v.replace(/\D/g, '')); setError2FA(''); }}
-                                    keyboardType="number-pad"
-                                    maxLength={6}
-                                    placeholder="000000"
-                                    placeholderTextColor="#b0b0a8"
-                                />
-
-                                {error2FA ? <Text style={estilos.mensajeError}>{error2FA}</Text> : null}
+                                <Text style={estilos.modalTitulo}>Activar verificación en dos pasos</Text>
+                                <Text style={estilos.modalSubtitulo}>Elige cómo generarás tus códigos de verificación.</Text>
+                                {error ? <Text style={estilos.mensajeError}>{error}</Text> : null}
 
                                 <Pressable
-                                    style={[
-                                        fase2FA === 'desactivar' ? estilos.botonDesactivar : estilos.botonPrincipal,
-                                        cargando2FA && { opacity: 0.7 },
-                                    ]}
-                                    android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
-                                    onPress={fase2FA === 'activar' ? manejarActivar2FA : manejarDesactivar2FA}
-                                    disabled={cargando2FA}
+                                    style={[estilos.opcionMetodo, cargando && { opacity: 0.6 }]}
+                                    android_ripple={{ color: 'rgba(0,0,0,0.06)' }}
+                                    onPress={elegirGoogleAuth}
+                                    disabled={cargando}
                                 >
-                                    {cargando2FA
-                                        ? <ActivityIndicator color="#ffffff" size="small" />
-                                        : <Text style={estilos.botonPrincipalTexto}>
-                                            {fase2FA === 'activar' ? 'VERIFICAR Y ACTIVAR' : 'DESACTIVAR'}
-                                        </Text>
-                                    }
+                                    <SymbolView name="qrcode" size={28} tintColor="#1b3022" />
+                                    <View style={estilos.opcionMetodoTextos}>
+                                        <Text style={estilos.opcionMetodoTitulo}>Google Authenticator</Text>
+                                        <Text style={estilos.opcionMetodoSub}>Compatible con Microsoft Authenticator, Authy y otras apps TOTP</Text>
+                                    </View>
+                                    {cargando ? <ActivityIndicator color="#1b3022" size="small" /> : <SymbolView name="chevron.right" size={16} tintColor="#737973" />}
+                                </Pressable>
+
+                                <View style={estilos.divisor} />
+
+                                <Pressable
+                                    style={[estilos.opcionMetodo, cargando && { opacity: 0.6 }]}
+                                    android_ripple={{ color: 'rgba(0,0,0,0.06)' }}
+                                    onPress={elegirPersonalAuth}
+                                    disabled={cargando}
+                                >
+                                    <SymbolView name="shield.checkered" size={28} tintColor="#1b3022" />
+                                    <View style={estilos.opcionMetodoTextos}>
+                                        <Text style={estilos.opcionMetodoTitulo}>Autenticador Raíces de Bosque</Text>
+                                        <Text style={estilos.opcionMetodoSub}>Usa la app exclusiva Raíces de Bosque OTP</Text>
+                                    </View>
+                                    <SymbolView name="chevron.right" size={16} tintColor="#737973" />
                                 </Pressable>
                             </>
                         )}
 
-                        <Pressable
-                            style={estilos.botonCancelarModal}
-                            android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
-                            onPress={cerrarModal2FA}
-                        >
-                            <Text style={estilos.botonCancelarModalTexto}>Cancelar</Text>
-                        </Pressable>
+                        {/* ─ QR de Google Auth ─ */}
+                        {fase === 'google-qr' && (
+                            <>
+                                <Text style={estilos.modalTitulo}>Configurar Google Authenticator</Text>
+                                <Text style={estilos.modalSubtitulo}>
+                                    Escanea el código QR con Google Authenticator (u otra app compatible) y luego ingresa el código generado.
+                                </Text>
+                                {qrImagen ? (
+                                    <View style={estilos.qrContenedor}>
+                                        <Image source={{ uri: qrImagen }} style={estilos.qrImagen} resizeMode="contain" />
+                                    </View>
+                                ) : null}
+                                {claveManual ? (
+                                    <View style={estilos.claveManualContenedor}>
+                                        <Text style={estilos.claveManualLabel}>Clave manual</Text>
+                                        <Text style={estilos.claveManualValor} selectable>{claveManual}</Text>
+                                    </View>
+                                ) : null}
+                                {!exito && (
+                                    <>
+                                        <Text style={estilos.modalEtiqueta}>Código de 6 dígitos</Text>
+                                        <TextInput
+                                            style={[estilos.inputCodigo, error ? estilos.inputCodigoError : null]}
+                                            value={codigo}
+                                            onChangeText={v => { setCodigo(v.replace(/\D/g, '')); setError(''); }}
+                                            keyboardType="number-pad"
+                                            maxLength={6}
+                                            placeholder="000000"
+                                            placeholderTextColor="#b0b0a8"
+                                        />
+                                        {error ? <Text style={estilos.mensajeError}>{error}</Text> : null}
+                                        <Pressable
+                                            style={[estilos.botonPrincipal, cargando && { opacity: 0.7 }]}
+                                            android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
+                                            onPress={manejarVerificarActivacion}
+                                            disabled={cargando}
+                                        >
+                                            {cargando ? <ActivityIndicator color="#fff" size="small" /> : <Text style={estilos.botonPrincipalTexto}>VERIFICAR Y ACTIVAR</Text>}
+                                        </Pressable>
+                                    </>
+                                )}
+                                {exito ? <Text style={estilos.textoExito}>{exito}</Text> : null}
+                            </>
+                        )}
+
+                        {/* ─ Instrucciones Personal Auth ─ */}
+                        {fase === 'personal-instruccion' && (
+                            <>
+                                <Text style={estilos.modalTitulo}>Autenticador Raíces de Bosque</Text>
+                                <Text style={estilos.modalSubtitulo}>
+                                    Tu cuenta está lista para vincularse con la app autenticadora personal.
+                                </Text>
+                                <View style={estilos.pasosList}>
+                                    <Text style={estilos.paso}>{'1.'} Instala la app <Text style={estilos.pasoNegrita}>Raíces de Bosque OTP</Text> en tu dispositivo.</Text>
+                                    <Text style={estilos.paso}>{'2.'} Ábrela e inicia sesión con tu usuario y contraseña de Raíces de Bosque.</Text>
+                                    <Text style={estilos.paso}>{'3.'} Toca <Text style={estilos.pasoNegrita}>Vincular este dispositivo</Text> y confirma con el código generado.</Text>
+                                    <Text style={estilos.paso}>{'4.'} Una vez vinculado, la verificación en dos pasos quedará activa automáticamente.</Text>
+                                </View>
+                            </>
+                        )}
+
+                        {/* ─ Desactivar ─ */}
+                        {fase === 'desactivar' && (
+                            <>
+                                <Text style={estilos.modalTitulo}>Desactivar verificación en dos pasos</Text>
+                                <Text style={estilos.modalSubtitulo}>
+                                    Para desactivarla necesitas tu contraseña actual y el código actual de tu app autenticadora.
+                                </Text>
+                                {!exito && (
+                                    <>
+                                        <Text style={estilos.modalEtiqueta}>Contraseña actual</Text>
+                                        <TextInput
+                                            style={[estilos.inputContrasena, error ? estilos.inputCodigoError : null]}
+                                            value={contrasena2FA}
+                                            onChangeText={v => { setContrasena2FA(v); setError(''); }}
+                                            secureTextEntry
+                                            placeholder="Tu contraseña"
+                                            placeholderTextColor="#b0b0a8"
+                                        />
+                                        <Text style={[estilos.modalEtiqueta, { marginTop: 12 }]}>Código de 6 dígitos (autenticador)</Text>
+                                        <TextInput
+                                            style={[estilos.inputCodigo, error ? estilos.inputCodigoError : null]}
+                                            value={codigo}
+                                            onChangeText={v => { setCodigo(v.replace(/\D/g, '')); setError(''); }}
+                                            keyboardType="number-pad"
+                                            maxLength={6}
+                                            placeholder="000000"
+                                            placeholderTextColor="#b0b0a8"
+                                        />
+                                        {error ? <Text style={estilos.mensajeError}>{error}</Text> : null}
+                                        <Pressable
+                                            style={[estilos.botonDesactivar, cargando && { opacity: 0.7 }]}
+                                            android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
+                                            onPress={manejarDesactivar}
+                                            disabled={cargando}
+                                        >
+                                            {cargando ? <ActivityIndicator color="#fff" size="small" /> : <Text style={estilos.botonPrincipalTexto}>DESACTIVAR</Text>}
+                                        </Pressable>
+                                    </>
+                                )}
+                                {exito ? <Text style={estilos.textoExito}>{exito}</Text> : null}
+                            </>
+                        )}
+
+                        {/* Cancelar siempre disponible */}
+                        {!exito && (
+                            <Pressable style={estilos.botonCancelarModal} android_ripple={{ color: 'rgba(0,0,0,0.08)' }} onPress={cerrarModal}>
+                                <Text style={estilos.botonCancelarModalTexto}>Cancelar</Text>
+                            </Pressable>
+                        )}
                     </View>
                 </KeyboardAvoidingView>
             </Modal>
@@ -322,279 +374,64 @@ export default function Perfil() {
 }
 
 const estilos = StyleSheet.create({
-    contenedor: {
-        flex: 1,
-        backgroundColor: '#f0eee8',
-    },
-    encabezado: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        paddingHorizontal: 20,
-        paddingVertical: 16,
-        borderBottomWidth: 1,
-        borderBottomColor: '#c8d4c0',
-    },
-    botonEncabezado: {
-        padding: 4,
-    },
-    encabezadoTitulo: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#1c1c18',
-        letterSpacing: 1,
-    },
-    scroll: {
-        padding: 20,
-        gap: 16,
-    },
-    tarjetaUsuario: {
-        backgroundColor: '#ffffff',
-        borderRadius: 16,
-        padding: 24,
-        alignItems: 'center',
-        gap: 8,
-        shadowColor: '#1b3022',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-    avatar: {
-        width: 100,
-        height: 100,
-        borderRadius: 16,
-        marginBottom: 4,
-        justifyContent: 'center',
-        alignItems: 'center',
-        overflow: 'hidden',
-    },
-    avatarImagen: {
-        borderRadius: 16,
-    },
-    avatarLetra: {
-        fontSize: 42,
-        fontWeight: '700',
-        color: '#1b3022',
-    },
-    nombre: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#1c1c18',
-        textAlign: 'center',
-    },
-    correo: {
-        fontSize: 14,
-        color: '#737973',
-        textAlign: 'center',
-        marginBottom: 8,
-    },
-    botonEditar: {
-        borderWidth: 1,
-        borderColor: '#c3c8c1',
-        borderRadius: 8,
-        paddingVertical: 10,
-        paddingHorizontal: 32,
-        overflow: 'hidden',
-    },
-    botonEditarTexto: {
-        fontSize: 13,
-        fontWeight: '600',
-        color: '#1c1c18',
-        letterSpacing: 0.5,
-    },
-    listaOpciones: {
-        backgroundColor: '#ffffff',
-        borderRadius: 16,
-        overflow: 'hidden',
-        shadowColor: '#1b3022',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
-        shadowRadius: 8,
-        elevation: 2,
-    },
-    opcion: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        paddingHorizontal: 20,
-        paddingVertical: 18,
-        gap: 16,
-    },
-    opcionTexto: {
-        flex: 1,
-        fontSize: 16,
-        fontWeight: '500',
-        color: '#1c1c18',
-    },
-    opcionConEstado: {
-        flex: 1,
-        gap: 2,
-    },
-    estadoActivo: {
-        fontSize: 12,
-        color: '#526349',
-        fontWeight: '500',
-    },
-    estadoInactivo: {
-        fontSize: 12,
-        color: '#737973',
-    },
-    divisor: {
-        height: 1,
-        backgroundColor: '#f0eee8',
-        marginLeft: 58,
-    },
-    botonCerrarSesion: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        justifyContent: 'center',
-        borderWidth: 1,
-        borderColor: '#c3c8c1',
-        borderRadius: 8,
-        paddingVertical: 14,
-        gap: 10,
-        backgroundColor: '#ffffff',
-        overflow: 'hidden',
-    },
-    cerrarSesionTexto: {
-        fontSize: 15,
-        fontWeight: '600',
-        color: '#ba1a1a',
-    },
-    badge: {
-        position: 'absolute',
-        top: -4,
-        right: -6,
-        backgroundColor: '#1b3022',
-        borderRadius: 999,
-        minWidth: 16,
-        height: 16,
-        justifyContent: 'center',
-        alignItems: 'center',
-        paddingHorizontal: 3,
-    },
-    badgeTexto: {
-        color: '#ffffff',
-        fontSize: 10,
-        fontWeight: '700',
-    },
-    botonAcercaDe: {
-        alignItems: 'center',
-        paddingVertical: 8,
-    },
-    acercaDeTexto: {
-        fontSize: 12,
-        color: '#9ca09a',
-    },
-    // Modal 2FA
-    modalFondo: {
-        flex: 1,
-        backgroundColor: 'rgba(27,48,34,0.55)',
-        justifyContent: 'flex-end',
-    },
-    modalTarjeta: {
-        backgroundColor: '#ffffff',
-        borderTopLeftRadius: 24,
-        borderTopRightRadius: 24,
-        padding: 28,
-        paddingBottom: 36,
-        shadowColor: '#1b3022',
-        shadowOffset: { width: 0, height: -4 },
-        shadowOpacity: 0.10,
-        shadowRadius: 16,
-        elevation: 12,
-    },
-    modalTitulo: {
-        fontSize: 18,
-        fontWeight: '700',
-        color: '#1c1c18',
-        textAlign: 'center',
-        marginBottom: 10,
-    },
-    modalSubtitulo: {
-        fontSize: 14,
-        color: '#737973',
-        textAlign: 'center',
-        marginBottom: 16,
-        lineHeight: 20,
-    },
-    modalEtiqueta: {
-        fontSize: 14,
-        fontWeight: '500',
-        color: '#434843',
-        marginBottom: 8,
-    },
-    qrContenedor: {
-        alignItems: 'center',
-        justifyContent: 'center',
-        height: 200,
-        marginBottom: 16,
-    },
-    qrImagen: {
-        width: 190,
-        height: 190,
-        borderRadius: 8,
-    },
-    inputCodigo: {
-        backgroundColor: '#fefcf8',
-        borderColor: '#8da082',
-        borderWidth: 1,
-        borderRadius: 24,
-        paddingHorizontal: 16,
-        paddingVertical: 14,
-        fontSize: 24,
-        color: '#1c1c18',
-        textAlign: 'center',
-        letterSpacing: 6,
-        marginBottom: 8,
-    },
-    inputCodigoError: {
-        borderColor: '#ba1a1a',
-    },
-    mensajeError: {
-        fontSize: 13,
-        color: '#ba1a1a',
-        marginBottom: 12,
-        textAlign: 'center',
-    },
-    textoExito: {
-        fontSize: 15,
-        color: '#526349',
-        fontWeight: '600',
-        textAlign: 'center',
-        marginVertical: 16,
-    },
-    botonPrincipal: {
-        backgroundColor: '#1b3022',
-        borderRadius: 999,
-        paddingVertical: 16,
-        alignItems: 'center',
-        marginBottom: 12,
-        overflow: 'hidden',
-    },
-    botonDesactivar: {
-        backgroundColor: '#ba1a1a',
-        borderRadius: 999,
-        paddingVertical: 16,
-        alignItems: 'center',
-        marginBottom: 12,
-        overflow: 'hidden',
-    },
-    botonPrincipalTexto: {
-        color: '#ffffff',
-        fontSize: 14,
-        fontWeight: '600',
-        letterSpacing: 0.5,
-    },
-    botonCancelarModal: {
-        borderRadius: 999,
-        paddingVertical: 14,
-        alignItems: 'center',
-        overflow: 'hidden',
-    },
-    botonCancelarModalTexto: {
-        fontSize: 14,
-        color: '#737973',
-        fontWeight: '500',
-    },
+    contenedor: { flex: 1, backgroundColor: '#f0eee8' },
+    encabezado: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: '#c8d4c0' },
+    botonEncabezado: { padding: 4 },
+    encabezadoTitulo: { fontSize: 18, fontWeight: '700', color: '#1c1c18', letterSpacing: 1 },
+    scroll: { padding: 20, gap: 16 },
+    tarjetaUsuario: { backgroundColor: '#ffffff', borderRadius: 16, padding: 24, alignItems: 'center', gap: 8, shadowColor: '#1b3022', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+    avatar: { width: 100, height: 100, borderRadius: 16, marginBottom: 4, justifyContent: 'center', alignItems: 'center', overflow: 'hidden' },
+    avatarImagen: { borderRadius: 16 },
+    avatarLetra: { fontSize: 42, fontWeight: '700', color: '#1b3022' },
+    nombre: { fontSize: 18, fontWeight: '700', color: '#1c1c18', textAlign: 'center' },
+    correo: { fontSize: 14, color: '#737973', textAlign: 'center', marginBottom: 8 },
+    botonEditar: { borderWidth: 1, borderColor: '#c3c8c1', borderRadius: 8, paddingVertical: 10, paddingHorizontal: 32, overflow: 'hidden' },
+    botonEditarTexto: { fontSize: 13, fontWeight: '600', color: '#1c1c18', letterSpacing: 0.5 },
+    listaOpciones: { backgroundColor: '#ffffff', borderRadius: 16, overflow: 'hidden', shadowColor: '#1b3022', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2 },
+    opcion: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 18, gap: 16 },
+    opcionTexto: { flex: 1, fontSize: 16, fontWeight: '500', color: '#1c1c18' },
+    opcionConEstado: { flex: 1, gap: 2 },
+    estadoActivo: { fontSize: 12, color: '#526349', fontWeight: '500' },
+    estadoInactivo: { fontSize: 12, color: '#737973' },
+    divisor: { height: 1, backgroundColor: '#f0eee8', marginLeft: 58 },
+    botonCerrarSesion: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#c3c8c1', borderRadius: 8, paddingVertical: 14, gap: 10, backgroundColor: '#ffffff', overflow: 'hidden' },
+    cerrarSesionTexto: { fontSize: 15, fontWeight: '600', color: '#ba1a1a' },
+    badge: { position: 'absolute', top: -4, right: -6, backgroundColor: '#1b3022', borderRadius: 999, minWidth: 16, height: 16, justifyContent: 'center', alignItems: 'center', paddingHorizontal: 3 },
+    badgeTexto: { color: '#ffffff', fontSize: 10, fontWeight: '700' },
+    botonAcercaDe: { alignItems: 'center', paddingVertical: 8 },
+    acercaDeTexto: { fontSize: 12, color: '#9ca09a' },
+    // Modal
+    modalFondo: { flex: 1, backgroundColor: 'rgba(27,48,34,0.55)', justifyContent: 'flex-end' },
+    modalTarjeta: { backgroundColor: '#ffffff', borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: 28, paddingBottom: 36, shadowColor: '#1b3022', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.10, shadowRadius: 16, elevation: 12 },
+    modalTitulo: { fontSize: 18, fontWeight: '700', color: '#1c1c18', textAlign: 'center', marginBottom: 10 },
+    modalSubtitulo: { fontSize: 14, color: '#737973', textAlign: 'center', marginBottom: 16, lineHeight: 20 },
+    modalEtiqueta: { fontSize: 14, fontWeight: '500', color: '#434843', marginBottom: 8 },
+    // Opciones de método
+    opcionMetodo: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, gap: 14 },
+    opcionMetodoTextos: { flex: 1 },
+    opcionMetodoTitulo: { fontSize: 15, fontWeight: '600', color: '#1c1c18' },
+    opcionMetodoSub: { fontSize: 12, color: '#737973', marginTop: 2, lineHeight: 16 },
+    // QR
+    qrContenedor: { alignItems: 'center', marginBottom: 12 },
+    qrImagen: { width: 190, height: 190, borderRadius: 8 },
+    claveManualContenedor: { backgroundColor: '#f0eee8', borderRadius: 12, padding: 12, marginBottom: 16, alignItems: 'center' },
+    claveManualLabel: { fontSize: 11, color: '#737973', marginBottom: 4 },
+    claveManualValor: { fontSize: 14, fontWeight: '700', color: '#1b3022', letterSpacing: 2 },
+    // Inputs
+    inputCodigo: { backgroundColor: '#fefcf8', borderColor: '#8da082', borderWidth: 1, borderRadius: 24, paddingHorizontal: 16, paddingVertical: 14, fontSize: 24, color: '#1c1c18', textAlign: 'center', letterSpacing: 6, marginBottom: 8 },
+    inputContrasena: { backgroundColor: '#fefcf8', borderColor: '#8da082', borderWidth: 1, borderRadius: 24, paddingHorizontal: 16, paddingVertical: 14, fontSize: 16, color: '#1c1c18', marginBottom: 8 },
+    inputCodigoError: { borderColor: '#ba1a1a' },
+    // Mensajes
+    mensajeError: { fontSize: 13, color: '#ba1a1a', marginBottom: 12, textAlign: 'center' },
+    textoExito: { fontSize: 15, color: '#526349', fontWeight: '600', textAlign: 'center', marginVertical: 16 },
+    // Pasos instrucción
+    pasosList: { gap: 10, marginBottom: 16 },
+    paso: { fontSize: 14, color: '#434843', lineHeight: 20 },
+    pasoNegrita: { fontWeight: '700', color: '#1c1c18' },
+    // Botones modal
+    botonPrincipal: { backgroundColor: '#1b3022', borderRadius: 999, paddingVertical: 16, alignItems: 'center', marginBottom: 12, overflow: 'hidden' },
+    botonDesactivar: { backgroundColor: '#ba1a1a', borderRadius: 999, paddingVertical: 16, alignItems: 'center', marginBottom: 12, overflow: 'hidden' },
+    botonPrincipalTexto: { color: '#ffffff', fontSize: 14, fontWeight: '600', letterSpacing: 0.5 },
+    botonCancelarModal: { borderRadius: 999, paddingVertical: 14, alignItems: 'center', overflow: 'hidden' },
+    botonCancelarModalTexto: { fontSize: 14, color: '#737973', fontWeight: '500' },
 });

@@ -10,4 +10,5 @@ export type Usuario = {
     IdRol: number;
     NombreRol: string;
     TieneTotp2FA?: boolean;
+    MetodoTotp2FA?: string | null;
 };
