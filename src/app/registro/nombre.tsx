@@ -102,6 +102,9 @@ export default function RegistroNombre() {
                     >
                         <Text style={estilos.botonTexto}>CONTINUAR</Text>
                     </Pressable>
+                    <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
+                        <Text style={estilos.enlaceAtrasTexto}>‹ Atrás</Text>
+                    </Pressable>
                 </View>
             </ScrollView>
         </ImageBackground>
@@ -132,4 +135,6 @@ const estilos = StyleSheet.create({
     botonVerificarTexto: { color: '#1b3022', fontSize: 13, fontWeight: '600', letterSpacing: 0.5 },
     boton: { backgroundColor: '#1b3022', borderRadius: 999, paddingVertical: 16, alignItems: 'center', overflow: 'hidden' },
     botonTexto: { color: '#fff', fontSize: 14, fontWeight: '600', letterSpacing: 1 },
+    enlaceAtras: { alignItems: 'center' },
+    enlaceAtrasTexto: { fontSize: 13, color: '#526349', textDecorationLine: 'underline' },
 });

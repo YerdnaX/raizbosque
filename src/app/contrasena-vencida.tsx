@@ -1,4 +1,4 @@
-import { View, Text, TextInput, Pressable, StyleSheet, ImageBackground, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet, ImageBackground, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -54,7 +54,7 @@ export default function ContrasenaVencida() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.icono}>⏰</Text>
+                    <Image source={require('@/assets/images/iconosv2/contrasenavencida.png')} style={estilos.icono} />
                     <Text style={estilos.titulo}>Contraseña Vencida</Text>
                     <Text style={estilos.subtitulo}>Tu contraseña ha expirado. Crea una nueva para continuar.</Text>
 
@@ -118,7 +118,7 @@ const estilos = StyleSheet.create({
     fondo: { flex: 1 },
     contenedor: { flexGrow: 1, justifyContent: 'center', alignItems: 'center', padding: 20 },
     tarjeta: { backgroundColor: '#fff', borderRadius: 24, padding: 30, width: '85%', elevation: 4 },
-    icono: { fontSize: 48, textAlign: 'center', marginBottom: 12 },
+    icono: { width: 48, height: 48, marginBottom: 12 },
     titulo: { fontSize: 26, fontWeight: '700', color: '#1c1c18', textAlign: 'center', marginBottom: 8 },
     subtitulo: { fontSize: 13, color: '#737973', textAlign: 'center', marginBottom: 24, lineHeight: 20 },
     campo: { marginBottom: 16 },

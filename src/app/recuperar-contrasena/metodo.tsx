@@ -1,4 +1,4 @@
-import { View, Text, Pressable, StyleSheet, ImageBackground, ScrollView, ActivityIndicator } from 'react-native';
+import { View, Text, Pressable, StyleSheet, ImageBackground, ScrollView, ActivityIndicator, Image } from 'react-native';
 import { useState } from 'react';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -45,7 +45,7 @@ export default function RecuperarContrasenaMetodo() {
                         onPress={elegirCorreo}
                         disabled={enviando}
                     >
-                        <Text style={estilos.opcionIcono}>✉️</Text>
+                        <Image source={require('@/assets/images/iconosv2/opcioncorreo.png')} style={estilos.opcionIcono} />
                         <View style={estilos.opcionTextos}>
                             <Text style={estilos.opcionTitulo}>Código por correo</Text>
                             <Text style={estilos.opcionDesc}>Te enviaremos un código de 6 dígitos</Text>
@@ -59,7 +59,7 @@ export default function RecuperarContrasenaMetodo() {
                         onPress={elegirPreguntas}
                         disabled={enviando}
                     >
-                        <Text style={estilos.opcionIcono}>🔐</Text>
+                        <Image source={require('@/assets/images/iconosv2/recuperacioncontrasena.png')} style={estilos.opcionIcono} />
                         <View style={estilos.opcionTextos}>
                             <Text style={estilos.opcionTitulo}>Preguntas de seguridad</Text>
                             <Text style={estilos.opcionDesc}>Responde tus preguntas de seguridad</Text>
@@ -84,7 +84,7 @@ const estilos = StyleSheet.create({
     subtitulo: { fontSize: 14, color: '#737973', textAlign: 'center', marginBottom: 24, lineHeight: 20 },
     mensajeError: { fontSize: 13, color: '#ba1a1a', marginBottom: 16, textAlign: 'center' },
     opcion: { flexDirection: 'row', alignItems: 'center', borderWidth: 1, borderColor: '#c8d4c0', borderRadius: 16, padding: 16, marginBottom: 12, gap: 12, overflow: 'hidden' },
-    opcionIcono: { fontSize: 28 },
+    opcionIcono: { width: 28, height: 28 },
     opcionTextos: { flex: 1 },
     opcionTitulo: { fontSize: 15, fontWeight: '600', color: '#1c1c18', marginBottom: 2 },
     opcionDesc: { fontSize: 12, color: '#737973', lineHeight: 16 },

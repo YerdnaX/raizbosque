@@ -80,7 +80,10 @@ export default function Inicio() {
 
                 {/* Planta del Mes */}
                 <View style={estilos.seccion}>
-                    <Text style={estilos.seccionTitulo}>🌿 Planta del Mes 🌿</Text>
+                    <View style={estilos.seccionTituloFila}>
+                        <Image source={require('@/assets/images/iconosv2/plantadeldia.png')} style={estilos.seccionTituloIconoGrande} />
+                        <Text style={estilos.seccionTitulo}>Planta del Mes</Text>
+                    </View>
                     {estaCargando ? (
                         <View style={estilos.tarjetaCargando}>
                             <ActivityIndicator size="large" color="#1b3022" />
@@ -126,7 +129,10 @@ export default function Inicio() {
 
                 {/* Plato del Día */}
                 <View style={estilos.seccion}>
-                    <Text style={estilos.seccionTitulo}>🍽️ Plato del Día</Text>
+                    <View style={estilos.seccionTituloFila}>
+                        <Image source={require('@/assets/images/iconosv2/platodeldia.png')} style={estilos.seccionTituloIconoGrande} />
+                        <Text style={estilos.seccionTitulo}>Plato del Día</Text>
+                    </View>
                     {estaCargando ? (
                         <View style={estilos.tarjetaCargando}>
                             <ActivityIndicator size="large" color="#1b3022" />
@@ -171,7 +177,10 @@ export default function Inicio() {
                 {usuario && (
                     <View style={estilos.seccion}>
                         <View style={estilos.seccionEncabezado}>
-                            <Text style={estilos.seccionTitulo}>📅 Próximas Reservaciones</Text>
+                            <View style={estilos.seccionTituloFila}>
+                                <Image source={require('@/assets/images/iconosv2/proximasreservaciones.png')} style={estilos.seccionTituloIcono} />
+                                <Text style={estilos.seccionTitulo}>Próximas Reservaciones</Text>
+                            </View>
                             <Pressable
                                 android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
                                 onPress={() => router.push('/reservaciones')}
@@ -323,6 +332,19 @@ const estilos = StyleSheet.create({
         fontSize: 18,
         fontWeight: '700',
         color: '#1c1c18',
+    },
+    seccionTituloFila: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    seccionTituloIcono: {
+        width: 20,
+        height: 20,
+    },
+    seccionTituloIconoGrande: {
+        width: 40,
+        height: 40,
     },
     verTodas: {
         fontSize: 13,
