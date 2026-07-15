@@ -9,8 +9,14 @@ import { SymbolView } from 'expo-symbols';
 import { useUsuario } from '../context/UsuarioContext';
 import { useCarrito } from '../context/CarritoContext';
 import { realizarCompra } from '../features/compras/services/compraService';
+import SelectorUbicacion from '../features/ubicaciones/components/SelectorUbicacion';
 
 type MetodoEntrega = 'Tienda' | 'Domicilio';
+
+type SeleccionUbicacion = {
+    idsSeleccionados: number[];
+    completo: boolean;
+};
 
 export default function Checkout() {
     const insets = useSafeAreaInsets();
@@ -20,7 +26,11 @@ export default function Checkout() {
     const [metodoEntrega, setMetodoEntrega] = useState<MetodoEntrega>('Tienda');
     const [telefono, setTelefono] = useState(usuario?.Telefono ?? '');
     const [usarDireccionGuardada, setUsarDireccionGuardada] = useState(true);
-    const [nuevaDireccion, setNuevaDireccion] = useState('');
+    const [ubicacionSeleccion, setUbicacionSeleccion] = useState<SeleccionUbicacion>({
+        idsSeleccionados: [],
+        completo: false,
+    });
+    const [direccionExacta, setDireccionExacta] = useState('');
     const [estaProcesando, setEstaProcesando] = useState(false);
 
     const impuesto = Math.round(total * 0.13 * 100) / 100;
@@ -28,10 +38,20 @@ export default function Checkout() {
 
     const telefonoYaRegistrado = !!(usuario?.Telefono);
 
-    function obtenerDireccionEntrega(): string | undefined {
-        if (metodoEntrega === 'Tienda') return undefined;
-        if (usarDireccionGuardada && usuario?.Direccion) return usuario.Direccion;
-        return nuevaDireccion.trim() || undefined;
+    function construirDatosDireccion() {
+        if (metodoEntrega === 'Tienda') return {};
+        if (usarDireccionGuardada && usuario?.Direccion) {
+            return { direccionEntrega: usuario.Direccion };
+        }
+        if (ubicacionSeleccion.completo && direccionExacta.trim()) {
+            return {
+                ubicacion: {
+                    idsSeleccionados: ubicacionSeleccion.idsSeleccionados,
+                    direccionExacta: direccionExacta.trim(),
+                },
+            };
+        }
+        return null;
     }
 
     async function confirmarCompra() {
@@ -42,12 +62,10 @@ export default function Checkout() {
             return;
         }
 
-        if (metodoEntrega === 'Domicilio') {
-            const dir = obtenerDireccionEntrega();
-            if (!dir) {
-                Alert.alert('Dirección requerida', 'Por favor ingresa una dirección de entrega.');
-                return;
-            }
+        const datosDireccion = construirDatosDireccion();
+        if (metodoEntrega === 'Domicilio' && !datosDireccion) {
+            Alert.alert('Dirección requerida', 'Por favor completa la ubicación y la dirección exacta.');
+            return;
         }
 
         setEstaProcesando(true);
@@ -55,7 +73,7 @@ export default function Checkout() {
             await realizarCompra({
                 idUsuario: usuario.IdUsuario,
                 metodoEntrega,
-                direccionEntrega: obtenerDireccionEntrega(),
+                ...datosDireccion,
             });
 
             limpiarCarrito();
@@ -223,27 +241,40 @@ export default function Checkout() {
                                     </Pressable>
 
                                     {!usarDireccionGuardada && (
-                                        <TextInput
-                                            style={[estilos.inputContenedor, { marginTop: 8 }]}
-                                            value={nuevaDireccion}
-                                            onChangeText={setNuevaDireccion}
-                                            placeholder="Ingresa la dirección de entrega"
-                                            placeholderTextColor="#b0b0a8"
-                                            multiline
-                                        />
+                                        <View style={{ marginTop: 8, gap: 10 }}>
+                                            <SelectorUbicacion onCambio={setUbicacionSeleccion} />
+                                            {ubicacionSeleccion.completo && (
+                                                <View style={estilos.campo}>
+                                                    <Text style={estilos.etiqueta}>Dirección exacta</Text>
+                                                    <TextInput
+                                                        style={estilos.inputContenedor}
+                                                        value={direccionExacta}
+                                                        onChangeText={setDireccionExacta}
+                                                        placeholder="Ej. 200 metros norte de la iglesia"
+                                                        placeholderTextColor="#b0b0a8"
+                                                        multiline
+                                                    />
+                                                </View>
+                                            )}
+                                        </View>
                                     )}
                                 </>
                             ) : (
-                                <View style={estilos.campo}>
-                                    <Text style={estilos.etiqueta}>Dirección de entrega</Text>
-                                    <TextInput
-                                        style={estilos.inputContenedor}
-                                        value={nuevaDireccion}
-                                        onChangeText={setNuevaDireccion}
-                                        placeholder="Ingresa la dirección de entrega"
-                                        placeholderTextColor="#b0b0a8"
-                                        multiline
-                                    />
+                                <View style={{ gap: 10 }}>
+                                    <SelectorUbicacion onCambio={setUbicacionSeleccion} />
+                                    {ubicacionSeleccion.completo && (
+                                        <View style={estilos.campo}>
+                                            <Text style={estilos.etiqueta}>Dirección exacta</Text>
+                                            <TextInput
+                                                style={estilos.inputContenedor}
+                                                value={direccionExacta}
+                                                onChangeText={setDireccionExacta}
+                                                placeholder="Ej. 200 metros norte de la iglesia"
+                                                placeholderTextColor="#b0b0a8"
+                                                multiline
+                                            />
+                                        </View>
+                                    )}
                                 </View>
                             )}
                         </View>

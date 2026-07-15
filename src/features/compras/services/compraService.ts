@@ -5,6 +5,10 @@ export type DatosCompra = {
     idUsuario: number;
     metodoEntrega: 'Tienda' | 'Domicilio';
     direccionEntrega?: string;
+    ubicacion?: {
+        idsSeleccionados: number[];
+        direccionExacta: string;
+    };
 };
 
 export async function realizarCompra(datos: DatosCompra): Promise<{ idCompra: number }> {
