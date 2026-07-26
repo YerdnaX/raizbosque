@@ -1,5 +1,6 @@
 export type Planta = {
     IdProducto: number;
+    IdProductoProvedorVivero: number | null;
     Nombre: string;
     Descripcion: string | null;
     Precio: number;
@@ -14,4 +15,9 @@ export type Planta = {
     CuidadosEspeciales: string | null;
     TemperaturaRecomendada: string | null;
     TipoSuelo: string | null;
+    Provedor: {
+        cantidadDisponible: number;
+        tiempoReposicionDias: number;
+        estado: string;
+    } | null;
 };

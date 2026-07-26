@@ -137,6 +137,29 @@ export default function DetallePlanta() {
 
                     <View style={estilos.separador} />
 
+                    <View style={estilos.seccion}>
+                        <Text style={estilos.seccionTitulo}>Disponibilidad</Text>
+                        <View style={estilos.disponibilidadCard}>
+                            <Text style={estilos.disponibilidadEtiqueta}>RAICES</Text>
+                            <Text style={estilos.disponibilidadTexto}>
+                                {planta.Stock > 0 ? `${planta.Stock} disponibles` : 'Sin stock'}
+                            </Text>
+                        </View>
+                        <View style={estilos.provedorCard}>
+                            <Text style={estilos.provedorEtiqueta}>PROVEDOR</Text>
+                            <Text style={estilos.provedorTexto}>
+                                {planta.Provedor
+                                    ? `${planta.Provedor.cantidadDisponible} items disponibles`
+                                    : 'Sin disponibilidad del provedor'}
+                            </Text>
+                            {planta.Provedor ? (
+                                <Text style={estilos.provedorDetalle}>
+                                    Reposicion en {planta.Provedor.tiempoReposicionDias} dias
+                                </Text>
+                            ) : null}
+                        </View>
+                    </View>
+
                     {/* Descripción */}
                     {planta.Descripcion ? (
                         <View style={estilos.seccion}>
@@ -352,6 +375,49 @@ const estilos = StyleSheet.create({
     },
     seccion: {
         gap: 10,
+    },
+    disponibilidadCard: {
+        backgroundColor: '#ffffff',
+        borderRadius: 8,
+        paddingVertical: 12,
+        paddingHorizontal: 14,
+        borderWidth: 1,
+        borderColor: '#e5e2dc',
+    },
+    disponibilidadEtiqueta: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#737973',
+    },
+    disponibilidadTexto: {
+        marginTop: 2,
+        fontSize: 15,
+        color: '#1c1c18',
+        fontWeight: '700',
+    },
+    provedorCard: {
+        backgroundColor: '#e8f0e5',
+        borderRadius: 8,
+        paddingVertical: 12,
+        paddingHorizontal: 14,
+        borderWidth: 1,
+        borderColor: '#c8d4c0',
+    },
+    provedorEtiqueta: {
+        fontSize: 11,
+        fontWeight: '700',
+        color: '#526349',
+    },
+    provedorTexto: {
+        marginTop: 2,
+        fontSize: 15,
+        color: '#1b3022',
+        fontWeight: '700',
+    },
+    provedorDetalle: {
+        marginTop: 4,
+        fontSize: 13,
+        color: '#526349',
     },
     seccionTitulo: {
         fontSize: 18,
