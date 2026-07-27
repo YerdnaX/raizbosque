@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 import { useUsuario } from '../context/UsuarioContext';
 import { useCarrito } from '../context/CarritoContext';
-import { realizarCompra } from '../features/compras/services/compraService';
+import { obtenerResumenCompra, realizarCompra, type ResumenCompra } from '../features/compras/services/compraService';
 import SelectorUbicacion from '../features/ubicaciones/components/SelectorUbicacion';
 
 type MetodoEntrega = 'Tienda' | 'Domicilio';
@@ -17,6 +17,22 @@ type SeleccionUbicacion = {
     idsSeleccionados: number[];
     completo: boolean;
 };
+
+type ErrorApi = {
+    response?: {
+        data?: {
+            message?: string;
+        };
+    };
+};
+
+function obtenerMensajeError(error: unknown, mensajePorDefecto: string) {
+    if (typeof error === 'object' && error !== null) {
+        const errorApi = error as ErrorApi;
+        return errorApi.response?.data?.message ?? mensajePorDefecto;
+    }
+    return mensajePorDefecto;
+}
 
 export default function Checkout() {
     const insets = useSafeAreaInsets();
@@ -32,9 +48,18 @@ export default function Checkout() {
     });
     const [direccionExacta, setDireccionExacta] = useState('');
     const [estaProcesando, setEstaProcesando] = useState(false);
+    const [codigoCupon, setCodigoCupon] = useState('');
+    const [resumenCompra, setResumenCompra] = useState<ResumenCompra | null>(null);
+    const [mensajeCupon, setMensajeCupon] = useState('');
+    const [errorCupon, setErrorCupon] = useState('');
+    const [estaValidandoCupon, setEstaValidandoCupon] = useState(false);
 
     const impuesto = Math.round(total * 0.13 * 100) / 100;
     const totalConIva = Math.round((total + impuesto) * 100) / 100;
+    const subtotalMostrado = resumenCompra?.subtotal ?? total;
+    const descuentoMostrado = resumenCompra?.descuento ?? 0;
+    const impuestoMostrado = resumenCompra?.impuesto ?? impuesto;
+    const totalMostrado = resumenCompra?.total ?? totalConIva;
 
     const telefonoYaRegistrado = !!(usuario?.Telefono);
 
@@ -54,6 +79,43 @@ export default function Checkout() {
         return null;
     }
 
+    function manejarCambioCupon(texto: string) {
+        setCodigoCupon(texto.toUpperCase());
+        setResumenCompra(null);
+        setMensajeCupon('');
+        setErrorCupon('');
+    }
+
+    async function aplicarCupon() {
+        if (!usuario) return;
+
+        const codigo = codigoCupon.trim();
+        if (!codigo) {
+            setResumenCompra(null);
+            setMensajeCupon('');
+            setErrorCupon('Ingresa un codigo de cupon.');
+            return;
+        }
+
+        setEstaValidandoCupon(true);
+        setMensajeCupon('');
+        setErrorCupon('');
+
+        try {
+            const resumen = await obtenerResumenCompra(usuario.IdUsuario, codigo);
+            setResumenCompra(resumen);
+            if (resumen.cupon) {
+                setCodigoCupon(resumen.cupon.codigo);
+                setMensajeCupon(`Cupon aplicado. Rebaja de ₡${resumen.descuento.toLocaleString('es-CR')}.`);
+            }
+        } catch (error) {
+            setResumenCompra(null);
+            setErrorCupon(obtenerMensajeError(error, 'No se pudo validar el cupon.'));
+        } finally {
+            setEstaValidandoCupon(false);
+        }
+    }
+
     async function confirmarCompra() {
         if (!usuario) return;
 
@@ -68,11 +130,17 @@ export default function Checkout() {
             return;
         }
 
+        if (codigoCupon.trim() && !resumenCompra?.cupon) {
+            Alert.alert('Cupon pendiente', 'Presiona APLICAR para validar el cupon antes de confirmar.');
+            return;
+        }
+
         setEstaProcesando(true);
         try {
             const resultado = await realizarCompra({
                 idUsuario: usuario.IdUsuario,
                 metodoEntrega,
+                codigoCupon: resumenCompra?.cupon?.codigo,
                 ...datosDireccion,
             });
 
@@ -87,8 +155,8 @@ export default function Checkout() {
                     direccionEntrega: resultado.direccionEntrega ?? '',
                 },
             });
-        } catch {
-            Alert.alert('Error', 'No se pudo procesar la compra. Intenta de nuevo.');
+        } catch (error) {
+            Alert.alert('Error', obtenerMensajeError(error, 'No se pudo procesar la compra. Intenta de nuevo.'));
         } finally {
             setEstaProcesando(false);
         }
@@ -283,6 +351,47 @@ export default function Checkout() {
                     )}
                 </View>
 
+                <View style={estilos.seccion}>
+                    <View style={estilos.seccionEncabezado}>
+                        <SymbolView name="ticket.fill" size={18} tintColor="#1b3022" />
+                        <Text style={estilos.seccionTitulo}>Cupon de descuento</Text>
+                    </View>
+
+                    <View style={estilos.cuponFila}>
+                        <TextInput
+                            style={[estilos.inputContenedor, estilos.inputCupon]}
+                            value={codigoCupon}
+                            onChangeText={manejarCambioCupon}
+                            placeholder="Ej. RAICES10"
+                            placeholderTextColor="#b0b0a8"
+                            autoCapitalize="characters"
+                        />
+                        <Pressable
+                            style={[estilos.botonCupon, estaValidandoCupon && estilos.botonCuponDesactivado]}
+                            android_ripple={{ color: 'rgba(255,255,255,0.22)', foreground: true }}
+                            onPress={aplicarCupon}
+                            disabled={estaValidandoCupon}
+                        >
+                            {estaValidandoCupon
+                                ? <ActivityIndicator color="#ffffff" size="small" />
+                                : <Text style={estilos.botonCuponTexto}>APLICAR</Text>
+                            }
+                        </Pressable>
+                    </View>
+
+                    {!!mensajeCupon && (
+                        <View style={estilos.mensajeCuponAplicado}>
+                            <Text style={estilos.mensajeCuponAplicadoTexto}>{mensajeCupon}</Text>
+                        </View>
+                    )}
+
+                    {!!errorCupon && (
+                        <View style={estilos.mensajeCuponError}>
+                            <Text style={estilos.mensajeCuponErrorTexto}>{errorCupon}</Text>
+                        </View>
+                    )}
+                </View>
+
                 {/* Resumen del Pedido */}
                 <View style={estilos.seccion}>
                     <View style={estilos.seccionEncabezado}>
@@ -306,15 +415,26 @@ export default function Checkout() {
 
                     <View style={estilos.totalFila}>
                         <Text style={estilos.totalEtiqueta}>Subtotal</Text>
-                        <Text style={estilos.totalValor}>₡{total.toLocaleString('es-CR')}</Text>
+                        <Text style={estilos.totalValor}>₡{subtotalMostrado.toLocaleString('es-CR')}</Text>
                     </View>
+                    {descuentoMostrado > 0 && (
+                        <View style={estilos.totalFila}>
+                            <Text style={estilos.totalEtiqueta}>Descuento</Text>
+                            <Text style={estilos.descuentoValor}>-₡{descuentoMostrado.toLocaleString('es-CR')}</Text>
+                        </View>
+                    )}
+                    {resumenCompra?.cupon && (
+                        <Text style={estilos.cuponDetalle}>
+                            {resumenCompra.cupon.codigo}: {resumenCompra.cupon.descripcion}
+                        </Text>
+                    )}
                     <View style={estilos.totalFila}>
                         <Text style={estilos.totalEtiqueta}>IVA (13%)</Text>
-                        <Text style={estilos.totalValor}>₡{impuesto.toLocaleString('es-CR')}</Text>
+                        <Text style={estilos.totalValor}>₡{impuestoMostrado.toLocaleString('es-CR')}</Text>
                     </View>
                     <View style={[estilos.totalFila, estilos.totalFilaFinal]}>
                         <Text style={estilos.totalFinalEtiqueta}>Total</Text>
-                        <Text style={estilos.totalFinalValor}>₡{totalConIva.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</Text>
+                        <Text style={estilos.totalFinalValor}>₡{totalMostrado.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</Text>
                     </View>
                 </View>
 
@@ -324,7 +444,7 @@ export default function Checkout() {
             <View style={estilos.pie}>
                 <View style={estilos.pieInfo}>
                     <Text style={estilos.pieTotalEtiqueta}>Total a pagar</Text>
-                    <Text style={estilos.pieTotalValor}>₡{totalConIva.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</Text>
+                    <Text style={estilos.pieTotalValor}>₡{totalMostrado.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</Text>
                 </View>
                 <Pressable
                     style={[estilos.botonConfirmar, estaProcesando && estilos.botonConfirmarDesactivado]}
@@ -444,6 +564,56 @@ const estilos = StyleSheet.create({
     inputTextoDesactivado: {
         fontSize: 14,
         color: '#9ca09a',
+    },
+    cuponFila: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+    },
+    inputCupon: {
+        flex: 1,
+    },
+    botonCupon: {
+        backgroundColor: '#1b3022',
+        borderRadius: 8,
+        paddingHorizontal: 14,
+        paddingVertical: 11,
+        minWidth: 92,
+        alignItems: 'center',
+        overflow: 'hidden',
+    },
+    botonCuponDesactivado: {
+        backgroundColor: '#8da082',
+    },
+    botonCuponTexto: {
+        color: '#ffffff',
+        fontSize: 12,
+        fontWeight: '700',
+        letterSpacing: 0.5,
+    },
+    mensajeCuponAplicado: {
+        backgroundColor: '#f0f5ee',
+        borderRadius: 8,
+        padding: 10,
+        borderLeftWidth: 3,
+        borderLeftColor: '#1b3022',
+    },
+    mensajeCuponAplicadoTexto: {
+        fontSize: 12,
+        color: '#526349',
+        fontWeight: '600',
+    },
+    mensajeCuponError: {
+        backgroundColor: '#ffdad6',
+        borderRadius: 8,
+        padding: 10,
+        borderLeftWidth: 3,
+        borderLeftColor: '#ba1a1a',
+    },
+    mensajeCuponErrorTexto: {
+        fontSize: 12,
+        color: '#93000a',
+        fontWeight: '600',
     },
     opcionEntrega: {
         flexDirection: 'row',
@@ -578,6 +748,16 @@ const estilos = StyleSheet.create({
         fontSize: 13,
         color: '#1c1c18',
         fontWeight: '500',
+    },
+    descuentoValor: {
+        fontSize: 13,
+        color: '#526349',
+        fontWeight: '700',
+    },
+    cuponDetalle: {
+        fontSize: 12,
+        color: '#526349',
+        textAlign: 'right',
     },
     totalFilaFinal: {
         marginTop: 6,
