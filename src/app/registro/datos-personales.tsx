@@ -24,7 +24,7 @@ export default function RegistroDatosPersonales() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.paso}>Paso 4 de 6</Text>
+                    <Text style={estilos.paso}>Paso 5 de 7</Text>
                     <Text style={estilos.titulo}>Datos Personales</Text>
                     <Text style={estilos.subtitulo}>¿Cuál es tu nombre completo?</Text>
 

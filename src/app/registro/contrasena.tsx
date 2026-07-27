@@ -38,7 +38,7 @@ export default function RegistroContrasena() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.paso}>Paso 5 de 6</Text>
+                    <Text style={estilos.paso}>Paso 6 de 7</Text>
                     <Text style={estilos.titulo}>Contraseña</Text>
                     <Text style={estilos.subtitulo}>Crea una contraseña segura para tu cuenta</Text>
 

@@ -22,7 +22,7 @@ export default function RegistroCodigo() {
         try {
             const token = await verificarCodigoRegistro(datos.correo, codigo);
             setToken(token);
-            router.push('/registro/nombre');
+            router.push('/registro/cedula' as never);
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
             if (cod === 'EXPIRED_CODE') setError('El código ha vencido. Solicita uno nuevo.');
@@ -59,7 +59,7 @@ export default function RegistroCodigo() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.paso}>Paso 2 de 6</Text>
+                    <Text style={estilos.paso}>Paso 2 de 7</Text>
                     <Text style={estilos.titulo}>Verificar Correo</Text>
                     <Text style={estilos.subtitulo}>
                         Ingresa el código de 6 dígitos enviado a{'\n'}

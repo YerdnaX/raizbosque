@@ -70,7 +70,7 @@ export default function RegistroPreguntas2() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.paso}>Paso 6 de 6</Text>
+                    <Text style={estilos.paso}>Paso 7 de 7</Text>
                     <Text style={estilos.titulo}>Última Pregunta</Text>
                     <Text style={estilos.subtitulo}>Recuerda: las respuestas distinguen mayúsculas y minúsculas</Text>
 

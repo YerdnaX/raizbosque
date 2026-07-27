@@ -44,7 +44,7 @@ export default function RegistroCorreo() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.paso}>Paso 1 de 6</Text>
+                    <Text style={estilos.paso}>Paso 1 de 7</Text>
                     <Text style={estilos.titulo}>Crear Cuenta</Text>
                     <Text style={estilos.subtitulo}>
                         Ingresa tu correo electrónico. Te enviaremos un código de verificación.

@@ -56,7 +56,7 @@ export default function RegistroNombre() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.paso}>Paso 3 de 6</Text>
+                    <Text style={estilos.paso}>Paso 4 de 7</Text>
                     <Text style={estilos.titulo}>Nombre de Usuario</Text>
                     <Text style={estilos.subtitulo}>Elige tu nombre de usuario. Debe ser único y alfanumérico.</Text>
 
