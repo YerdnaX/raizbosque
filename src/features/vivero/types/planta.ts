@@ -1,6 +1,6 @@
 export type Planta = {
     IdProducto: number;
-    IdProductoProvedorVivero: number | null;
+    IdProductoProvedor: number | null;
     Nombre: string;
     Descripcion: string | null;
     Precio: number;
