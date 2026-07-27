@@ -70,7 +70,7 @@ export default function Checkout() {
 
         setEstaProcesando(true);
         try {
-            await realizarCompra({
+            const resultado = await realizarCompra({
                 idUsuario: usuario.IdUsuario,
                 metodoEntrega,
                 ...datosDireccion,
@@ -78,13 +78,14 @@ export default function Checkout() {
 
             limpiarCarrito();
 
-            Alert.alert(
-                '¡Compra confirmada!',
-                metodoEntrega === 'Tienda'
-                    ? 'Tu pedido estará listo para recoger en la tienda en 1 hora.'
-                    : 'Tu pedido será enviado a la dirección indicada.',
-                [{ text: 'Ir al inicio', onPress: () => router.replace('/(tabs)') }],
-            );
+            router.replace({
+                pathname: '/compra-confirmada',
+                params: {
+                    metodoEntrega,
+                    numeroOrden: resultado.numeroOrden.toString(),
+                    trackingNumber: resultado.trackingNumber ?? '',
+                },
+            });
         } catch {
             Alert.alert('Error', 'No se pudo procesar la compra. Intenta de nuevo.');
         } finally {

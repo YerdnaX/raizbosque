@@ -11,8 +11,14 @@ export type DatosCompra = {
     };
 };
 
-export async function realizarCompra(datos: DatosCompra): Promise<{ idCompra: number }> {
-    const respuesta = await apiClient.post<{ success: boolean; idCompra: number }>('/compras', datos);
+export type ResultadoCompra = {
+    idCompra: number;
+    numeroOrden: number;
+    trackingNumber: string | null;
+};
+
+export async function realizarCompra(datos: DatosCompra): Promise<ResultadoCompra> {
+    const respuesta = await apiClient.post<{ success: boolean } & ResultadoCompra>('/compras', datos);
     return respuesta.data;
 }
 
