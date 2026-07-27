@@ -15,6 +15,7 @@ export type ResultadoCompra = {
     idCompra: number;
     numeroOrden: number;
     trackingNumber: string | null;
+    direccionEntrega: string | null;
 };
 
 export async function realizarCompra(datos: DatosCompra): Promise<ResultadoCompra> {

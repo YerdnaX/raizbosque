@@ -79,11 +79,12 @@ export default function Checkout() {
             limpiarCarrito();
 
             router.replace({
-                pathname: '/compra-confirmada',
+                pathname: './compra-confirmada',
                 params: {
                     metodoEntrega,
                     numeroOrden: resultado.numeroOrden.toString(),
                     trackingNumber: resultado.trackingNumber ?? '',
+                    direccionEntrega: resultado.direccionEntrega ?? '',
                 },
             });
         } catch {
