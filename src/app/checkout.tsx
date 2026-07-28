@@ -10,8 +10,12 @@ import { useUsuario } from '../context/UsuarioContext';
 import { useCarrito } from '../context/CarritoContext';
 import { obtenerResumenCompra, realizarCompra, type ResumenCompra } from '../features/compras/services/compraService';
 import SelectorUbicacion from '../features/ubicaciones/components/SelectorUbicacion';
+import VisaLogo from '@/assets/images/checkout/logo-payment-visa.svg';
+import MastercardLogo from '@/assets/images/checkout/logo-payment-mastercard.svg';
 
 type MetodoEntrega = 'Tienda' | 'Domicilio';
+type MetodoPago = 'Tarjeta' | 'SINPE' | null;
+type MarcaTarjeta = 'Visa' | 'Mastercard' | null;
 
 type SeleccionUbicacion = {
     idsSeleccionados: number[];
@@ -34,6 +38,75 @@ function obtenerMensajeError(error: unknown, mensajePorDefecto: string) {
     return mensajePorDefecto;
 }
 
+function obtenerSoloDigitos(texto: string) {
+    return texto.replace(/\D/g, '');
+}
+
+function formatearNumeroTarjeta(texto: string) {
+    return obtenerSoloDigitos(texto)
+        .slice(0, 19)
+        .replace(/(.{4})/g, '$1 ')
+        .trim();
+}
+
+function formatearFechaVencimiento(texto: string) {
+    const digitos = obtenerSoloDigitos(texto).slice(0, 4);
+    if (digitos.length <= 2) return digitos;
+    return `${digitos.slice(0, 2)}/${digitos.slice(2)}`;
+}
+
+function formatearTelefonoSinpe(texto: string) {
+    const digitos = obtenerSoloDigitos(texto).slice(0, 8);
+    if (digitos.length <= 4) return digitos;
+    return `${digitos.slice(0, 4)}-${digitos.slice(4)}`;
+}
+
+function detectarMarcaTarjeta(numeroTarjeta: string): MarcaTarjeta {
+    const numero = obtenerSoloDigitos(numeroTarjeta);
+    if (numero.startsWith('4')) return 'Visa';
+
+    const dosDigitos = Number(numero.slice(0, 2));
+    const cuatroDigitos = Number(numero.slice(0, 4));
+    if ((dosDigitos >= 51 && dosDigitos <= 55) || (cuatroDigitos >= 2221 && cuatroDigitos <= 2720)) {
+        return 'Mastercard';
+    }
+
+    return null;
+}
+
+function validarLuhn(numeroTarjeta: string) {
+    const numero = obtenerSoloDigitos(numeroTarjeta);
+    let suma = 0;
+    let duplicar = false;
+
+    for (let i = numero.length - 1; i >= 0; i -= 1) {
+        let digito = Number(numero[i]);
+        if (duplicar) {
+            digito *= 2;
+            if (digito > 9) digito -= 9;
+        }
+        suma += digito;
+        duplicar = !duplicar;
+    }
+
+    return suma > 0 && suma % 10 === 0;
+}
+
+function validarFechaVencimiento(fechaVencimiento: string) {
+    const partes = fechaVencimiento.split('/');
+    if (partes.length !== 2 || partes[0].length !== 2 || partes[1].length !== 2) return false;
+
+    const mes = Number(partes[0]);
+    const anio = Number(`20${partes[1]}`);
+    if (mes < 1 || mes > 12) return false;
+
+    const hoy = new Date();
+    const anioActual = hoy.getFullYear();
+    const mesActual = hoy.getMonth() + 1;
+
+    return anio > anioActual || (anio === anioActual && mes >= mesActual);
+}
+
 export default function Checkout() {
     const insets = useSafeAreaInsets();
     const { usuario } = useUsuario();
@@ -53,6 +126,12 @@ export default function Checkout() {
     const [mensajeCupon, setMensajeCupon] = useState('');
     const [errorCupon, setErrorCupon] = useState('');
     const [estaValidandoCupon, setEstaValidandoCupon] = useState(false);
+    const [metodoPago, setMetodoPago] = useState<MetodoPago>(null);
+    const [numeroTarjeta, setNumeroTarjeta] = useState('');
+    const [nombreTarjeta, setNombreTarjeta] = useState('');
+    const [fechaVencimiento, setFechaVencimiento] = useState('');
+    const [cvv, setCvv] = useState('');
+    const [telefonoSinpe, setTelefonoSinpe] = useState('');
 
     const impuesto = Math.round(total * 0.13 * 100) / 100;
     const totalConIva = Math.round((total + impuesto) * 100) / 100;
@@ -62,6 +141,8 @@ export default function Checkout() {
     const totalMostrado = resumenCompra?.total ?? totalConIva;
 
     const telefonoYaRegistrado = !!(usuario?.Telefono);
+    const marcaTarjeta = detectarMarcaTarjeta(numeroTarjeta);
+    const LogoTarjeta = marcaTarjeta === 'Visa' ? VisaLogo : marcaTarjeta === 'Mastercard' ? MastercardLogo : null;
 
     function construirDatosDireccion() {
         if (metodoEntrega === 'Tienda') return {};
@@ -116,6 +197,61 @@ export default function Checkout() {
         }
     }
 
+    function validarPagoSeleccionado() {
+        if (!metodoPago) {
+            Alert.alert('Metodo de pago requerido', 'Selecciona un metodo de pago para continuar.');
+            return false;
+        }
+
+        if (metodoPago === 'SINPE') {
+            if (obtenerSoloDigitos(telefonoSinpe).length !== 8) {
+                Alert.alert('SINPE no valido', 'Ingresa un numero SINPE de 8 digitos.');
+                return false;
+            }
+            return true;
+        }
+
+        const numeroLimpio = obtenerSoloDigitos(numeroTarjeta);
+        const nombreLimpio = nombreTarjeta.trim();
+        const palabrasNombre = nombreLimpio.split(/\s+/).filter(Boolean);
+
+        if (!numeroLimpio || !nombreLimpio || !fechaVencimiento.trim() || !cvv.trim()) {
+            Alert.alert('Pago incompleto', 'Completa la informacion de la tarjeta.');
+            return false;
+        }
+
+        if (!marcaTarjeta) {
+            Alert.alert('Tarjeta no valida', 'Ingresa una tarjeta Visa o Mastercard valida.');
+            return false;
+        }
+
+        const longitudValida = marcaTarjeta === 'Visa'
+            ? [13, 16, 19].includes(numeroLimpio.length)
+            : numeroLimpio.length === 16;
+
+        if (!longitudValida || !validarLuhn(numeroLimpio)) {
+            Alert.alert('Tarjeta no valida', 'Ingresa una tarjeta Visa o Mastercard valida.');
+            return false;
+        }
+
+        if (palabrasNombre.length < 2) {
+            Alert.alert('Nombre requerido', 'Ingresa el nombre completo del dueno de la tarjeta.');
+            return false;
+        }
+
+        if (!validarFechaVencimiento(fechaVencimiento)) {
+            Alert.alert('Fecha no valida', 'Ingresa una fecha de vencimiento valida.');
+            return false;
+        }
+
+        if (obtenerSoloDigitos(cvv).length !== 3) {
+            Alert.alert('CVV no valido', 'Ingresa el CVV de 3 digitos.');
+            return false;
+        }
+
+        return true;
+    }
+
     async function confirmarCompra() {
         if (!usuario) return;
 
@@ -132,6 +268,10 @@ export default function Checkout() {
 
         if (codigoCupon.trim() && !resumenCompra?.cupon) {
             Alert.alert('Cupon pendiente', 'Presiona APLICAR para validar el cupon antes de confirmar.');
+            return;
+        }
+
+        if (!validarPagoSeleccionado()) {
             return;
         }
 
@@ -347,6 +487,128 @@ export default function Checkout() {
                                     )}
                                 </View>
                             )}
+                        </View>
+                    )}
+                </View>
+
+                {/* Metodo de Pago */}
+                <View style={estilos.seccion}>
+                    <View style={estilos.seccionEncabezado}>
+                        <SymbolView name="creditcard.fill" size={18} tintColor="#1b3022" />
+                        <Text style={estilos.seccionTitulo}>Metodo de pago</Text>
+                    </View>
+
+                    <Pressable
+                        style={[estilos.opcionEntrega, metodoPago === 'Tarjeta' && estilos.opcionEntregaActiva]}
+                        android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
+                        onPress={() => setMetodoPago('Tarjeta')}
+                    >
+                        <View style={estilos.opcionEntregaIzq}>
+                            <SymbolView name="creditcard.fill" size={22} tintColor={metodoPago === 'Tarjeta' ? '#1b3022' : '#737973'} />
+                            <View>
+                                <Text style={[estilos.opcionEntregaNombre, metodoPago === 'Tarjeta' && estilos.opcionEntregaNombreActivo]}>
+                                    Pago con tarjeta
+                                </Text>
+                                <Text style={estilos.opcionEntregaDetalle}>Visa o Mastercard</Text>
+                            </View>
+                        </View>
+                        <View style={[estilos.radio, metodoPago === 'Tarjeta' && estilos.radioActivo]}>
+                            {metodoPago === 'Tarjeta' && <View style={estilos.radioPunto} />}
+                        </View>
+                    </Pressable>
+
+                    {metodoPago === 'Tarjeta' && (
+                        <View style={estilos.formularioPago}>
+                            <View style={estilos.campo}>
+                                <Text style={estilos.etiqueta}>Numero de tarjeta</Text>
+                                <View style={estilos.inputTarjetaFila}>
+                                    <TextInput
+                                        style={estilos.inputTarjeta}
+                                        value={numeroTarjeta}
+                                        onChangeText={(texto) => setNumeroTarjeta(formatearNumeroTarjeta(texto))}
+                                        placeholder="0000 0000 0000 0000"
+                                        placeholderTextColor="#b0b0a8"
+                                        keyboardType="number-pad"
+                                    />
+                                    {LogoTarjeta && <LogoTarjeta width={42} height={28} />}
+                                </View>
+                            </View>
+
+                            <View style={estilos.campo}>
+                                <Text style={estilos.etiqueta}>Nombre completo del dueno</Text>
+                                <TextInput
+                                    style={estilos.inputContenedor}
+                                    value={nombreTarjeta}
+                                    onChangeText={setNombreTarjeta}
+                                    placeholder="Nombre y apellidos"
+                                    placeholderTextColor="#b0b0a8"
+                                    autoCapitalize="words"
+                                />
+                            </View>
+
+                            <View style={estilos.filaPago}>
+                                <View style={[estilos.campo, estilos.campoPagoMitad]}>
+                                    <Text style={estilos.etiqueta}>Vencimiento</Text>
+                                    <TextInput
+                                        style={estilos.inputContenedor}
+                                        value={fechaVencimiento}
+                                        onChangeText={(texto) => setFechaVencimiento(formatearFechaVencimiento(texto))}
+                                        placeholder="MM/AA"
+                                        placeholderTextColor="#b0b0a8"
+                                        keyboardType="number-pad"
+                                        maxLength={5}
+                                    />
+                                </View>
+
+                                <View style={[estilos.campo, estilos.campoPagoMitad]}>
+                                    <Text style={estilos.etiqueta}>CVV</Text>
+                                    <TextInput
+                                        style={estilos.inputContenedor}
+                                        value={cvv}
+                                        onChangeText={(texto) => setCvv(obtenerSoloDigitos(texto).slice(0, 3))}
+                                        placeholder="123"
+                                        placeholderTextColor="#b0b0a8"
+                                        keyboardType="number-pad"
+                                        maxLength={3}
+                                    />
+                                </View>
+                            </View>
+                        </View>
+                    )}
+
+                    <Pressable
+                        style={[estilos.opcionEntrega, metodoPago === 'SINPE' && estilos.opcionEntregaActiva]}
+                        android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
+                        onPress={() => setMetodoPago('SINPE')}
+                    >
+                        <View style={estilos.opcionEntregaIzq}>
+                            <SymbolView name="iphone" size={22} tintColor={metodoPago === 'SINPE' ? '#1b3022' : '#737973'} />
+                            <View>
+                                <Text style={[estilos.opcionEntregaNombre, metodoPago === 'SINPE' && estilos.opcionEntregaNombreActivo]}>
+                                    Pago con SINPE
+                                </Text>
+                                <Text style={estilos.opcionEntregaDetalle}>Numero de telefono</Text>
+                            </View>
+                        </View>
+                        <View style={[estilos.radio, metodoPago === 'SINPE' && estilos.radioActivo]}>
+                            {metodoPago === 'SINPE' && <View style={estilos.radioPunto} />}
+                        </View>
+                    </Pressable>
+
+                    {metodoPago === 'SINPE' && (
+                        <View style={estilos.formularioPago}>
+                            <View style={estilos.campo}>
+                                <Text style={estilos.etiqueta}>Telefono SINPE</Text>
+                                <TextInput
+                                    style={estilos.inputContenedor}
+                                    value={telefonoSinpe}
+                                    onChangeText={(texto) => setTelefonoSinpe(formatearTelefonoSinpe(texto))}
+                                    placeholder="8888-8888"
+                                    placeholderTextColor="#b0b0a8"
+                                    keyboardType="phone-pad"
+                                    maxLength={9}
+                                />
+                            </View>
                         </View>
                     )}
                 </View>
@@ -705,6 +967,33 @@ const estilos = StyleSheet.create({
         fontSize: 12,
         color: '#737973',
         lineHeight: 17,
+    },
+    formularioPago: {
+        gap: 12,
+        paddingTop: 2,
+    },
+    inputTarjetaFila: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        borderWidth: 1,
+        borderColor: '#c3c8c1',
+        borderRadius: 8,
+        paddingHorizontal: 12,
+        backgroundColor: '#ffffff',
+        gap: 8,
+    },
+    inputTarjeta: {
+        flex: 1,
+        paddingVertical: 10,
+        fontSize: 14,
+        color: '#1c1c18',
+    },
+    filaPago: {
+        flexDirection: 'row',
+        gap: 10,
+    },
+    campoPagoMitad: {
+        flex: 1,
     },
     itemResumen: {
         flexDirection: 'row',
