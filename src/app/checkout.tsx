@@ -2,13 +2,20 @@ import {
     View, Text, Pressable, ScrollView, TextInput,
     StyleSheet, ActivityIndicator, ImageBackground, Alert,
 } from 'react-native';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 import { useUsuario } from '../context/UsuarioContext';
 import { useCarrito } from '../context/CarritoContext';
-import { obtenerResumenCompra, realizarCompra, type MetodoPagoCompra, type ResumenCompra } from '../features/compras/services/compraService';
+import {
+    obtenerResumenCompra,
+    obtenerTipoCambioVenta,
+    realizarCompra,
+    type MetodoPagoCompra,
+    type ResumenCompra,
+    type TipoCambioVenta,
+} from '../features/compras/services/compraService';
 import SelectorUbicacion from '../features/ubicaciones/components/SelectorUbicacion';
 import VisaLogo from '@/assets/images/checkout/logo-payment-visa.svg';
 import MastercardLogo from '@/assets/images/checkout/logo-payment-mastercard.svg';
@@ -112,6 +119,14 @@ function enmascararUltimosCuatro(valor: string, mascara: string) {
     return `${mascara}${digitos.slice(-4)}`;
 }
 
+function formatearMontoDolares(monto: number) {
+    return monto.toLocaleString('en-US', {
+        style: 'currency',
+        currency: 'USD',
+        minimumFractionDigits: 2,
+    });
+}
+
 export default function Checkout() {
     const insets = useSafeAreaInsets();
     const { usuario } = useUsuario();
@@ -137,6 +152,8 @@ export default function Checkout() {
     const [fechaVencimiento, setFechaVencimiento] = useState('');
     const [cvv, setCvv] = useState('');
     const [telefonoSinpe, setTelefonoSinpe] = useState('');
+    const [tipoCambioVenta, setTipoCambioVenta] = useState<TipoCambioVenta | null>(null);
+    const [errorTipoCambio, setErrorTipoCambio] = useState('');
 
     const impuesto = Math.round(total * 0.13 * 100) / 100;
     const totalConIva = Math.round((total + impuesto) * 100) / 100;
@@ -144,10 +161,36 @@ export default function Checkout() {
     const descuentoMostrado = resumenCompra?.descuento ?? 0;
     const impuestoMostrado = resumenCompra?.impuesto ?? impuesto;
     const totalMostrado = resumenCompra?.total ?? totalConIva;
+    const totalDolares = tipoCambioVenta
+        ? Math.round((totalMostrado / tipoCambioVenta.valor) * 100) / 100
+        : null;
 
     const telefonoYaRegistrado = !!(usuario?.Telefono);
     const marcaTarjeta = detectarMarcaTarjeta(numeroTarjeta);
     const LogoTarjeta = marcaTarjeta === 'Visa' ? VisaLogo : marcaTarjeta === 'Mastercard' ? MastercardLogo : null;
+
+    useEffect(() => {
+        let activo = true;
+
+        async function cargarTipoCambio() {
+            try {
+                const tipoCambio = await obtenerTipoCambioVenta();
+                if (!activo) return;
+                setTipoCambioVenta(tipoCambio);
+                setErrorTipoCambio('');
+            } catch (error) {
+                if (!activo) return;
+                setTipoCambioVenta(null);
+                setErrorTipoCambio('No se pudo cargar el tipo de cambio.');
+            }
+        }
+
+        cargarTipoCambio();
+
+        return () => {
+            activo = false;
+        };
+    }, []);
 
     function construirDatosDireccion() {
         if (metodoEntrega === 'Tienda') return {};
@@ -743,6 +786,28 @@ export default function Checkout() {
                         <Text style={estilos.totalFinalEtiqueta}>Total</Text>
                         <Text style={estilos.totalFinalValor}>₡{totalMostrado.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</Text>
                     </View>
+                    <View style={estilos.tipoCambioCaja}>
+                        <View style={estilos.totalFila}>
+                            <Text style={estilos.totalEtiqueta}>Tipo de cambio venta</Text>
+                            <Text style={estilos.totalValor}>
+                                {tipoCambioVenta
+                                    ? `₡${tipoCambioVenta.valor.toLocaleString('es-CR', { minimumFractionDigits: 2 })}`
+                                    : 'Cargando...'}
+                            </Text>
+                        </View>
+                        {tipoCambioVenta ? (
+                            <>
+                                <Text style={estilos.tipoCambioFecha}>Fecha: {tipoCambioVenta.fecha}</Text>
+                                <View style={estilos.totalFila}>
+                                    <Text style={estilos.totalEtiqueta}>Total en dolares</Text>
+                                    <Text style={estilos.totalValor}>
+                                        {totalDolares !== null ? formatearMontoDolares(totalDolares) : '-'}
+                                    </Text>
+                                </View>
+                            </>
+                        ) : null}
+                        {errorTipoCambio ? <Text style={estilos.tipoCambioError}>{errorTipoCambio}</Text> : null}
+                    </View>
                 </View>
 
                 <View style={{ height: 100 }} />
@@ -1108,6 +1173,23 @@ const estilos = StyleSheet.create({
         fontSize: 18,
         fontWeight: '700',
         color: '#1b3022',
+    },
+    tipoCambioCaja: {
+        marginTop: 10,
+        paddingTop: 10,
+        borderTopWidth: 1,
+        borderTopColor: '#e5e2dc',
+        gap: 6,
+    },
+    tipoCambioFecha: {
+        fontSize: 11,
+        color: '#737973',
+        textAlign: 'right',
+    },
+    tipoCambioError: {
+        fontSize: 12,
+        color: '#ba1a1a',
+        textAlign: 'right',
     },
     pie: {
         position: 'absolute',

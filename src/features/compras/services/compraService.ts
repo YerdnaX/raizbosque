@@ -62,6 +62,11 @@ export type ResultadoCompra = {
     cupon: CuponAplicado | null;
 };
 
+export type TipoCambioVenta = {
+    fecha: string;
+    valor: number;
+};
+
 export async function obtenerResumenCompra(idUsuario: number, codigoCupon?: string): Promise<ResumenCompra> {
     const respuesta = await apiClient.post<{ success: boolean } & ResumenCompra>('/compras/resumen', {
         idUsuario,
@@ -78,4 +83,23 @@ export async function realizarCompra(datos: DatosCompra): Promise<ResultadoCompr
 export async function obtenerHistorial(idUsuario: number): Promise<Compra[]> {
     const respuesta = await apiClient.get<{ success: boolean; compras: Compra[] }>(`/compras/${idUsuario}`);
     return respuesta.data.compras;
+}
+
+export async function obtenerTipoCambioVenta(): Promise<TipoCambioVenta> {
+    const respuesta = await fetch('https://api.hacienda.go.cr/indicadores/tc');
+    if (!respuesta.ok) {
+        throw new Error('No se pudo consultar el tipo de cambio');
+    }
+
+    const datos = await respuesta.json();
+    const venta = datos?.dolar?.venta;
+
+    if (!venta?.fecha || typeof venta.valor !== 'number') {
+        throw new Error('Respuesta de tipo de cambio no valida');
+    }
+
+    return {
+        fecha: venta.fecha,
+        valor: venta.valor,
+    };
 }
