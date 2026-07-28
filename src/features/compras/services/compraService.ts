@@ -5,12 +5,34 @@ export type DatosCompra = {
     idUsuario: number;
     metodoEntrega: 'Tienda' | 'Domicilio';
     codigoCupon?: string;
+    metodoPago: MetodoPagoCompra;
     direccionEntrega?: string;
     ubicacion?: {
         idsSeleccionados: number[];
         direccionExacta: string;
     };
 };
+
+export type MetodoPagoCompra =
+    | {
+        tarjeta: {
+            tarjeta: {
+                identificador: string;
+                cvv: string;
+                fechaVencimiento: string;
+            };
+            propietario: {
+                nombre: string;
+            };
+        };
+        sinpe?: never;
+    }
+    | {
+        sinpe: {
+            telefono: string;
+        };
+        tarjeta?: never;
+    };
 
 export type CuponAplicado = {
     codigo: string;

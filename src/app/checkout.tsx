@@ -8,7 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 import { useUsuario } from '../context/UsuarioContext';
 import { useCarrito } from '../context/CarritoContext';
-import { obtenerResumenCompra, realizarCompra, type ResumenCompra } from '../features/compras/services/compraService';
+import { obtenerResumenCompra, realizarCompra, type MetodoPagoCompra, type ResumenCompra } from '../features/compras/services/compraService';
 import SelectorUbicacion from '../features/ubicaciones/components/SelectorUbicacion';
 import VisaLogo from '@/assets/images/checkout/logo-payment-visa.svg';
 import MastercardLogo from '@/assets/images/checkout/logo-payment-mastercard.svg';
@@ -105,6 +105,11 @@ function validarFechaVencimiento(fechaVencimiento: string) {
     const mesActual = hoy.getMonth() + 1;
 
     return anio > anioActual || (anio === anioActual && mes >= mesActual);
+}
+
+function enmascararUltimosCuatro(valor: string, mascara: string) {
+    const digitos = obtenerSoloDigitos(valor);
+    return `${mascara}${digitos.slice(-4)}`;
 }
 
 export default function Checkout() {
@@ -252,6 +257,33 @@ export default function Checkout() {
         return true;
     }
 
+    function construirMetodoPago(): MetodoPagoCompra | null {
+        if (metodoPago === 'Tarjeta') {
+            return {
+                tarjeta: {
+                    tarjeta: {
+                        identificador: obtenerSoloDigitos(numeroTarjeta),
+                        cvv: obtenerSoloDigitos(cvv),
+                        fechaVencimiento,
+                    },
+                    propietario: {
+                        nombre: nombreTarjeta.trim(),
+                    },
+                },
+            };
+        }
+
+        if (metodoPago === 'SINPE') {
+            return {
+                sinpe: {
+                    telefono: obtenerSoloDigitos(telefonoSinpe),
+                },
+            };
+        }
+
+        return null;
+    }
+
     async function confirmarCompra() {
         if (!usuario) return;
 
@@ -275,16 +307,27 @@ export default function Checkout() {
             return;
         }
 
+        const datosPago = construirMetodoPago();
+        if (!datosPago) {
+            Alert.alert('Metodo de pago requerido', 'Selecciona un metodo de pago para continuar.');
+            return;
+        }
+
         setEstaProcesando(true);
         try {
             const resultado = await realizarCompra({
                 idUsuario: usuario.IdUsuario,
                 metodoEntrega,
                 codigoCupon: resumenCompra?.cupon?.codigo,
+                metodoPago: datosPago,
                 ...datosDireccion,
             });
 
             limpiarCarrito();
+            const metodoPagoConfirmacion = metodoPago === 'Tarjeta' ? 'Tarjeta' : 'SINPE';
+            const detallePagoConfirmacion = metodoPago === 'Tarjeta'
+                ? enmascararUltimosCuatro(numeroTarjeta, '************')
+                : enmascararUltimosCuatro(telefonoSinpe, '****');
 
             router.replace({
                 pathname: './compra-confirmada',
@@ -293,6 +336,8 @@ export default function Checkout() {
                     numeroOrden: resultado.numeroOrden.toString(),
                     trackingNumber: resultado.trackingNumber ?? '',
                     direccionEntrega: resultado.direccionEntrega ?? '',
+                    metodoPago: metodoPagoConfirmacion,
+                    detallePago: detallePagoConfirmacion,
                 },
             });
         } catch (error) {

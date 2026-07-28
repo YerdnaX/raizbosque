@@ -10,11 +10,13 @@ const IMAGEN_TOPBAR = require('@/assets/images/login/topBar.png');
 
 export default function CompraConfirmada() {
     const insets = useSafeAreaInsets();
-    const { metodoEntrega, numeroOrden, trackingNumber, direccionEntrega } = useLocalSearchParams<{
+    const { metodoEntrega, numeroOrden, trackingNumber, direccionEntrega, metodoPago, detallePago } = useLocalSearchParams<{
         metodoEntrega?: string;
         numeroOrden?: string;
         trackingNumber?: string;
         direccionEntrega?: string;
+        metodoPago?: string;
+        detallePago?: string;
     }>();
 
     const esDomicilio = metodoEntrega === 'Domicilio';
@@ -87,6 +89,22 @@ export default function CompraConfirmada() {
                                         <Text style={estilos.direccionTexto}>{direccionEntrega || '-'}</Text>
                                     </>
                                 ) : null}
+                            </View>
+                        </View>
+
+                        <View style={estilos.filaInfo}>
+                            <SymbolView
+                                name={metodoPago === 'Tarjeta' ? 'creditcard.fill' : 'iphone'}
+                                size={22}
+                                tintColor="#526349"
+                            />
+                            <View style={estilos.infoTexto}>
+                                <Text style={estilos.infoEtiqueta}>Metodo de pago</Text>
+                                <Text style={estilos.infoValor}>
+                                    {metodoPago === 'Tarjeta' ? 'Tarjeta' : 'SINPE'}
+                                </Text>
+                                <Text style={estilos.infoEtiquetaSecundaria}>Detalle</Text>
+                                <Text style={estilos.infoValor}>{detallePago || '-'}</Text>
                             </View>
                         </View>
 
