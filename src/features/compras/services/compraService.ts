@@ -103,10 +103,17 @@ export async function obtenerHistorial(idUsuario: number): Promise<Compra[]> {
     return respuesta.data.compras;
 }
 
-export async function crearOrdenPaypal(idUsuario: number, codigoCupon?: string): Promise<OrdenPaypal> {
+export async function crearOrdenPaypal(
+    idUsuario: number,
+    urlRetorno: string,
+    urlCancelado: string,
+    codigoCupon?: string,
+): Promise<OrdenPaypal> {
     const respuesta = await apiClient.post<{ success: boolean } & OrdenPaypal>('/compras/paypal/crear-orden', {
         idUsuario,
         codigoCupon,
+        urlRetorno,
+        urlCancelado,
     });
     return respuesta.data;
 }

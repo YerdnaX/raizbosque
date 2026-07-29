@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
+import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { useUsuario } from '../context/UsuarioContext';
 import { useCarrito } from '../context/CarritoContext';
@@ -22,8 +23,6 @@ import {
 import SelectorUbicacion from '../features/ubicaciones/components/SelectorUbicacion';
 import VisaLogo from '@/assets/images/checkout/logo-payment-visa.svg';
 import MastercardLogo from '@/assets/images/checkout/logo-payment-mastercard.svg';
-
-const PAYPAL_URL_RETORNO = 'raizbosque://paypal-retorno';
 
 type MetodoEntrega = 'Tienda' | 'Domicilio';
 type MetodoPago = 'Tarjeta' | 'SINPE' | 'PayPal' | null;
@@ -345,9 +344,14 @@ export default function Checkout() {
         if (!usuario) return;
 
         try {
-            const orden = await crearOrdenPaypal(usuario.IdUsuario, resumenCompra?.cupon?.codigo);
+            // Linking.createURL genera el deep link correcto segun el entorno:
+            // exp://<ip>:8081/--/paypal-retorno en Expo Go, raizbosque://paypal-retorno en un build standalone.
+            const urlRetorno = Linking.createURL('paypal-retorno');
+            const urlCancelado = Linking.createURL('paypal-cancelado');
 
-            const resultadoAuth = await WebBrowser.openAuthSessionAsync(orden.approveUrl, PAYPAL_URL_RETORNO);
+            const orden = await crearOrdenPaypal(usuario.IdUsuario, urlRetorno, urlCancelado, resumenCompra?.cupon?.codigo);
+
+            const resultadoAuth = await WebBrowser.openAuthSessionAsync(orden.approveUrl, urlRetorno);
 
             if (resultadoAuth.type !== 'success') {
                 Alert.alert('Pago cancelado', 'No se completo el pago con PayPal.');
