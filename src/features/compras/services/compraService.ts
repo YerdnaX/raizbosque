@@ -67,6 +67,24 @@ export type TipoCambioVenta = {
     valor: number;
 };
 
+export type OrdenPaypal = {
+    orderId: string;
+    approveUrl: string;
+    montoUSD: number;
+};
+
+export type DatosCapturaPaypal = {
+    idUsuario: number;
+    metodoEntrega: 'Tienda' | 'Domicilio';
+    codigoCupon?: string;
+    orderId: string;
+    direccionEntrega?: string;
+    ubicacion?: {
+        idsSeleccionados: number[];
+        direccionExacta: string;
+    };
+};
+
 export async function obtenerResumenCompra(idUsuario: number, codigoCupon?: string): Promise<ResumenCompra> {
     const respuesta = await apiClient.post<{ success: boolean } & ResumenCompra>('/compras/resumen', {
         idUsuario,
@@ -83,6 +101,19 @@ export async function realizarCompra(datos: DatosCompra): Promise<ResultadoCompr
 export async function obtenerHistorial(idUsuario: number): Promise<Compra[]> {
     const respuesta = await apiClient.get<{ success: boolean; compras: Compra[] }>(`/compras/${idUsuario}`);
     return respuesta.data.compras;
+}
+
+export async function crearOrdenPaypal(idUsuario: number, codigoCupon?: string): Promise<OrdenPaypal> {
+    const respuesta = await apiClient.post<{ success: boolean } & OrdenPaypal>('/compras/paypal/crear-orden', {
+        idUsuario,
+        codigoCupon,
+    });
+    return respuesta.data;
+}
+
+export async function capturarPagoPaypal(datos: DatosCapturaPaypal): Promise<ResultadoCompra> {
+    const respuesta = await apiClient.post<{ success: boolean } & ResultadoCompra>('/compras/paypal/capturar', datos);
+    return respuesta.data;
 }
 
 export async function obtenerTipoCambioVenta(): Promise<TipoCambioVenta> {

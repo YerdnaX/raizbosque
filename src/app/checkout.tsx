@@ -6,9 +6,12 @@ import { useEffect, useState } from 'react';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
+import * as WebBrowser from 'expo-web-browser';
 import { useUsuario } from '../context/UsuarioContext';
 import { useCarrito } from '../context/CarritoContext';
 import {
+    capturarPagoPaypal,
+    crearOrdenPaypal,
     obtenerResumenCompra,
     obtenerTipoCambioVenta,
     realizarCompra,
@@ -20,8 +23,10 @@ import SelectorUbicacion from '../features/ubicaciones/components/SelectorUbicac
 import VisaLogo from '@/assets/images/checkout/logo-payment-visa.svg';
 import MastercardLogo from '@/assets/images/checkout/logo-payment-mastercard.svg';
 
+const PAYPAL_URL_RETORNO = 'raizbosque://paypal-retorno';
+
 type MetodoEntrega = 'Tienda' | 'Domicilio';
-type MetodoPago = 'Tarjeta' | 'SINPE' | null;
+type MetodoPago = 'Tarjeta' | 'SINPE' | 'PayPal' | null;
 type MarcaTarjeta = 'Visa' | 'Mastercard' | null;
 
 type SeleccionUbicacion = {
@@ -125,6 +130,11 @@ function formatearMontoDolares(monto: number) {
         currency: 'USD',
         minimumFractionDigits: 2,
     });
+}
+
+function obtenerParametroUrl(url: string, nombre: string) {
+    const coincidencia = url.match(new RegExp(`[?&]${nombre}=([^&]+)`));
+    return coincidencia ? decodeURIComponent(coincidencia[1]) : null;
 }
 
 export default function Checkout() {
@@ -251,6 +261,10 @@ export default function Checkout() {
             return false;
         }
 
+        if (metodoPago === 'PayPal') {
+            return true;
+        }
+
         if (metodoPago === 'SINPE') {
             if (obtenerSoloDigitos(telefonoSinpe).length !== 8) {
                 Alert.alert('SINPE no valido', 'Ingresa un numero SINPE de 8 digitos.');
@@ -327,28 +341,53 @@ export default function Checkout() {
         return null;
     }
 
-    async function confirmarCompra() {
+    async function confirmarCompraPaypal(datosDireccion: ReturnType<typeof construirDatosDireccion>) {
         if (!usuario) return;
 
-        if (!telefonoYaRegistrado && !telefono.trim()) {
-            Alert.alert('Teléfono requerido', 'Por favor ingresa un número de teléfono.');
-            return;
-        }
+        try {
+            const orden = await crearOrdenPaypal(usuario.IdUsuario, resumenCompra?.cupon?.codigo);
 
-        const datosDireccion = construirDatosDireccion();
-        if (metodoEntrega === 'Domicilio' && !datosDireccion) {
-            Alert.alert('Dirección requerida', 'Por favor completa la ubicación y la dirección exacta.');
-            return;
-        }
+            const resultadoAuth = await WebBrowser.openAuthSessionAsync(orden.approveUrl, PAYPAL_URL_RETORNO);
 
-        if (codigoCupon.trim() && !resumenCompra?.cupon) {
-            Alert.alert('Cupon pendiente', 'Presiona APLICAR para validar el cupon antes de confirmar.');
-            return;
-        }
+            if (resultadoAuth.type !== 'success') {
+                Alert.alert('Pago cancelado', 'No se completo el pago con PayPal.');
+                return;
+            }
 
-        if (!validarPagoSeleccionado()) {
-            return;
+            const payerId = obtenerParametroUrl(resultadoAuth.url, 'PayerID');
+            if (!payerId) {
+                Alert.alert('Pago cancelado', 'No se completo el pago con PayPal.');
+                return;
+            }
+
+            const resultado = await capturarPagoPaypal({
+                idUsuario: usuario.IdUsuario,
+                metodoEntrega,
+                codigoCupon: resumenCompra?.cupon?.codigo,
+                orderId: orden.orderId,
+                ...datosDireccion,
+            });
+
+            limpiarCarrito();
+
+            router.replace({
+                pathname: './compra-confirmada',
+                params: {
+                    metodoEntrega,
+                    numeroOrden: resultado.numeroOrden.toString(),
+                    trackingNumber: resultado.trackingNumber ?? '',
+                    direccionEntrega: resultado.direccionEntrega ?? '',
+                    metodoPago: 'PayPal',
+                    detallePago: usuario.Correo,
+                },
+            });
+        } catch (error) {
+            Alert.alert('Error', obtenerMensajeError(error, 'No se pudo procesar el pago con PayPal.'));
         }
+    }
+
+    async function confirmarCompraBanco(datosDireccion: ReturnType<typeof construirDatosDireccion>) {
+        if (!usuario) return;
 
         const datosPago = construirMetodoPago();
         if (!datosPago) {
@@ -356,7 +395,6 @@ export default function Checkout() {
             return;
         }
 
-        setEstaProcesando(true);
         try {
             const resultado = await realizarCompra({
                 idUsuario: usuario.IdUsuario,
@@ -385,6 +423,39 @@ export default function Checkout() {
             });
         } catch (error) {
             Alert.alert('Error', obtenerMensajeError(error, 'No se pudo procesar la compra. Intenta de nuevo.'));
+        }
+    }
+
+    async function confirmarCompra() {
+        if (!usuario) return;
+
+        if (!telefonoYaRegistrado && !telefono.trim()) {
+            Alert.alert('Teléfono requerido', 'Por favor ingresa un número de teléfono.');
+            return;
+        }
+
+        const datosDireccion = construirDatosDireccion();
+        if (metodoEntrega === 'Domicilio' && !datosDireccion) {
+            Alert.alert('Dirección requerida', 'Por favor completa la ubicación y la dirección exacta.');
+            return;
+        }
+
+        if (codigoCupon.trim() && !resumenCompra?.cupon) {
+            Alert.alert('Cupon pendiente', 'Presiona APLICAR para validar el cupon antes de confirmar.');
+            return;
+        }
+
+        if (!validarPagoSeleccionado()) {
+            return;
+        }
+
+        setEstaProcesando(true);
+        try {
+            if (metodoPago === 'PayPal') {
+                await confirmarCompraPaypal(datosDireccion);
+            } else {
+                await confirmarCompraBanco(datosDireccion);
+            }
         } finally {
             setEstaProcesando(false);
         }
@@ -699,6 +770,25 @@ export default function Checkout() {
                             </View>
                         </View>
                     )}
+
+                    <Pressable
+                        style={[estilos.opcionEntrega, metodoPago === 'PayPal' && estilos.opcionEntregaActiva]}
+                        android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
+                        onPress={() => setMetodoPago('PayPal')}
+                    >
+                        <View style={estilos.opcionEntregaIzq}>
+                            <SymbolView name="globe" size={22} tintColor={metodoPago === 'PayPal' ? '#1b3022' : '#737973'} />
+                            <View>
+                                <Text style={[estilos.opcionEntregaNombre, metodoPago === 'PayPal' && estilos.opcionEntregaNombreActivo]}>
+                                    Pago con PayPal
+                                </Text>
+                                <Text style={estilos.opcionEntregaDetalle}>Seras redirigido a PayPal para pagar</Text>
+                            </View>
+                        </View>
+                        <View style={[estilos.radio, metodoPago === 'PayPal' && estilos.radioActivo]}>
+                            {metodoPago === 'PayPal' && <View style={estilos.radioPunto} />}
+                        </View>
+                    </Pressable>
                 </View>
 
                 <View style={estilos.seccion}>
