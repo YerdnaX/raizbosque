@@ -123,6 +123,8 @@ The visual language balances the structured reliability of a premium SaaS produc
 ## Colors
 The palette is rooted in the "Costa Rican Verdant" spectrum.
 
+- **Emerald Ink (#064E3B):** The reinforced deep-green brand color. Used for the post-login welcome ritual background, primary action buttons, and the active bottom-navigation accent. Close in spirit to Forest Green below but reserved for moments that should feel most "branded" (calm, natural, trustworthy).
+- **Champagne (#F8E7C9):** Warm complementary tone used on top of Emerald Ink surfaces (e.g. welcome ritual text and mark) where it has strong contrast. Not intended to replace the cream backgrounds used elsewhere.
 - **Primary (Forest Green - #1B3022):** Used for primary headings, navigation bars, and high-emphasis components. Represents depth and sustainability.
 - **Secondary (Sage Green - #8DA082):** Used for subtle backgrounds, tags, and secondary interactions. Provides a soft, calming bridge between earth and forest.
 - **Tertiary (Soft Terracotta - #A65D46):** Used sparingly for call-to-actions (CTAs) and notifications. It mimics volcanic soil and warmth.

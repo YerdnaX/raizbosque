@@ -1,5 +1,6 @@
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { COLORES } from '@/constants/colores';
 import InicioIcono from '@/assets/icons/bottomBar/inicio.svg';
 import RestauranteIcono from '@/assets/icons/bottomBar/restaurante.svg';
 import ViveroIcono from '@/assets/icons/bottomBar/vivero.svg';
@@ -14,7 +15,7 @@ export default function TabsLayout() {
         <Tabs
             screenOptions={{
                 headerShown: false,
-                tabBarActiveTintColor: '#1b3022',
+                tabBarActiveTintColor: COLORES.esmeraldaTinta,
                 tabBarInactiveTintColor: '#8da082',
                 tabBarStyle: {
                     backgroundColor: '#ffffff',

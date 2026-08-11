@@ -45,7 +45,8 @@
     "web": "expo start --web",
     "lint": "expo lint",
     "listarsimuladoresandroid": "%LOCALAPPDATA%\\Android\\Sdk\\emulator\\emulator.exe -list-avds",
-    "lanzarsimuladorandroid": "%LOCALAPPDATA%\\Android\\Sdk\\emulator\\emulator.exe -avd Medium_Phone"
+    "lanzarsimuladorandroid": "%LOCALAPPDATA%\\Android\\Sdk\\emulator\\emulator.exe -avd Medium_Phone",
+    "build:android": "eas build --platform android --profile preview"
   },
   "private": true
 }

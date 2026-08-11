@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { login, verificarCodigo2FALogin } from "../features/auth/services/authService";
 import { useUsuario } from "../context/UsuarioContext";
+import { COLORES } from "../constants/colores";
 
 export default function Login() {
     const [identificador, setIdentificador] = useState("");
@@ -34,7 +35,7 @@ export default function Login() {
                 setUserId2FA(resultado.userId);
             } else {
                 guardarUsuario(resultado.usuario);
-                router.replace('/(tabs)/perfil');
+                router.replace('/bienvenida' as any);
             }
         } catch (error: any) {
             const cod = error?.response?.data?.codigo;
@@ -64,7 +65,7 @@ export default function Login() {
         try {
             const usuario = await verificarCodigo2FALogin(userId2FA!, codigo2FA);
             guardarUsuario(usuario);
-            router.replace('/(tabs)/perfil');
+            router.replace('/bienvenida' as any);
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
             if (cod === 'INVALID_2FA_CODE') {
@@ -249,10 +250,10 @@ const estilos = StyleSheet.create({
     mensajeError: { fontSize: 13, color: '#ba1a1a', marginBottom: 8, textAlign: 'center' },
     enlaces: { flexDirection: 'row', justifyContent: 'space-between', marginVertical: 12 },
     enlaceTexto: { fontSize: 12, color: '#526349', textDecorationLine: 'underline' },
-    botonEntrar: { backgroundColor: '#1b3022', borderRadius: 999, paddingVertical: 16, alignItems: 'center', marginBottom: 12, overflow: 'hidden' },
+    botonEntrar: { backgroundColor: COLORES.esmeraldaTinta, borderRadius: 999, paddingVertical: 16, alignItems: 'center', marginBottom: 12, overflow: 'hidden' },
     botonEntrarTexto: { color: '#ffffff', fontSize: 14, fontWeight: '600', letterSpacing: 1 },
-    botonRegistrarse: { borderWidth: 1.5, borderColor: '#1b3022', borderRadius: 999, paddingVertical: 16, alignItems: 'center', overflow: 'hidden' },
-    botonRegistrarseTexto: { color: '#1b3022', fontSize: 14, fontWeight: '600', letterSpacing: 1 },
+    botonRegistrarse: { borderWidth: 1.5, borderColor: COLORES.esmeraldaTinta, borderRadius: 999, paddingVertical: 16, alignItems: 'center', overflow: 'hidden' },
+    botonRegistrarseTexto: { color: COLORES.esmeraldaTinta, fontSize: 14, fontWeight: '600', letterSpacing: 1 },
     // Modal 2FA
     modalFondo: { flex: 1, backgroundColor: 'rgba(27,48,34,0.55)', justifyContent: 'center', alignItems: 'center', padding: 24 },
     modalTarjeta: { backgroundColor: '#ffffff', borderRadius: 24, padding: 28, width: '100%', shadowColor: '#1b3022', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 16, elevation: 8 },
