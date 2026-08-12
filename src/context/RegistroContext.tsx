@@ -1,4 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState } from 'react';
+import { cargarBorrador, eliminarBorrador } from '../utils/borradores';
+import { useGuardadoAutomatico } from '../hooks/useGuardadoAutomatico';
 
 type EstadoRegistro = {
     correo: string;
@@ -36,13 +38,43 @@ const estadoInicial: EstadoRegistro = {
     contrasena: '', respuesta1: '', respuesta2: '', respuesta3: '',
 };
 
+// El borrador solo guarda campos no sensibles: nunca contraseña, respuestas
+// de seguridad (funcionan como credencial alterna) ni el token de verificación.
+const CLAVE_BORRADOR = 'registro-progreso';
+
+type DraftRegistro = Pick<EstadoRegistro, 'correo' | 'nombre' | 'apellidos' | 'telefono' | 'direccion' | 'nombreUsuario'>;
+
+function extraerDraft(datos: EstadoRegistro): DraftRegistro {
+    const { correo, nombre, apellidos, telefono, direccion, nombreUsuario } = datos;
+    return { correo, nombre, apellidos, telefono, direccion, nombreUsuario };
+}
+
 const RegistroContext = createContext<RegistroContextType | null>(null);
 
 export function RegistroProvider({ children }: { children: React.ReactNode }) {
     const [datos, setDatos] = useState<EstadoRegistro>(estadoInicial);
+    const [hidratado, setHidratado] = useState(false);
+
+    useEffect(() => {
+        let activo = true;
+        cargarBorrador<DraftRegistro>(CLAVE_BORRADOR).then((draft) => {
+            if (activo && draft) {
+                setDatos((prev) => ({ ...prev, ...draft }));
+            }
+            if (activo) setHidratado(true);
+        });
+        return () => { activo = false; };
+    }, []);
+
+    useGuardadoAutomatico(CLAVE_BORRADOR, extraerDraft(datos), hidratado);
 
     const set = (campo: keyof EstadoRegistro) => (valor: string) =>
         setDatos(prev => ({ ...prev, [campo]: valor }));
+
+    function reiniciar() {
+        setDatos(estadoInicial);
+        eliminarBorrador(CLAVE_BORRADOR);
+    }
 
     return (
         <RegistroContext.Provider value={{
@@ -58,7 +90,7 @@ export function RegistroProvider({ children }: { children: React.ReactNode }) {
             setRespuesta1:    set('respuesta1'),
             setRespuesta2:    set('respuesta2'),
             setRespuesta3:    set('respuesta3'),
-            reiniciar:        () => setDatos(estadoInicial),
+            reiniciar,
         }}>
             {children}
         </RegistroContext.Provider>

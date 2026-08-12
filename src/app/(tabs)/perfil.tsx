@@ -1,6 +1,6 @@
 import {
     View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions, ImageBackground,
-    Modal, Image, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform,
+    Modal, Image, TextInput, ActivityIndicator, KeyboardAvoidingView, Platform, Switch,
 } from "react-native";
 import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
@@ -9,7 +9,9 @@ import { useState } from "react";
 import { useUsuario } from "../../context/UsuarioContext";
 import { useCarrito } from "../../context/CarritoContext";
 import { useIdioma } from "../../context/IdiomaContext";
+import { useBiometria } from "../../features/auth/hooks/useBiometria";
 import { SelectorIdiomaFila } from "../../components/ui/SelectorIdioma";
+import { COLORES } from "../../constants/colores";
 import {
     iniciarConfiguracion2FA,
     verificarActivacion2FA,
@@ -33,6 +35,20 @@ export default function Perfil() {
     const { usuario, cerrarSesion, actualizarTotp2FA } = useUsuario();
     const { totalItems } = useCarrito();
     const { t } = useIdioma();
+    const bio = useBiometria();
+    const [cambiandoBiometria, setCambiandoBiometria] = useState(false);
+
+    async function alternarBiometria(activar: boolean) {
+        if (cambiandoBiometria) return;
+        setCambiandoBiometria(true);
+        if (activar) {
+            const exito = await bio.autenticar();
+            if (exito) await bio.habilitar();
+        } else {
+            await bio.deshabilitar();
+        }
+        setCambiandoBiometria(false);
+    }
 
     const opcionesExtras: Opcion[] = [
         { titulo: t('profile.changePassword'), icono: 'lock',     ruta: '/cambiar-contrasena' },
@@ -205,6 +221,33 @@ export default function Perfil() {
                         <SymbolView name="chevron.right" size={16} tintColor="#737973" />
                     </Pressable>
                     <View style={estilos.divisor} />
+
+                    {/* Seguridad – biometría (solo si el dispositivo tiene hardware) */}
+                    {bio.hayHardware && (
+                        <>
+                            <View style={estilos.opcion}>
+                                <SymbolView name="lock.shield" size={22} tintColor="#434843" />
+                                <View style={estilos.opcionConEstado}>
+                                    <Text style={estilos.opcionTexto}>{t('biometria.configuracionTitulo')}</Text>
+                                    <Text style={estilos.estadoInactivo}>
+                                        {bio.disponible ? t('biometria.configuracionSubtitulo') : t('biometria.configuracionNoDisponible')}
+                                    </Text>
+                                </View>
+                                {cambiandoBiometria ? (
+                                    <ActivityIndicator size="small" color={COLORES.esmeraldaTinta} />
+                                ) : (
+                                    <Switch
+                                        value={bio.habilitada}
+                                        onValueChange={alternarBiometria}
+                                        disabled={!bio.disponible}
+                                        trackColor={{ false: '#c3c8c1', true: COLORES.esmeraldaTinta }}
+                                        thumbColor="#ffffff"
+                                    />
+                                )}
+                            </View>
+                            <View style={estilos.divisor} />
+                        </>
+                    )}
 
                     {/* Idioma */}
                     <SelectorIdiomaFila

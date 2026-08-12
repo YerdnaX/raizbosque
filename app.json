@@ -42,7 +42,13 @@
           }
         }
       ],
-      "expo-localization"
+      "expo-localization",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "RaízBosque usa la biometría de tu dispositivo para un reingreso rápido y seguro."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

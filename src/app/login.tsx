@@ -2,10 +2,13 @@ import { View, Text, TextInput, Pressable, StyleSheet, ImageBackground, ScrollVi
 import { useState } from "react";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { SymbolView } from "expo-symbols";
 import { login, verificarCodigo2FALogin } from "../features/auth/services/authService";
 import { useUsuario } from "../context/UsuarioContext";
 import { useIdioma } from "../context/IdiomaContext";
+import { useBiometria } from "../features/auth/hooks/useBiometria";
 import { COLORES } from "../constants/colores";
+import type { Usuario } from "../features/auth/types/usuario";
 
 export default function Login() {
     const { t } = useIdioma();
@@ -15,13 +18,51 @@ export default function Login() {
     const [estaCargando, setEstaCargando] = useState(false);
     const [error, setError] = useState('');
     const insets = useSafeAreaInsets();
-    const { guardarUsuario } = useUsuario();
+    const { usuario, guardarUsuario } = useUsuario();
+    const bio = useBiometria();
+    const [entrandoConBiometria, setEntrandoConBiometria] = useState(false);
+    const [mostrarActivarBiometria, setMostrarActivarBiometria] = useState(false);
 
     // Estado para el paso de 2FA
     const [userId2FA, setUserId2FA] = useState<number | null>(null);
     const [codigo2FA, setCodigo2FA] = useState('');
     const [cargando2FA, setCargando2FA] = useState(false);
     const [error2FA, setError2FA] = useState('');
+
+    // Tras un login normal exitoso: si el dispositivo soporta biometría y el
+    // usuario nunca respondió, ofrecerla antes de continuar a Home.
+    function completarLogin(usuarioLogueado: Usuario) {
+        guardarUsuario(usuarioLogueado);
+        if (bio.disponible && !bio.habilitada && !bio.yaPreguntada) {
+            setMostrarActivarBiometria(true);
+            return;
+        }
+        router.replace('/bienvenida' as any);
+    }
+
+    async function confirmarActivarBiometria() {
+        await bio.habilitar();
+        setMostrarActivarBiometria(false);
+        router.replace('/bienvenida' as any);
+    }
+
+    async function declinarActivarBiometria() {
+        await bio.declinarPregunta();
+        setMostrarActivarBiometria(false);
+        router.replace('/bienvenida' as any);
+    }
+
+    async function manejarLoginBiometrico() {
+        setError('');
+        setEntrandoConBiometria(true);
+        const exito = await bio.autenticar();
+        setEntrandoConBiometria(false);
+        if (exito) {
+            router.replace('/bienvenida' as any);
+        } else {
+            setError(t('biometria.fallidoMensaje'));
+        }
+    }
 
     async function manejarLogin() {
         setError('');
@@ -36,8 +77,7 @@ export default function Login() {
             if (resultado.requires2FA) {
                 setUserId2FA(resultado.userId);
             } else {
-                guardarUsuario(resultado.usuario);
-                router.replace('/bienvenida' as any);
+                completarLogin(resultado.usuario);
             }
         } catch (error: any) {
             const cod = error?.response?.data?.codigo;
@@ -65,9 +105,9 @@ export default function Login() {
         }
         setCargando2FA(true);
         try {
-            const usuario = await verificarCodigo2FALogin(userId2FA!, codigo2FA);
-            guardarUsuario(usuario);
-            router.replace('/bienvenida' as any);
+            const usuarioVerificado = await verificarCodigo2FALogin(userId2FA!, codigo2FA);
+            setUserId2FA(null);
+            completarLogin(usuarioVerificado);
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
             if (cod === 'INVALID_2FA_CODE') {
@@ -99,6 +139,33 @@ export default function Login() {
                 <View style={estilos.tarjeta}>
                     <Text style={estilos.titulo}>RAÍCES BOSQUE</Text>
                     <Text style={estilos.subtitulo}>{t('auth.login.title')}</Text>
+
+                    {bio.listaParaUsar && usuario && (
+                        <>
+                            <Pressable
+                                style={[estilos.botonBiometria, entrandoConBiometria && { opacity: 0.7 }]}
+                                android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
+                                onPress={manejarLoginBiometrico}
+                                disabled={entrandoConBiometria}
+                                accessibilityRole="button"
+                                accessibilityLabel={bio.etiqueta}
+                            >
+                                {entrandoConBiometria
+                                    ? <ActivityIndicator color={COLORES.esmeraldaTinta} />
+                                    : (
+                                        <>
+                                            <SymbolView name="lock.shield" size={18} tintColor={COLORES.esmeraldaTinta} />
+                                            <Text style={estilos.botonBiometriaTexto}>{bio.etiqueta}</Text>
+                                        </>
+                                    )}
+                            </Pressable>
+                            <View style={estilos.separadorFila}>
+                                <View style={estilos.separadorLinea} />
+                                <Text style={estilos.separadorTexto}>{t('common.or')}</Text>
+                                <View style={estilos.separadorLinea} />
+                            </View>
+                        </>
+                    )}
 
                     <View style={estilos.campo}>
                         <Text style={estilos.etiqueta}>{t('auth.login.emailOrUsernameLabel')}</Text>
@@ -221,6 +288,37 @@ export default function Login() {
                     </View>
                 </KeyboardAvoidingView>
             </Modal>
+
+            {/* Oferta discreta de activar biometría tras el primer login exitoso */}
+            <Modal
+                visible={mostrarActivarBiometria}
+                transparent
+                animationType="fade"
+                onRequestClose={declinarActivarBiometria}
+            >
+                <View style={estilos.modalFondo}>
+                    <View style={estilos.modalTarjeta}>
+                        <SymbolView name="lock.shield" size={28} tintColor={COLORES.esmeraldaTinta} style={{ alignSelf: 'center', marginBottom: 12 }} />
+                        <Text style={estilos.modalTitulo}>{t('biometria.activarPreguntaTitulo')}</Text>
+
+                        <Pressable
+                            style={estilos.botonEntrar}
+                            android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
+                            onPress={confirmarActivarBiometria}
+                        >
+                            <Text style={estilos.botonEntrarTexto}>{t('biometria.activar')}</Text>
+                        </Pressable>
+
+                        <Pressable
+                            style={estilos.botonRegistrarse}
+                            android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
+                            onPress={declinarActivarBiometria}
+                        >
+                            <Text style={estilos.botonRegistrarseTexto}>{t('biometria.ahoraNo')}</Text>
+                        </Pressable>
+                    </View>
+                </View>
+            </Modal>
         </ImageBackground>
     );
 }
@@ -256,6 +354,15 @@ const estilos = StyleSheet.create({
     botonEntrarTexto: { color: '#ffffff', fontSize: 14, fontWeight: '600', letterSpacing: 1 },
     botonRegistrarse: { borderWidth: 1.5, borderColor: COLORES.esmeraldaTinta, borderRadius: 999, paddingVertical: 16, alignItems: 'center', overflow: 'hidden' },
     botonRegistrarseTexto: { color: COLORES.esmeraldaTinta, fontSize: 14, fontWeight: '600', letterSpacing: 1 },
+    botonBiometria: {
+        flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 8,
+        borderWidth: 1.5, borderColor: COLORES.esmeraldaTinta, borderRadius: 999,
+        paddingVertical: 14, marginBottom: 16, overflow: 'hidden',
+    },
+    botonBiometriaTexto: { color: COLORES.esmeraldaTinta, fontSize: 14, fontWeight: '600' },
+    separadorFila: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 16 },
+    separadorLinea: { flex: 1, height: 1, backgroundColor: '#e5e2dc' },
+    separadorTexto: { fontSize: 12, color: '#9ca09a' },
     // Modal 2FA
     modalFondo: { flex: 1, backgroundColor: 'rgba(27,48,34,0.55)', justifyContent: 'center', alignItems: 'center', padding: 24 },
     modalTarjeta: { backgroundColor: '#ffffff', borderRadius: 24, padding: 28, width: '100%', shadowColor: '#1b3022', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 16, elevation: 8 },

@@ -1,5 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { limpiarPreferenciaBiometrica } from '../features/auth/services/biometriaService';
+import { eliminarBorrador } from '../utils/borradores';
+import { claveBorradorCheckout } from '../features/compras/utils/claveBorradorCheckout';
 import type { Usuario } from '../features/auth/types/usuario';
 
 const CLAVE_USUARIO = 'usuario';
@@ -41,6 +44,10 @@ export function UsuarioProvider({ children }: { children: React.ReactNode }) {
     }
 
     function cerrarSesion() {
+        if (usuario) {
+            eliminarBorrador(claveBorradorCheckout(usuario.IdUsuario));
+        }
+        limpiarPreferenciaBiometrica();
         setUsuario(null);
         AsyncStorage.removeItem(CLAVE_USUARIO);
     }

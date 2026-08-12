@@ -10,6 +10,9 @@ import * as WebBrowser from 'expo-web-browser';
 import { useUsuario } from '../context/UsuarioContext';
 import { useCarrito } from '../context/CarritoContext';
 import { useIdioma } from '../context/IdiomaContext';
+import { cargarBorrador, eliminarBorrador } from '../utils/borradores';
+import { useGuardadoAutomatico } from '../hooks/useGuardadoAutomatico';
+import { claveBorradorCheckout } from '../features/compras/utils/claveBorradorCheckout';
 import {
     capturarPagoPaypal,
     crearOrdenPaypal,
@@ -34,6 +37,19 @@ type ErrorApi = {
             message?: string;
         };
     };
+};
+
+// Progreso temporal de checkout: nunca incluye número de tarjeta, nombre en
+// la tarjeta, vencimiento, CVV ni teléfono SINPE (solo el método elegido).
+type DraftCheckout = {
+    paso: PasoCheckout;
+    metodoEntrega: MetodoEntrega;
+    telefono: string;
+    usarDireccionGuardada: boolean;
+    ubicacionSeleccion: SeleccionUbicacion;
+    direccionExacta: string;
+    metodoPago: MetodoPago;
+    codigoCupon: string;
 };
 
 function obtenerMensajeError(error: unknown, mensajePorDefecto: string) {
@@ -159,6 +175,36 @@ export default function Checkout() {
     const [estaProcesando, setEstaProcesando] = useState(false);
     const [tipoCambioVenta, setTipoCambioVenta] = useState<TipoCambioVenta | null>(null);
     const [errorTipoCambio, setErrorTipoCambio] = useState('');
+
+    const [draftHidratado, setDraftHidratado] = useState(false);
+    const claveDraft = usuario ? claveBorradorCheckout(usuario.IdUsuario) : null;
+
+    // Restaura progreso guardado (si existe y no expiró) al entrar a Checkout.
+    useEffect(() => {
+        if (!claveDraft) { setDraftHidratado(true); return; }
+        let activo = true;
+        cargarBorrador<DraftCheckout>(claveDraft).then((draft) => {
+            if (activo && draft) {
+                setPaso(draft.paso);
+                setMetodoEntrega(draft.metodoEntrega);
+                if (draft.telefono) setTelefono(draft.telefono);
+                setUsarDireccionGuardada(draft.usarDireccionGuardada);
+                setUbicacionSeleccion(draft.ubicacionSeleccion);
+                setDireccionExacta(draft.direccionExacta);
+                setMetodoPago(draft.metodoPago);
+                setCodigoCupon(draft.codigoCupon);
+            }
+            if (activo) setDraftHidratado(true);
+        });
+        return () => { activo = false; };
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [claveDraft]);
+
+    // Auto-guardado con debounce mientras el usuario completa el checkout.
+    useGuardadoAutomatico<DraftCheckout>(claveDraft, {
+        paso, metodoEntrega, telefono, usarDireccionGuardada, ubicacionSeleccion,
+        direccionExacta, metodoPago, codigoCupon,
+    }, draftHidratado && !!claveDraft);
 
     const impuesto = Math.round(total * 0.13 * 100) / 100;
     const totalConIva = Math.round((total + impuesto) * 100) / 100;
@@ -413,6 +459,7 @@ export default function Checkout() {
             });
 
             limpiarCarrito();
+            if (claveDraft) eliminarBorrador(claveDraft);
 
             router.replace({
                 pathname: './compra-confirmada',
@@ -449,6 +496,7 @@ export default function Checkout() {
             });
 
             limpiarCarrito();
+            if (claveDraft) eliminarBorrador(claveDraft);
             const metodoPagoConfirmacion = metodoPago === 'Tarjeta' ? 'Tarjeta' : 'SINPE';
             const detallePagoConfirmacion = metodoPago === 'Tarjeta'
                 ? enmascararUltimosCuatro(numeroTarjeta, '************')
