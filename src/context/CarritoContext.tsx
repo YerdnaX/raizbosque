@@ -16,9 +16,21 @@ type CarritoContextType = {
     total: number;
     estaCargando: boolean;
     agregarAlCarrito: (idProducto: number, precio: number) => Promise<boolean>;
+    agregarVariosAlCarrito: (solicitudes: SolicitudCarrito[]) => Promise<ResultadoAgregarVarios>;
     actualizarCantidad: (idDetalle: number, cantidad: number) => Promise<void>;
     eliminarDelCarrito: (idDetalle: number) => Promise<void>;
     limpiarCarrito: () => void;
+};
+
+export type SolicitudCarrito = {
+    idProducto: number;
+    precio: number;
+    cantidad: number;
+};
+
+export type ResultadoAgregarVarios = {
+    unidadesAgregadas: number;
+    productosFallidos: number[];
 };
 
 const CarritoContext = createContext<CarritoContextType | null>(null);
@@ -78,6 +90,31 @@ export function CarritoProvider({ children }: { children: ReactNode }) {
         }
     }
 
+    async function agregarVariosAlCarrito(solicitudes: SolicitudCarrito[]): Promise<ResultadoAgregarVarios> {
+        if (!usuario) {
+            Alert.alert(t('cart.loginRequiredTitle'), t('cart.loginRequiredMessage'));
+            return { unidadesAgregadas: 0, productosFallidos: solicitudes.map(item => item.idProducto) };
+        }
+
+        let unidadesAgregadas = 0;
+        const productosFallidos = new Set<number>();
+
+        for (const solicitud of solicitudes) {
+            for (let unidad = 0; unidad < solicitud.cantidad; unidad += 1) {
+                try {
+                    await agregarItemService(usuario.IdUsuario, solicitud.idProducto, solicitud.precio);
+                    unidadesAgregadas += 1;
+                } catch {
+                    productosFallidos.add(solicitud.idProducto);
+                    break;
+                }
+            }
+        }
+
+        if (unidadesAgregadas > 0) await recargarCarrito();
+        return { unidadesAgregadas, productosFallidos: Array.from(productosFallidos) };
+    }
+
     async function actualizarCantidad(idDetalle: number, cantidad: number) {
         try {
             await actualizarCantidadService(idDetalle, cantidad);
@@ -101,7 +138,7 @@ export function CarritoProvider({ children }: { children: ReactNode }) {
     }
 
     return (
-        <CarritoContext.Provider value={{ items, totalItems, total, estaCargando, agregarAlCarrito, actualizarCantidad, eliminarDelCarrito, limpiarCarrito }}>
+        <CarritoContext.Provider value={{ items, totalItems, total, estaCargando, agregarAlCarrito, agregarVariosAlCarrito, actualizarCantidad, eliminarDelCarrito, limpiarCarrito }}>
             {children}
         </CarritoContext.Provider>
     );

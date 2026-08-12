@@ -4,6 +4,7 @@ import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cambiarContrasenaVencida } from '../features/auth/services/authService';
 import { useIdioma } from '../context/IdiomaContext';
+import { BotonAtras } from '../components/ui/BotonAtras';
 
 function evaluarRequisitos(valor: string, t: (key: string) => string) {
     return [
@@ -107,9 +108,7 @@ export default function ContrasenaVencida() {
                         {enviando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>{t('auth.expiredPassword.submit')}</Text>}
                     </Pressable>
 
-                    <Pressable style={estilos.enlaceAtras} onPress={() => router.replace('/login')}>
-                        <Text style={estilos.enlaceAtrasTexto}>{t('auth.expiredPassword.backHome')}</Text>
-                    </Pressable>
+                    <BotonAtras variante="enlace" etiqueta={t('auth.expiredPassword.backHome')} onPress={() => router.replace('/login')} />
                 </View>
             </ScrollView>
         </ImageBackground>

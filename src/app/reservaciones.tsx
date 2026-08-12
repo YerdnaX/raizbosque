@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 import { useUsuario } from '../context/UsuarioContext';
 import { useIdioma } from '../context/IdiomaContext';
+import { BotonAtras } from '../components/ui/BotonAtras';
 import {
     obtenerReservaciones,
     cancelarReservacion,
@@ -103,11 +104,7 @@ export default function Reservaciones() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(255,255,255,0.22)', foreground: true }} onPress={() => router.back()}>
-                    <View style={estilos.fondoAtras}>
-                        <Text style={estilos.botonAtrasTexto}>‹</Text>
-                    </View>
-                </Pressable>
+                <BotonAtras />
                 <Text style={estilos.encabezadoTitulo}>{t('reservations.headerTitle')}</Text>
                 <Pressable
                     style={estilos.botonNueva}

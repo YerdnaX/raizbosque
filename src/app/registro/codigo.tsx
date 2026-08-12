@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRegistro } from '../../context/RegistroContext';
 import { useIdioma } from '../../context/IdiomaContext';
 import { verificarCodigoRegistro, enviarCodigoRegistro } from '../../features/auth/services/authService';
+import { BotonAtras } from '../../components/ui/BotonAtras';
 
 export default function RegistroCodigo() {
     const insets = useSafeAreaInsets();
@@ -99,9 +100,7 @@ export default function RegistroCodigo() {
                         }
                     </Pressable>
 
-                    <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>{t('auth.register.code.changeEmail')}</Text>
-                    </Pressable>
+                    <BotonAtras variante="enlace" etiqueta={t('auth.register.code.changeEmail')} />
                 </View>
             </ScrollView>
         </ImageBackground>

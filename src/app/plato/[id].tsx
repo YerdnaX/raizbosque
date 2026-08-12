@@ -7,6 +7,7 @@ import { useDetalleRestaurante } from '../../features/restaurante/hooks/useDetal
 import { urlImagen } from '../../utils/urlImagen';
 import { useCarrito } from '../../context/CarritoContext';
 import { useIdioma } from '../../context/IdiomaContext';
+import { BotonAtras } from '../../components/ui/BotonAtras';
 
 const IMAGEN_TOPBAR = require('@/assets/images/login/topBar.png');
 
@@ -16,11 +17,7 @@ function Encabezado() {
     return (
         <>
             <ImageBackground source={IMAGEN_TOPBAR} style={[estilos.encabezado, { paddingTop: insets.top }]} resizeMode="cover">
-                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(255,255,255,0.22)', foreground: true }} onPress={() => router.back()}>
-                    <View style={estilos.fondoAtras}>
-                        <Text style={estilos.botonAtrasTexto}>‹</Text>
-                    </View>
-                </Pressable>
+                <BotonAtras />
                 <Text style={estilos.encabezadoTitulo}>RAÍCES</Text>
                 <Pressable style={estilos.botonEncabezado} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.push('/carrito')}>
                     <View>

@@ -1,15 +1,19 @@
 import {
     View, Text, Pressable, FlatList, Modal, ScrollView,
-    StyleSheet, ActivityIndicator, ImageBackground,
+    StyleSheet, ActivityIndicator, ImageBackground, Alert, Image,
 } from 'react-native';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 import { useUsuario } from '../context/UsuarioContext';
 import { useIdioma } from '../context/IdiomaContext';
+import { BotonAtras } from '../components/ui/BotonAtras';
 import { obtenerHistorial } from '../features/compras/services/compraService';
 import type { Compra } from '../features/compras/types/compra';
+import { useCarrito } from '../context/CarritoContext';
+import { obtenerPlantasVivero } from '../features/vivero/services/viveroService';
+import { obtenerProductos } from '../features/productos/services/productosService';
 
 type ClaveFiltro = 'filterAll' | 'filterPending' | 'filterCompleted';
 const FILTROS: { valor: string; claveEtiqueta: ClaveFiltro }[] = [
@@ -42,12 +46,15 @@ function formatearFecha(fechaISO: string, meses: readonly string[]): string {
 export default function Historial() {
     const insets = useSafeAreaInsets();
     const { usuario } = useUsuario();
-    const { t, strings } = useIdioma();
+    const { t, tn, strings } = useIdioma();
+    const { items: itemsCarrito, agregarVariosAlCarrito } = useCarrito();
     const [compras, setCompras] = useState<Compra[]>([]);
     const [estaCargando, setEstaCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [filtro, setFiltro] = useState('Todos');
     const [compraDetalle, setCompraDetalle] = useState<Compra | null>(null);
+    const [compraRecomprando, setCompraRecomprando] = useState<number | null>(null);
+    const recompraEnCurso = useRef(false);
 
     useEffect(() => {
         if (!usuario) return;
@@ -68,6 +75,69 @@ export default function Historial() {
         }
     }
 
+    async function comprarDeNuevo(compra: Compra) {
+        if (recompraEnCurso.current) return;
+        recompraEnCurso.current = true;
+        setCompraRecomprando(compra.IdCompra);
+
+        try {
+            const [plantas, productos] = await Promise.all([
+                obtenerPlantasVivero(),
+                obtenerProductos(),
+            ]);
+            const catalogoActual = new Map(
+                [...plantas, ...productos].map(producto => [producto.IdProducto, producto]),
+            );
+            const cantidadesActuales = new Map(
+                itemsCarrito.map(item => [item.IdProducto, item.Cantidad]),
+            );
+            const nombresOmitidos = new Set<string>();
+            const nombresPorId = new Map(compra.items.map(item => [item.IdProducto, item.Nombre]));
+            const solicitudes = compra.items.flatMap(item => {
+                const productoActual = catalogoActual.get(item.IdProducto);
+                const cantidadEnCarrito = cantidadesActuales.get(item.IdProducto) ?? 0;
+
+                if (!productoActual || productoActual.Stock <= cantidadEnCarrito) {
+                    nombresOmitidos.add(item.Nombre);
+                    return [];
+                }
+
+                const cantidad = Math.min(item.Cantidad, productoActual.Stock - cantidadEnCarrito);
+                if (cantidad < item.Cantidad) nombresOmitidos.add(item.Nombre);
+                return [{ idProducto: item.IdProducto, precio: productoActual.Precio, cantidad }];
+            });
+
+            const resultado = await agregarVariosAlCarrito(solicitudes);
+            resultado.productosFallidos.forEach(id => {
+                nombresOmitidos.add(nombresPorId.get(id) ?? String(id));
+            });
+
+            const partesMensaje: string[] = [];
+            if (resultado.unidadesAgregadas > 0) {
+                partesMensaje.push(tn('purchaseHistory.reorderAdded', resultado.unidadesAgregadas));
+            } else {
+                partesMensaje.push(t('purchaseHistory.reorderNothingAdded'));
+            }
+            if (nombresOmitidos.size > 0) {
+                partesMensaje.push(tn('purchaseHistory.reorderUnavailable', nombresOmitidos.size, {
+                    names: Array.from(nombresOmitidos).join(', '),
+                }));
+            }
+
+            Alert.alert(t('purchaseHistory.reorderResultTitle'), partesMensaje.join('\n\n'), [
+                { text: t('purchaseHistory.continue'), style: 'cancel' },
+                ...(resultado.unidadesAgregadas > 0
+                    ? [{ text: t('purchaseHistory.viewCart'), onPress: () => router.push('/carrito' as never) }]
+                    : []),
+            ]);
+        } catch {
+            Alert.alert(t('common.error'), t('purchaseHistory.reorderLoadError'));
+        } finally {
+            recompraEnCurso.current = false;
+            setCompraRecomprando(null);
+        }
+    }
+
     const comprasFiltradas = filtro === 'Todos'
         ? compras
         : compras.filter(c => c.EstadoCompra === filtro);
@@ -81,11 +151,7 @@ export default function Historial() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(255,255,255,0.22)', foreground: true }} onPress={() => router.back()}>
-                    <View style={estilos.fondoAtras}>
-                        <Text style={estilos.botonAtrasTexto}>‹</Text>
-                    </View>
-                </Pressable>
+                <BotonAtras />
                 <Text style={estilos.encabezadoTitulo}>{t('purchaseHistory.headerTitle')}</Text>
                 <View style={estilos.espaciador} />
             </ImageBackground>
@@ -136,7 +202,13 @@ export default function Historial() {
                     contentContainerStyle={estilos.lista}
                     showsVerticalScrollIndicator={false}
                     renderItem={({ item }) => (
-                        <TarjetaCompra compra={item} onVerDetalle={() => setCompraDetalle(item)} />
+                        <TarjetaCompra
+                            compra={item}
+                            onVerDetalle={() => setCompraDetalle(item)}
+                            onComprarDeNuevo={() => comprarDeNuevo(item)}
+                            estaRecomprando={compraRecomprando === item.IdCompra}
+                            deshabilitada={compraRecomprando !== null}
+                        />
                     )}
                 />
             )}
@@ -158,8 +230,14 @@ export default function Historial() {
                                     </Text>
                                     <Text style={estilos.modalFecha}>{formatearFecha(compraDetalle.FechaCompra, strings.common.months)}</Text>
                                 </View>
-                                <Pressable onPress={() => setCompraDetalle(null)} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} style={estilos.modalCerrar}>
-                                    <SymbolView name="xmark" size={18} tintColor="#434843" />
+                                <Pressable
+                                    onPress={() => setCompraDetalle(null)}
+                                    android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
+                                    style={estilos.modalCerrar}
+                                    accessibilityRole="button"
+                                    accessibilityLabel={t('common.back')}
+                                >
+                                    <Image source={require('@/assets/icons/atras.png')} style={estilos.modalCerrarIcono} resizeMode="contain" />
                                 </Pressable>
                             </View>
 
@@ -228,7 +306,13 @@ function BadgeEstado({ estado }: { estado: string }) {
     );
 }
 
-function TarjetaCompra({ compra, onVerDetalle }: { compra: Compra; onVerDetalle: () => void }) {
+function TarjetaCompra({ compra, onVerDetalle, onComprarDeNuevo, estaRecomprando, deshabilitada }: {
+    compra: Compra;
+    onVerDetalle: () => void;
+    onComprarDeNuevo: () => void;
+    estaRecomprando: boolean;
+    deshabilitada: boolean;
+}) {
     const { t, tn, strings } = useIdioma();
     const nombresProductos = compra.items.map(i => i.Nombre).join(', ');
     const totalItems = compra.items.reduce((s, i) => s + i.Cantidad, 0);
@@ -267,6 +351,21 @@ function TarjetaCompra({ compra, onVerDetalle }: { compra: Compra; onVerDetalle:
             <View style={estilos.tarjetaAcciones}>
                 <Pressable style={estilos.botonDetalle} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={onVerDetalle}>
                     <Text style={estilos.botonDetalleTexto}>{t('purchaseHistory.viewDetails')}</Text>
+                </Pressable>
+                <View style={estilos.separadorAcciones} />
+                <Pressable
+                    style={[estilos.botonRecompra, deshabilitada && estilos.botonDeshabilitado]}
+                    android_ripple={{ color: 'rgba(255,255,255,0.20)' }}
+                    onPress={onComprarDeNuevo}
+                    disabled={deshabilitada}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('purchaseHistory.buyAgain')}
+                    accessibilityState={{ disabled: deshabilitada, busy: estaRecomprando }}
+                >
+                    {estaRecomprando && <ActivityIndicator size="small" color="#F8E7C9" />}
+                    <Text style={estilos.botonRecompraTexto}>
+                        {estaRecomprando ? t('purchaseHistory.buyingAgain') : t('purchaseHistory.buyAgain')}
+                    </Text>
                 </Pressable>
             </View>
         </View>
@@ -490,6 +589,27 @@ const estilos = StyleSheet.create({
         fontWeight: '600',
         color: '#1b3022',
     },
+    separadorAcciones: {
+        width: 1,
+        backgroundColor: '#e5e2dc',
+    },
+    botonRecompra: {
+        flex: 1,
+        minHeight: 48,
+        flexDirection: 'row',
+        gap: 7,
+        paddingHorizontal: 8,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: '#064E3B',
+    },
+    botonRecompraTexto: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#F8E7C9',
+        textAlign: 'center',
+    },
+    botonDeshabilitado: { opacity: 0.65 },
     // Modal
     modalFondo: {
         flex: 1,
@@ -531,6 +651,10 @@ const estilos = StyleSheet.create({
         backgroundColor: '#f0eee8',
         justifyContent: 'center',
         alignItems: 'center',
+    },
+    modalCerrarIcono: {
+        width: 20,
+        height: 20,
     },
     modalScroll: {
         paddingHorizontal: 20,

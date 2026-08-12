@@ -1,5 +1,4 @@
-import { View, Text, TextInput, Pressable, FlatList, StyleSheet, ActivityIndicator, ImageBackground, Image } from "react-native";
-import { useState, useMemo } from "react";
+import { View, Text, Pressable, FlatList, StyleSheet, ActivityIndicator, ImageBackground, Image } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
@@ -8,25 +7,15 @@ import { useProductos } from '../../features/productos/hooks/useProductos';
 import { urlImagen } from '../../utils/urlImagen';
 import { useCarrito } from '../../context/CarritoContext';
 import { useIdioma } from '../../context/IdiomaContext';
+import { BusquedaFiltrosCatalogo } from '../../features/catalogo/components/BusquedaFiltrosCatalogo';
+import { useBusquedaCatalogo } from '../../features/catalogo/hooks/useBusquedaCatalogo';
 
 export default function Productos() {
     const insets = useSafeAreaInsets();
     const { productos, estaCargando, error } = useProductos();
     const { agregarAlCarrito, totalItems } = useCarrito();
     const { t } = useIdioma();
-    const [busqueda, setBusqueda] = useState('');
-    const [filtroActivo, setFiltroActivo] = useState('Todos');
-
-    const categorias = useMemo(
-        () => ['Todos', ...Array.from(new Set(productos.map(p => p.NombreCategoria)))],
-        [productos],
-    );
-
-    const productosFiltrados = productos.filter(p => {
-        const coincideBusqueda = p.Nombre.toLowerCase().includes(busqueda.toLowerCase());
-        const coincideFiltro = filtroActivo === 'Todos' || p.NombreCategoria === filtroActivo;
-        return coincideBusqueda && coincideFiltro;
-    });
+    const catalogo = useBusquedaCatalogo(productos);
 
     return (
         <View style={estilos.contenedor}>
@@ -61,42 +50,35 @@ export default function Productos() {
                 </View>
             ) : (
                 <FlatList
-                    data={productosFiltrados}
+                    data={catalogo.resultados}
                     keyExtractor={p => p.IdProducto.toString()}
                     numColumns={2}
                     contentContainerStyle={estilos.lista}
                     columnWrapperStyle={estilos.fila}
                     showsVerticalScrollIndicator={false}
                     ListHeaderComponent={
-                        <View style={estilos.cabecera}>
-                            <View style={estilos.barraBusqueda}>
-                                <SymbolView name="magnifyingglass" size={18} tintColor="#737973" />
-                                <TextInput
-                                    style={estilos.inputBusqueda}
-                                    placeholder={t('shop.products.searchPlaceholder')}
-                                    placeholderTextColor="#b0b0a8"
-                                    value={busqueda}
-                                    onChangeText={setBusqueda}
-                                />
-                            </View>
-                            <View style={estilos.filtros}>
-                                {categorias.map(filtro => (
-                                    <Pressable
-                                        key={filtro}
-                                        style={[estilos.chip, filtroActivo === filtro && estilos.chipActivo]}
-                                        android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
-                                        onPress={() => setFiltroActivo(filtro)}
-                                    >
-                                        <Text style={[estilos.chipTexto, filtroActivo === filtro && estilos.chipTextoActivo]}>
-                                            {filtro === 'Todos' ? t('shop.allFilter') : filtro}
-                                        </Text>
-                                    </Pressable>
-                                ))}
-                            </View>
-                        </View>
+                        <BusquedaFiltrosCatalogo
+                            placeholder={t('shop.products.searchPlaceholder')}
+                            busqueda={catalogo.busqueda}
+                            onCambiarBusqueda={catalogo.setBusqueda}
+                            categoriaActiva={catalogo.categoriaActiva}
+                            onCambiarCategoria={catalogo.setCategoriaActiva}
+                            soloDisponibles={catalogo.soloDisponibles}
+                            onCambiarDisponibles={catalogo.setSoloDisponibles}
+                            onMostrarTodos={catalogo.mostrarTodos}
+                            categorias={catalogo.categorias}
+                            sugerencias={catalogo.sugerencias}
+                        />
                     }
                     ListEmptyComponent={
-                        <Text style={estilos.vacio}>{t('shop.products.empty')}</Text>
+                        <View style={estilos.vacioContenedor}>
+                            <Text style={estilos.vacio}>
+                                {catalogo.busqueda.trim()
+                                    ? t('shop.noResults', { query: catalogo.busqueda.trim() })
+                                    : t('shop.noFilteredResults')}
+                            </Text>
+                            <Text style={estilos.vacioAyuda}>{t('shop.noResultsHint')}</Text>
+                        </View>
                     }
                     renderItem={({ item }) => (
                         <Pressable
@@ -167,52 +149,6 @@ const estilos = StyleSheet.create({
         color: '#737973',
         textAlign: 'center',
         paddingHorizontal: 32,
-    },
-    cabecera: {
-        paddingHorizontal: 16,
-        paddingTop: 16,
-        paddingBottom: 8,
-        gap: 12,
-    },
-    barraBusqueda: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        backgroundColor: '#ffffff',
-        borderRadius: 12,
-        paddingHorizontal: 14,
-        paddingVertical: 10,
-        gap: 10,
-    },
-    inputBusqueda: {
-        flex: 1,
-        fontSize: 15,
-        color: '#1c1c18',
-    },
-    filtros: {
-        flexDirection: 'row',
-        gap: 8,
-        flexWrap: 'wrap',
-    },
-    chip: {
-        borderWidth: 1,
-        borderColor: '#c3c8c1',
-        borderRadius: 999,
-        paddingHorizontal: 14,
-        paddingVertical: 6,
-        backgroundColor: '#ffffff',
-        overflow: 'hidden',
-    },
-    chipActivo: {
-        backgroundColor: '#1b3022',
-        borderColor: '#1b3022',
-    },
-    chipTexto: {
-        fontSize: 13,
-        color: '#434843',
-        fontWeight: '500',
-    },
-    chipTextoActivo: {
-        color: '#ffffff',
     },
     lista: {
         paddingBottom: 16,
@@ -297,10 +233,12 @@ const estilos = StyleSheet.create({
     },
     vacio: {
         textAlign: 'center',
-        color: '#737973',
-        fontSize: 14,
-        marginTop: 40,
+        color: '#1c1c18',
+        fontSize: 15,
+        fontWeight: '600',
     },
+    vacioContenedor: { marginTop: 40, paddingHorizontal: 24, gap: 6 },
+    vacioAyuda: { textAlign: 'center', color: '#737973', fontSize: 13 },
     badge: {
         position: 'absolute',
         top: -4,

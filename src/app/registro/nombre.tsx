@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRegistro } from '../../context/RegistroContext';
 import { useIdioma } from '../../context/IdiomaContext';
 import { verificarNombreUsuario } from '../../features/auth/services/authService';
+import { BotonAtras } from '../../components/ui/BotonAtras';
 
 export default function RegistroNombre() {
     const insets = useSafeAreaInsets();
@@ -104,9 +105,7 @@ export default function RegistroNombre() {
                     >
                         <Text style={estilos.botonTexto}>{t('common.continue')}</Text>
                     </Pressable>
-                    <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>{'‹ '}{t('common.back')}</Text>
-                    </Pressable>
+                    <BotonAtras variante="enlace" />
                 </View>
             </ScrollView>
         </ImageBackground>

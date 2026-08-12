@@ -1,4 +1,4 @@
-import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
+import { View, Text, Pressable, TextInput, Image, StyleSheet } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import { COLORES } from '@/constants/colores';
 import { useIdioma } from '../../../context/IdiomaContext';
@@ -49,7 +49,7 @@ export function PasoPago({
     return (
         <View style={estilos.contenedor}>
             <Pressable onPress={onVolver} hitSlop={8} style={estilos.volver}>
-                <SymbolView name="chevron.left" size={14} tintColor="#737973" />
+                <Image source={require('@/assets/icons/atras.png')} style={estilos.volverIcono} resizeMode="contain" />
                 <Text style={estilos.volverTexto}>{t('checkout.payment.backToDelivery')}</Text>
             </Pressable>
 
@@ -202,6 +202,7 @@ export function PasoPago({
 const estilos = StyleSheet.create({
     contenedor: { padding: 20, gap: 14 },
     volver: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: -4 },
+    volverIcono: { width: 14, height: 14 },
     volverTexto: { fontSize: 13, color: '#737973', fontWeight: '600' },
     pregunta: { fontSize: 18, fontWeight: '700', color: '#1c1c18', marginBottom: 2 },
     opcion: {

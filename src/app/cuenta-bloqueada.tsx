@@ -2,6 +2,7 @@ import { View, Text, Pressable, StyleSheet, ImageBackground, Image } from 'react
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useIdioma } from '../context/IdiomaContext';
+import { BotonAtras } from '../components/ui/BotonAtras';
 
 export default function CuentaBloqueada() {
     const insets = useSafeAreaInsets();
@@ -28,9 +29,11 @@ export default function CuentaBloqueada() {
                         <Text style={estilos.botonTexto}>{t('auth.blockedAccount.recover')}</Text>
                     </Pressable>
 
-                    <Pressable style={estilos.enlaceAtras} onPress={() => router.replace('/login')}>
-                        <Text style={estilos.enlaceAtrasTexto}>{t('auth.blockedAccount.backHome')}</Text>
-                    </Pressable>
+                    <BotonAtras
+                        variante="enlace"
+                        etiqueta={t('auth.blockedAccount.backHome')}
+                        onPress={() => router.replace('/login')}
+                    />
                 </View>
             </View>
         </ImageBackground>

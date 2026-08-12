@@ -10,6 +10,7 @@ import * as WebBrowser from 'expo-web-browser';
 import { useUsuario } from '../context/UsuarioContext';
 import { useCarrito } from '../context/CarritoContext';
 import { useIdioma } from '../context/IdiomaContext';
+import { BotonAtras } from '../components/ui/BotonAtras';
 import { cargarBorrador, eliminarBorrador } from '../utils/borradores';
 import { useGuardadoAutomatico } from '../hooks/useGuardadoAutomatico';
 import { claveBorradorCheckout } from '../features/compras/utils/claveBorradorCheckout';
@@ -562,15 +563,7 @@ export default function Checkout() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable
-                    style={estilos.botonAtras}
-                    android_ripple={{ color: 'rgba(255,255,255,0.22)', foreground: true }}
-                    onPress={() => (paso === 'entrega' ? router.back() : setPaso(paso === 'confirmacion' ? 'pago' : 'entrega'))}
-                >
-                    <View style={estilos.fondoAtras}>
-                        <Text style={estilos.botonAtrasTexto}>‹</Text>
-                    </View>
-                </Pressable>
+                <BotonAtras onPress={() => (paso === 'entrega' ? router.back() : setPaso(paso === 'confirmacion' ? 'pago' : 'entrega'))} />
                 <Text style={estilos.encabezadoTitulo}>{t('checkout.headerTitle')}</Text>
                 <View style={estilos.espaciador} />
             </ImageBackground>

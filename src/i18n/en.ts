@@ -156,7 +156,7 @@ const en: typeof es = {
                 label: 'Verification code',
                 resendPrompt: "Didn't get the code?",
                 resend: 'Resend',
-                changeEmail: '‹ Change email',
+                changeEmail: 'Change email',
                 resent: 'New code sent to your email.',
                 errors: {
                     required: 'Enter the 6-digit code',
@@ -257,7 +257,7 @@ const en: typeof es = {
             title: 'Recover Password',
             subtitle: 'Enter the email linked to your account',
             emailLabel: 'Email',
-            backHome: '‹ Back to sign in',
+            backHome: 'Back to sign in',
             errors: {
                 emailRequired: 'Email is required',
                 emailInvalid: 'Enter a valid email',
@@ -277,7 +277,7 @@ const en: typeof es = {
                 label: '6-digit code',
                 resendPrompt: "Didn't get the code?",
                 resend: 'Resend',
-                changeMethod: '‹ Change method',
+                changeMethod: 'Change method',
                 resent: 'New code sent to your email.',
                 errors: {
                     required: 'Enter the 6-digit code',
@@ -289,7 +289,7 @@ const en: typeof es = {
             questions: {
                 title: 'Security Questions',
                 subtitle: 'Answers are case-sensitive',
-                changeMethod: '‹ Change method',
+                changeMethod: 'Change method',
                 errors: {
                     loadFailed: "Couldn't load the questions. Check that the email is correct.",
                     incomplete: 'Answer all the questions',
@@ -324,7 +324,7 @@ const en: typeof es = {
             title: 'Recover Username',
             subtitle: 'Enter the email linked to your account to recover your username',
             emailLabel: 'Email',
-            backHome: '‹ Back to sign in',
+            backHome: 'Back to sign in',
             errors: {
                 emailRequired: 'Email is required',
                 emailInvalid: 'Enter a valid email',
@@ -373,7 +373,7 @@ const en: typeof es = {
             showPasswords: 'Show passwords',
             hidePasswords: 'Hide passwords',
             submit: 'UPDATE PASSWORD',
-            backHome: '‹ Back to sign in',
+            backHome: 'Back to sign in',
             currentPlaceholder: 'Your current password',
             newPlaceholder: 'Your new password',
             errors: {
@@ -389,7 +389,7 @@ const en: typeof es = {
             message: 'Your account has been locked due to multiple failed sign-in attempts.',
             hint: 'To unlock it, you need to recover your password.',
             recover: 'RECOVER PASSWORD',
-            backHome: '‹ Back to sign in',
+            backHome: 'Back to sign in',
         },
     },
     profile: {
@@ -614,6 +614,17 @@ const en: typeof es = {
         tax: 'Tax (13%)',
         total: 'Total',
         viewDetails: 'View details',
+        buyAgain: 'Buy again',
+        buyingAgain: 'Adding...',
+        reorderResultTitle: 'Reorder ready',
+        reorderAdded_one: 'We added {{count}} product to your cart.',
+        reorderAdded_other: 'We added {{count}} products to your cart.',
+        reorderUnavailable_one: '{{count}} product could not be recovered: {{names}}.',
+        reorderUnavailable_other: '{{count}} products could not be recovered: {{names}}.',
+        reorderNothingAdded: "We couldn't add products from this order.",
+        reorderLoadError: "We couldn't check availability. Please try again.",
+        viewCart: 'View cart',
+        continue: 'Stay here',
         itemsCount_one: '{{count}} product',
         itemsCount_other: '{{count}} products',
         status: {
@@ -745,6 +756,12 @@ const en: typeof es = {
         nursery: { headerTitle: 'Nursery', searchPlaceholder: 'Search plants...', empty: 'No plants found.' },
         products: { headerTitle: 'Products', searchPlaceholder: 'Search products...', empty: 'No products found.' },
         allFilter: 'All',
+        availableFilter: 'Available',
+        clearSearch: 'Clear search',
+        suggestions: 'Search suggestions',
+        noResults: 'No results for “{{query}}”.',
+        noFilteredResults: 'No results match these filters.',
+        noResultsHint: 'Try another name or remove a filter.',
     },
     about: {
         headerTitle: 'About',

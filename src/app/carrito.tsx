@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
 import { useCarrito } from '../context/CarritoContext';
 import { useIdioma } from '../context/IdiomaContext';
+import { BotonAtras } from '../components/ui/BotonAtras';
 import { urlImagen } from '../utils/urlImagen';
 import type { ItemCarrito } from '../features/carrito/types/carritoItem';
 
@@ -27,11 +28,7 @@ export default function Carrito() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(255,255,255,0.22)', foreground: true }} onPress={() => router.back()}>
-                    <View style={estilos.fondoAtras}>
-                        <Text style={estilos.botonAtrasTexto}>‹</Text>
-                    </View>
-                </Pressable>
+                <BotonAtras />
                 <Text style={estilos.encabezadoTitulo}>{t('cart.headerTitle')}</Text>
                 <View style={estilos.espaciador} />
             </ImageBackground>

@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRegistro } from '../../context/RegistroContext';
 import { useIdioma } from '../../context/IdiomaContext';
 import { consultarPersonaPorCedula } from '../../features/auth/services/identidadService';
+import { BotonAtras } from '../../components/ui/BotonAtras';
 
 export default function RegistroCedula() {
     const insets = useSafeAreaInsets();
@@ -90,9 +91,7 @@ export default function RegistroCedula() {
                         <Text style={estilos.botonSecundarioTexto}>{t('auth.register.cedula.skip')}</Text>
                     </Pressable>
 
-                    <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>{"<"} {t('common.back')}</Text>
-                    </Pressable>
+                    <BotonAtras variante="enlace" />
                 </View>
             </ScrollView>
         </ImageBackground>

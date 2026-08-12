@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { cambiarContrasena } from "../features/auth/services/authService";
 import { useUsuario } from "../context/UsuarioContext";
 import { useIdioma } from "../context/IdiomaContext";
+import { BotonAtras } from "../components/ui/BotonAtras";
 
 function evaluarRequisitos(valor: string, t: (key: string) => string) {
     return [
@@ -77,11 +78,7 @@ export default function CambiarContrasena() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(255,255,255,0.22)', foreground: true }} onPress={() => router.back()}>
-                    <View style={estilos.fondoAtras}>
-                        <Text style={estilos.botonAtrasTexto}>‹</Text>
-                    </View>
-                </Pressable>
+                <BotonAtras />
                 <Text style={estilos.encabezadoTitulo}>{t('auth.changePassword.headerTitle')}</Text>
                 <View style={estilos.espaciador} />
             </ImageBackground>

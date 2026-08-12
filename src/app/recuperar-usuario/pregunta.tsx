@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecuperarUsuario } from '../../context/RecuperarUsuarioContext';
 import { obtenerPreguntaRecuperacionUsuario, verificarRespuestaRecuperacionUsuario } from '../../features/auth/services/authService';
 import { useIdioma } from '../../context/IdiomaContext';
+import { BotonAtras } from '../../components/ui/BotonAtras';
 
 export default function RecuperarUsuarioPregunta() {
     const insets = useSafeAreaInsets();
@@ -84,9 +85,7 @@ export default function RecuperarUsuarioPregunta() {
                         {enviando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>{t('common.verify')}</Text>}
                     </Pressable>
 
-                    <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>{t('common.back')}</Text>
-                    </Pressable>
+                    <BotonAtras variante="enlace" />
                 </View>
             </ScrollView>
         </ImageBackground>

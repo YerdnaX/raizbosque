@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecuperarContrasena } from '../../context/RecuperarContrasenaContext';
 import { obtenerPreguntasRecuperacion, verificarRespuestasSeguridad } from '../../features/auth/services/authService';
 import { useIdioma } from '../../context/IdiomaContext';
+import { BotonAtras } from '../../components/ui/BotonAtras';
 
 type Pregunta = { IdPregunta: number; TextoPregunta: string };
 
@@ -101,9 +102,7 @@ export default function RecuperarContrasenaPreguntas() {
                         {enviando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>{t('common.verify')}</Text>}
                     </Pressable>
 
-                    <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>{t('auth.recoverPassword.questions.changeMethod')}</Text>
-                    </Pressable>
+                    <BotonAtras variante="enlace" etiqueta={t('auth.recoverPassword.questions.changeMethod')} />
                 </View>
             </ScrollView>
         </ImageBackground>

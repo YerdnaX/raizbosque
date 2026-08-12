@@ -156,7 +156,7 @@ const es = {
                 label: 'Código de verificación',
                 resendPrompt: '¿No recibiste el código?',
                 resend: 'Reenviar',
-                changeEmail: '‹ Cambiar correo',
+                changeEmail: 'Cambiar correo',
                 resent: 'Nuevo código enviado al correo.',
                 errors: {
                     required: 'Ingresa el código de 6 dígitos',
@@ -257,7 +257,7 @@ const es = {
             title: 'Recuperar Contraseña',
             subtitle: 'Ingresa el correo asociado a tu cuenta',
             emailLabel: 'Correo Electrónico',
-            backHome: '‹ Volver al inicio',
+            backHome: 'Volver al inicio',
             errors: {
                 emailRequired: 'El correo es requerido',
                 emailInvalid: 'Ingresa un correo válido',
@@ -277,7 +277,7 @@ const es = {
                 label: 'Código de 6 dígitos',
                 resendPrompt: '¿No recibiste el código?',
                 resend: 'Reenviar',
-                changeMethod: '‹ Cambiar método',
+                changeMethod: 'Cambiar método',
                 resent: 'Nuevo código enviado al correo.',
                 errors: {
                     required: 'Ingresa el código de 6 dígitos',
@@ -289,7 +289,7 @@ const es = {
             questions: {
                 title: 'Preguntas de Seguridad',
                 subtitle: 'Las respuestas son sensibles a mayúsculas y minúsculas',
-                changeMethod: '‹ Cambiar método',
+                changeMethod: 'Cambiar método',
                 errors: {
                     loadFailed: 'No se pudieron cargar las preguntas. Verifica que el correo sea correcto.',
                     incomplete: 'Completa todas las respuestas',
@@ -324,7 +324,7 @@ const es = {
             title: 'Recuperar Usuario',
             subtitle: 'Ingresa el correo asociado a tu cuenta para recuperar tu nombre de usuario',
             emailLabel: 'Correo Electrónico',
-            backHome: '‹ Volver al inicio',
+            backHome: 'Volver al inicio',
             errors: {
                 emailRequired: 'El correo es requerido',
                 emailInvalid: 'Ingresa un correo válido',
@@ -373,7 +373,7 @@ const es = {
             showPasswords: 'Mostrar contraseñas',
             hidePasswords: 'Ocultar contraseñas',
             submit: 'ACTUALIZAR CONTRASEÑA',
-            backHome: '‹ Volver al inicio',
+            backHome: 'Volver al inicio',
             currentPlaceholder: 'Tu contraseña actual',
             newPlaceholder: 'Tu nueva contraseña',
             errors: {
@@ -389,7 +389,7 @@ const es = {
             message: 'Tu cuenta ha sido bloqueada por múltiples intentos fallidos de inicio de sesión.',
             hint: 'Para desbloquearla, debes recuperar tu contraseña.',
             recover: 'RECUPERAR CONTRASEÑA',
-            backHome: '‹ Volver al inicio',
+            backHome: 'Volver al inicio',
         },
     },
     profile: {
@@ -614,6 +614,17 @@ const es = {
         tax: 'IVA (13%)',
         total: 'Total',
         viewDetails: 'Ver detalles',
+        buyAgain: 'Comprar de nuevo',
+        buyingAgain: 'Agregando...',
+        reorderResultTitle: 'Recompra lista',
+        reorderAdded_one: 'Agregamos {{count}} producto a tu carrito.',
+        reorderAdded_other: 'Agregamos {{count}} productos a tu carrito.',
+        reorderUnavailable_one: '{{count}} producto no pudo recuperarse: {{names}}.',
+        reorderUnavailable_other: '{{count}} productos no pudieron recuperarse: {{names}}.',
+        reorderNothingAdded: 'No pudimos agregar productos de esta compra.',
+        reorderLoadError: 'No pudimos comprobar la disponibilidad. Intenta de nuevo.',
+        viewCart: 'Ver carrito',
+        continue: 'Seguir aquí',
         itemsCount_one: '{{count}} producto',
         itemsCount_other: '{{count}} productos',
         status: {
@@ -745,6 +756,12 @@ const es = {
         nursery: { headerTitle: 'Vivero', searchPlaceholder: 'Buscar plantas...', empty: 'No se encontraron plantas.' },
         products: { headerTitle: 'Productos', searchPlaceholder: 'Buscar productos...', empty: 'No se encontraron productos.' },
         allFilter: 'Todos',
+        availableFilter: 'Disponibles',
+        clearSearch: 'Limpiar búsqueda',
+        suggestions: 'Sugerencias de búsqueda',
+        noResults: 'No encontramos “{{query}}”.',
+        noFilteredResults: 'No encontramos resultados con estos filtros.',
+        noResultsHint: 'Probá con otro nombre o quitá algún filtro.',
     },
     about: {
         headerTitle: 'Acerca de',

@@ -1,8 +1,7 @@
 import { View, Text, Image, Pressable, StyleSheet, ImageBackground } from "react-native";
-import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import AtrasIcono from '@/assets/icons/atras.svg';
 import { useIdioma } from '../context/IdiomaContext';
+import { BotonAtras } from '../components/ui/BotonAtras';
 
 export default function AcercaDe() {
     const insets = useSafeAreaInsets();
@@ -15,11 +14,7 @@ export default function AcercaDe() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Pressable style={estilos.botonAtras} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.back()}>
-                    <View style={estilos.fondoAtras}>
-                        <AtrasIcono width={24} height={24} fill="#ffffff" />
-                    </View>
-                </Pressable>
+                <BotonAtras />
                 <Text style={estilos.encabezadoTitulo}>{t('about.headerTitle')}</Text>
                 <View style={estilos.espaciador} />
             </ImageBackground>

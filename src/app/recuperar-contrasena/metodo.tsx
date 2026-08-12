@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecuperarContrasena } from '../../context/RecuperarContrasenaContext';
 import { enviarCodigoRecuperacion } from '../../features/auth/services/authService';
 import { useIdioma } from '../../context/IdiomaContext';
+import { BotonAtras } from '../../components/ui/BotonAtras';
 
 export default function RecuperarContrasenaMetodo() {
     const insets = useSafeAreaInsets();
@@ -69,9 +70,7 @@ export default function RecuperarContrasenaMetodo() {
                         <Text style={estilos.flecha}>›</Text>
                     </Pressable>
 
-                    <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>{t('common.back')}</Text>
-                    </Pressable>
+                    <BotonAtras variante="enlace" />
                 </View>
             </ScrollView>
         </ImageBackground>

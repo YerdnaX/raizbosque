@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRegistro } from '../../context/RegistroContext';
 import { useIdioma } from '../../context/IdiomaContext';
 import { getPreguntasSeguridad, completarRegistro } from '../../features/auth/services/authService';
+import { BotonAtras } from '../../components/ui/BotonAtras';
 
 type Pregunta = { IdPregunta: number; TextoPregunta: string };
 
@@ -104,9 +105,7 @@ export default function RegistroPreguntas2() {
                         }
                     </Pressable>
 
-                    <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>{'‹ '}{t('common.back')}</Text>
-                    </Pressable>
+                    <BotonAtras variante="enlace" />
                 </View>
             </ScrollView>
         </ImageBackground>
