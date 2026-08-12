@@ -7,14 +7,16 @@ import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 import { useJardin } from '../../features/jardin/hooks/useJardin';
 import { useUsuario } from '../../context/UsuarioContext';
 import { useCarrito } from '../../context/CarritoContext';
+import { useIdioma } from '../../context/IdiomaContext';
 import { urlImagen } from '../../utils/urlImagen';
 import type { PlantaJardin } from '../../features/jardin/types/plantaJardin';
+import type { crearTraductor } from '../../i18n';
 
-function formatearProximoRiego(dias: number | null): string {
-    if (dias === null) return '—';
-    if (dias <= 0) return 'Hoy';
-    if (dias === 1) return 'Mañana';
-    return `${dias} días`;
+function formatearProximoRiego(dias: number | null, t: ReturnType<typeof crearTraductor>['t']): string {
+    if (dias === null) return t('garden.waterUnknown');
+    if (dias <= 0) return t('garden.waterToday');
+    if (dias === 1) return t('garden.waterTomorrow');
+    return t('garden.waterInDays', { days: dias });
 }
 
 export default function Jardin() {
@@ -22,6 +24,7 @@ export default function Jardin() {
     const { usuario } = useUsuario();
     const { totalItems } = useCarrito();
     const { plantas, estaCargando, error, eliminar, recargar } = useJardin(usuario?.IdUsuario ?? null);
+    const { t } = useIdioma();
 
     useFocusEffect(
         useCallback(() => {
@@ -31,11 +34,11 @@ export default function Jardin() {
 
     function confirmarEliminar(idJardin: number, nombre: string) {
         Alert.alert(
-            'Eliminar planta',
-            `¿Quitar "${nombre}" de tu jardín?`,
+            t('garden.removeTitle'),
+            t('garden.removeMessage', { name: nombre }),
             [
-                { text: 'Cancelar', style: 'cancel' },
-                { text: 'Eliminar', style: 'destructive', onPress: () => eliminar(idJardin) },
+                { text: t('garden.removeCancel'), style: 'cancel' },
+                { text: t('garden.removeConfirm'), style: 'destructive', onPress: () => eliminar(idJardin) },
             ]
         );
     }
@@ -68,18 +71,18 @@ export default function Jardin() {
                 <View style={estilos.chipsRow}>
                     <View style={estilos.chip}>
                         <SymbolView name="drop.fill" size={13} tintColor="#526349" />
-                        <Text style={estilos.chipTexto}>{formatearProximoRiego(item.DiasParaRiego)}</Text>
+                        <Text style={estilos.chipTexto}>{formatearProximoRiego(item.DiasParaRiego, t)}</Text>
                     </View>
 
                     {esRevisar ? (
                         <View style={[estilos.chip, estilos.chipRevisar]}>
                             <SymbolView name="exclamationmark.triangle" size={13} tintColor="#b45309" />
-                            <Text style={[estilos.chipTexto, estilos.chipRevisarTexto]}>Revisar</Text>
+                            <Text style={[estilos.chipTexto, estilos.chipRevisarTexto]}>{t('garden.statusReview')}</Text>
                         </View>
                     ) : (
                         <View style={[estilos.chip, estilos.chipBuena]}>
                             <SymbolView name="heart.fill" size={13} tintColor="#526349" />
-                            <Text style={estilos.chipTexto}>Buena</Text>
+                            <Text style={estilos.chipTexto}>{t('garden.statusGood')}</Text>
                         </View>
                     )}
                 </View>
@@ -130,19 +133,19 @@ export default function Jardin() {
                         <View style={estilos.cabecera}>
                             <View style={estilos.cabeceraFila}>
                                 <View>
-                                    <Text style={estilos.titulo}>Mi Jardín</Text>
-                                    <Text style={estilos.subtitulo}>Tus plantas actuales.</Text>
+                                    <Text style={estilos.titulo}>{t('garden.title')}</Text>
+                                    <Text style={estilos.subtitulo}>{t('garden.subtitle')}</Text>
                                 </View>
                                 <Pressable style={estilos.botonAgregar} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={() => router.push('/vivero')}>
-                                    <Text style={estilos.botonAgregarTexto}>+ AGREGAR</Text>
+                                    <Text style={estilos.botonAgregarTexto}>{t('garden.addButton')}</Text>
                                 </Pressable>
                             </View>
                         </View>
                     }
                     ListEmptyComponent={
                         <View style={estilos.vacio}>
-                            <Text style={estilos.vacioTexto}>Tu jardín está vacío.</Text>
-                            <Text style={estilos.vacioSubtexto}>Agrega plantas desde el Vivero.</Text>
+                            <Text style={estilos.vacioTexto}>{t('garden.emptyTitle')}</Text>
+                            <Text style={estilos.vacioSubtexto}>{t('garden.emptySubtitle')}</Text>
                         </View>
                     }
                     renderItem={renderTarjeta}

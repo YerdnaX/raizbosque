@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRegistro } from '../../context/RegistroContext';
+import { useIdioma } from '../../context/IdiomaContext';
 import { getPreguntasSeguridad } from '../../features/auth/services/authService';
 
 type Pregunta = { IdPregunta: number; TextoPregunta: string };
@@ -10,6 +11,7 @@ type Pregunta = { IdPregunta: number; TextoPregunta: string };
 export default function RegistroPreguntas1() {
     const insets = useSafeAreaInsets();
     const { setRespuesta1, setRespuesta2 } = useRegistro();
+    const { t } = useIdioma();
     const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
     const [resp1, setResp1] = useState('');
     const [resp2, setResp2] = useState('');
@@ -19,14 +21,14 @@ export default function RegistroPreguntas1() {
     useEffect(() => {
         getPreguntasSeguridad()
             .then(setPreguntas)
-            .catch(() => setError('No se pudieron cargar las preguntas. Intenta de nuevo.'))
+            .catch(() => setError(t('auth.register.securityQuestions.errors.loadFailed')))
             .finally(() => setCargando(false));
     }, []);
 
     function manejarSiguiente() {
         setError('');
-        if (!resp1.trim()) { setError('La respuesta a la pregunta 1 es requerida'); return; }
-        if (!resp2.trim()) { setError('La respuesta a la pregunta 2 es requerida'); return; }
+        if (!resp1.trim()) { setError(t('auth.register.securityQuestions.errors.answer1Required')); return; }
+        if (!resp2.trim()) { setError(t('auth.register.securityQuestions.errors.answer2Required')); return; }
         setRespuesta1(resp1.trim());
         setRespuesta2(resp2.trim());
         router.push('/registro/preguntas-2');
@@ -46,9 +48,9 @@ export default function RegistroPreguntas1() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.paso}>Paso 7 de 7</Text>
-                    <Text style={estilos.titulo}>Preguntas de Seguridad</Text>
-                    <Text style={estilos.subtitulo}>Las respuestas son sensibles a mayúsculas y minúsculas</Text>
+                    <Text style={estilos.paso}>{t('auth.register.step', { current: 7, total: 7 })}</Text>
+                    <Text style={estilos.titulo}>{t('auth.register.securityQuestions.title')}</Text>
+                    <Text style={estilos.subtitulo}>{t('auth.register.securityQuestions.subtitle')}</Text>
 
                     {preguntas[0] && (
                         <View style={estilos.campo}>
@@ -57,7 +59,7 @@ export default function RegistroPreguntas1() {
                                 style={estilos.input}
                                 value={resp1}
                                 onChangeText={v => { setResp1(v); setError(''); }}
-                                placeholder="Tu respuesta"
+                                placeholder={t('common.answerPlaceholder')}
                                 placeholderTextColor="#b0b0a8"
                                 autoCapitalize="none"
                             />
@@ -71,7 +73,7 @@ export default function RegistroPreguntas1() {
                                 style={estilos.input}
                                 value={resp2}
                                 onChangeText={v => { setResp2(v); setError(''); }}
-                                placeholder="Tu respuesta"
+                                placeholder={t('common.answerPlaceholder')}
                                 placeholderTextColor="#b0b0a8"
                                 autoCapitalize="none"
                             />
@@ -85,11 +87,11 @@ export default function RegistroPreguntas1() {
                         android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                         onPress={manejarSiguiente}
                     >
-                        <Text style={estilos.botonTexto}>CONTINUAR</Text>
+                        <Text style={estilos.botonTexto}>{t('common.continue')}</Text>
                     </Pressable>
 
                     <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>‹ Atrás</Text>
+                        <Text style={estilos.enlaceAtrasTexto}>{'‹ '}{t('common.back')}</Text>
                     </Pressable>
                 </View>
             </ScrollView>

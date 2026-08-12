@@ -4,20 +4,22 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { cambiarContrasena } from "../features/auth/services/authService";
 import { useUsuario } from "../context/UsuarioContext";
+import { useIdioma } from "../context/IdiomaContext";
 
-function evaluarRequisitos(valor: string) {
+function evaluarRequisitos(valor: string, t: (key: string) => string) {
     return [
-        { texto: 'Al menos 6 caracteres',             ok: valor.length >= 6 },
-        { texto: 'Al menos una mayúscula',             ok: /[A-Z]/.test(valor) },
-        { texto: 'Al menos una minúscula',             ok: /[a-z]/.test(valor) },
-        { texto: 'Al menos un símbolo',                ok: /[^a-zA-Z0-9]/.test(valor) },
-        { texto: 'Sin caracteres consecutivos iguales', ok: valor.length > 0 && !/(.)\1/.test(valor) },
+        { texto: t('common.passwordRequirements.minLength'), ok: valor.length >= 6 },
+        { texto: t('common.passwordRequirements.uppercase'), ok: /[A-Z]/.test(valor) },
+        { texto: t('common.passwordRequirements.lowercase'), ok: /[a-z]/.test(valor) },
+        { texto: t('common.passwordRequirements.symbol'),    ok: /[^a-zA-Z0-9]/.test(valor) },
+        { texto: t('common.passwordRequirements.noRepeats'), ok: valor.length > 0 && !/(.)\1/.test(valor) },
     ];
 }
 
 export default function CambiarContrasena() {
     const insets = useSafeAreaInsets();
     const { usuario } = useUsuario();
+    const { t } = useIdioma();
 
     const [contrasenaActual, setContrasenaActual] = useState('');
     const [contrasenaNueva, setContrasenaNueva] = useState('');
@@ -27,21 +29,21 @@ export default function CambiarContrasena() {
     const [estaCargando, setEstaCargando] = useState(false);
     const [error, setError] = useState('');
 
-    const requisitos = evaluarRequisitos(contrasenaNueva);
+    const requisitos = evaluarRequisitos(contrasenaNueva, t);
     const todosOk = requisitos.every(r => r.ok);
 
     async function manejarCambio() {
         setError('');
         if (!contrasenaActual || !contrasenaNueva || !confirmarNueva) {
-            setError('Por favor completa todos los campos.');
+            setError(t('auth.changePassword.errors.incompleteFields'));
             return;
         }
         if (!todosOk) {
-            setError('La contraseña nueva no cumple todos los requisitos.');
+            setError(t('auth.changePassword.errors.requirements'));
             return;
         }
         if (contrasenaNueva !== confirmarNueva) {
-            setError('Las contraseñas nuevas no coinciden.');
+            setError(t('auth.changePassword.errors.mismatch'));
             return;
         }
         if (!usuario) return;
@@ -50,18 +52,18 @@ export default function CambiarContrasena() {
         try {
             await cambiarContrasena(usuario.IdUsuario, contrasenaActual, contrasenaNueva);
             Alert.alert(
-                '¡Contraseña actualizada!',
-                'Tu contraseña fue cambiada correctamente.',
+                t('auth.changePassword.successTitle'),
+                t('auth.changePassword.successMessage'),
                 [{ text: 'OK', onPress: () => router.back() }],
             );
         } catch (err: any) {
             const cod = err?.response?.data?.codigo;
             if (err?.response?.status === 401 || cod === 'INVALID_CREDENTIALS') {
-                setError('La contraseña actual que ingresaste no es correcta.');
+                setError(t('auth.changePassword.errors.wrongCurrent'));
             } else if (cod === 'INVALID_PASSWORD_POLICY') {
-                setError('La contraseña nueva no cumple la política de seguridad.');
+                setError(t('auth.changePassword.errors.policy'));
             } else {
-                setError('No se pudo cambiar la contraseña. Intenta de nuevo.');
+                setError(t('auth.changePassword.errors.generic'));
             }
         } finally {
             setEstaCargando(false);
@@ -80,7 +82,7 @@ export default function CambiarContrasena() {
                         <Text style={estilos.botonAtrasTexto}>‹</Text>
                     </View>
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>Cambiar Contraseña</Text>
+                <Text style={estilos.encabezadoTitulo}>{t('auth.changePassword.headerTitle')}</Text>
                 <View style={estilos.espaciador} />
             </ImageBackground>
 
@@ -91,7 +93,7 @@ export default function CambiarContrasena() {
             >
                 <View style={estilos.tarjeta}>
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Contraseña Actual</Text>
+                        <Text style={estilos.etiqueta}>{t('auth.changePassword.currentLabel')}</Text>
                         <View style={estilos.inputFila}>
                             <TextInput
                                 style={estilos.inputDentro}
@@ -102,7 +104,7 @@ export default function CambiarContrasena() {
                                 autoCapitalize="none"
                             />
                             <Pressable android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => setVerActual(!verActual)}>
-                                <Text style={estilos.toggle}>{verActual ? 'Ocultar' : 'Ver'}</Text>
+                                <Text style={estilos.toggle}>{verActual ? t('auth.changePassword.hide') : t('auth.changePassword.show')}</Text>
                             </Pressable>
                         </View>
                     </View>
@@ -110,7 +112,7 @@ export default function CambiarContrasena() {
                     <View style={estilos.divisor} />
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Contraseña Nueva</Text>
+                        <Text style={estilos.etiqueta}>{t('auth.changePassword.newLabel')}</Text>
                         <View style={estilos.inputFila}>
                             <TextInput
                                 style={estilos.inputDentro}
@@ -121,7 +123,7 @@ export default function CambiarContrasena() {
                                 autoCapitalize="none"
                             />
                             <Pressable android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => setVerNueva(!verNueva)}>
-                                <Text style={estilos.toggle}>{verNueva ? 'Ocultar' : 'Ver'}</Text>
+                                <Text style={estilos.toggle}>{verNueva ? t('auth.changePassword.hide') : t('auth.changePassword.show')}</Text>
                             </Pressable>
                         </View>
                         <View style={estilos.requisitos}>
@@ -136,7 +138,7 @@ export default function CambiarContrasena() {
                     <View style={estilos.divisor} />
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Confirmar Contraseña Nueva</Text>
+                        <Text style={estilos.etiqueta}>{t('auth.changePassword.confirmLabel')}</Text>
                         <View style={estilos.inputFila}>
                             <TextInput
                                 style={estilos.inputDentro}
@@ -160,7 +162,7 @@ export default function CambiarContrasena() {
                 >
                     {estaCargando
                         ? <ActivityIndicator color="#ffffff" />
-                        : <Text style={estilos.botonCambiarTexto}>CAMBIAR CONTRASEÑA</Text>
+                        : <Text style={estilos.botonCambiarTexto}>{t('auth.changePassword.submit')}</Text>
                     }
                 </Pressable>
             </ScrollView>

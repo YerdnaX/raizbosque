@@ -3,11 +3,13 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRegistro } from '../../context/RegistroContext';
+import { useIdioma } from '../../context/IdiomaContext';
 import { verificarCodigoRegistro, enviarCodigoRegistro } from '../../features/auth/services/authService';
 
 export default function RegistroCodigo() {
     const insets = useSafeAreaInsets();
     const { datos, setToken } = useRegistro();
+    const { t } = useIdioma();
     const [codigo, setCodigo] = useState('');
     const [error, setError] = useState('');
     const [cargando, setCargando] = useState(false);
@@ -16,7 +18,7 @@ export default function RegistroCodigo() {
 
     async function manejarVerificar() {
         setError('');
-        if (!codigo || codigo.length !== 6) { setError('Ingresa el código de 6 dígitos'); return; }
+        if (!codigo || codigo.length !== 6) { setError(t('auth.register.code.errors.required')); return; }
 
         setCargando(true);
         try {
@@ -25,8 +27,8 @@ export default function RegistroCodigo() {
             router.push('/registro/cedula' as never);
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
-            if (cod === 'EXPIRED_CODE') setError('El código ha vencido. Solicita uno nuevo.');
-            else setError('Código incorrecto. Verifica e intenta de nuevo.');
+            if (cod === 'EXPIRED_CODE') setError(t('auth.register.code.errors.expired'));
+            else setError(t('auth.register.code.errors.incorrect'));
         } finally {
             setCargando(false);
         }
@@ -38,17 +40,17 @@ export default function RegistroCodigo() {
         setReenviando(true);
         try {
             await enviarCodigoRegistro(datos.correo);
-            setMensajeExito('Nuevo código enviado al correo.');
+            setMensajeExito(t('auth.register.code.resent'));
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
             if (cod === 'EMAIL_NETWORK_ERROR') {
-                setError('No fue posible conectar al servicio de correo. Intenta más tarde.');
+                setError(t('common.emailServiceError'));
             } else if (e?.code === 'ECONNABORTED') {
-                setError('El servidor tardó demasiado en responder. Intenta nuevamente.');
+                setError(t('common.timeoutError'));
             } else if (!e?.response) {
-                setError('Sin conexión con el servidor. Verifica internet e intenta otra vez.');
+                setError(t('common.noConnectionError'));
             } else {
-                setError('No se pudo reenviar el código. Intenta de nuevo.');
+                setError(t('auth.register.code.errors.resendFailed'));
             }
         } finally {
             setReenviando(false);
@@ -59,22 +61,22 @@ export default function RegistroCodigo() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.paso}>Paso 2 de 7</Text>
-                    <Text style={estilos.titulo}>Verificar Correo</Text>
+                    <Text style={estilos.paso}>{t('auth.register.step', { current: 2, total: 7 })}</Text>
+                    <Text style={estilos.titulo}>{t('auth.register.code.title')}</Text>
                     <Text style={estilos.subtitulo}>
-                        Ingresa el código de 6 dígitos enviado a{'\n'}
+                        {t('auth.register.code.subtitle')}{'\n'}
                         <Text style={estilos.correoDestacado}>{datos.correo}</Text>
                     </Text>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Código de verificación</Text>
+                        <Text style={estilos.etiqueta}>{t('auth.register.code.label')}</Text>
                         <TextInput
                             style={[estilos.inputCodigo, error ? estilos.inputError : null]}
                             value={codigo}
                             onChangeText={v => { setCodigo(v.replace(/[^0-9]/g, '')); setError(''); }}
                             keyboardType="numeric"
                             maxLength={6}
-                            placeholder="000000"
+                            placeholder={t('common.codePlaceholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                         {error ? <Text style={estilos.mensajeError}>{error}</Text> : null}
@@ -87,18 +89,18 @@ export default function RegistroCodigo() {
                         onPress={manejarVerificar}
                         disabled={cargando}
                     >
-                        {cargando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>VERIFICAR</Text>}
+                        {cargando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>{t('common.verify')}</Text>}
                     </Pressable>
 
                     <Pressable style={estilos.enlace} onPress={manejarReenviar} disabled={reenviando}>
                         {reenviando
                             ? <ActivityIndicator color="#526349" size="small" />
-                            : <Text style={estilos.enlaceTexto}>¿No recibiste el código? <Text style={estilos.enlaceDestacado}>Reenviar</Text></Text>
+                            : <Text style={estilos.enlaceTexto}>{t('auth.register.code.resendPrompt')} <Text style={estilos.enlaceDestacado}>{t('auth.register.code.resend')}</Text></Text>
                         }
                     </Pressable>
 
                     <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>‹ Cambiar correo</Text>
+                        <Text style={estilos.enlaceAtrasTexto}>{t('auth.register.code.changeEmail')}</Text>
                     </Pressable>
                 </View>
             </ScrollView>

@@ -3,11 +3,13 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRegistro } from '../../context/RegistroContext';
+import { useIdioma } from '../../context/IdiomaContext';
 import { verificarNombreUsuario } from '../../features/auth/services/authService';
 
 export default function RegistroNombre() {
     const insets = useSafeAreaInsets();
     const { setNombreUsuario } = useRegistro();
+    const { t } = useIdioma();
     const [nombreUsuario, setNombreUsuarioLocal] = useState('');
     const [estado, setEstado] = useState<'idle' | 'disponible' | 'error'>('idle');
     const [mensajeEstado, setMensajeEstado] = useState('');
@@ -15,15 +17,15 @@ export default function RegistroNombre() {
 
     function obtenerRequisitos(valor: string) {
         return [
-            { texto: 'Al menos 6 caracteres',       ok: valor.length >= 6 },
-            { texto: 'Solo letras y números',        ok: /^[a-zA-Z0-9]*$/.test(valor) && valor.length > 0 },
+            { texto: t('auth.register.username.requirements.minLength'),       ok: valor.length >= 6 },
+            { texto: t('auth.register.username.requirements.alphanumeric'),        ok: /^[a-zA-Z0-9]*$/.test(valor) && valor.length > 0 },
         ];
     }
 
     async function manejarVerificar() {
         setEstado('idle');
         setMensajeEstado('');
-        if (!nombreUsuario) { setEstado('error'); setMensajeEstado('El nombre de usuario es requerido'); return; }
+        if (!nombreUsuario) { setEstado('error'); setMensajeEstado(t('auth.register.username.errors.required')); return; }
 
         const requisitos = obtenerRequisitos(nombreUsuario);
         const fallidos = requisitos.filter(r => !r.ok);
@@ -33,12 +35,12 @@ export default function RegistroNombre() {
         try {
             await verificarNombreUsuario(nombreUsuario);
             setEstado('disponible');
-            setMensajeEstado('¡Nombre de usuario disponible!');
+            setMensajeEstado(t('auth.register.username.available'));
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
             setEstado('error');
-            if (cod === 'USERNAME_ALREADY_EXISTS') setMensajeEstado('Ese nombre de usuario ya está en uso');
-            else setMensajeEstado('No se pudo verificar. Intenta de nuevo.');
+            if (cod === 'USERNAME_ALREADY_EXISTS') setMensajeEstado(t('auth.register.username.errors.taken'));
+            else setMensajeEstado(t('auth.register.username.errors.generic'));
         } finally {
             setCargando(false);
         }
@@ -56,18 +58,18 @@ export default function RegistroNombre() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.paso}>Paso 4 de 7</Text>
-                    <Text style={estilos.titulo}>Nombre de Usuario</Text>
-                    <Text style={estilos.subtitulo}>Elige tu nombre de usuario. Debe ser único y alfanumérico.</Text>
+                    <Text style={estilos.paso}>{t('auth.register.step', { current: 4, total: 7 })}</Text>
+                    <Text style={estilos.titulo}>{t('auth.register.username.title')}</Text>
+                    <Text style={estilos.subtitulo}>{t('auth.register.username.subtitle')}</Text>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Nombre de usuario <Text style={estilos.req}>*</Text></Text>
+                        <Text style={estilos.etiqueta}>{t('auth.register.username.label')} <Text style={estilos.req}>*</Text></Text>
                         <TextInput
                             style={[estilos.input, estado === 'error' ? estilos.inputError : estado === 'disponible' ? estilos.inputOk : null]}
                             value={nombreUsuario}
                             onChangeText={v => { setNombreUsuarioLocal(v.replace(/[^a-zA-Z0-9]/g, '')); setEstado('idle'); setMensajeEstado(''); }}
                             autoCapitalize="none"
-                            placeholder="ej. juanperez123"
+                            placeholder={t('auth.register.username.placeholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                         {mensajeEstado ? (
@@ -91,7 +93,7 @@ export default function RegistroNombre() {
                         onPress={manejarVerificar}
                         disabled={cargando}
                     >
-                        {cargando ? <ActivityIndicator color="#1b3022" size="small" /> : <Text style={estilos.botonVerificarTexto}>VERIFICAR DISPONIBILIDAD</Text>}
+                        {cargando ? <ActivityIndicator color="#1b3022" size="small" /> : <Text style={estilos.botonVerificarTexto}>{t('auth.register.username.checkAvailability')}</Text>}
                     </Pressable>
 
                     <Pressable
@@ -100,10 +102,10 @@ export default function RegistroNombre() {
                         onPress={manejarSiguiente}
                         disabled={estado !== 'disponible'}
                     >
-                        <Text style={estilos.botonTexto}>CONTINUAR</Text>
+                        <Text style={estilos.botonTexto}>{t('common.continue')}</Text>
                     </Pressable>
                     <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>‹ Atrás</Text>
+                        <Text style={estilos.enlaceAtrasTexto}>{'‹ '}{t('common.back')}</Text>
                     </Pressable>
                 </View>
             </ScrollView>

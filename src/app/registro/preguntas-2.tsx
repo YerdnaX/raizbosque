@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRegistro } from '../../context/RegistroContext';
+import { useIdioma } from '../../context/IdiomaContext';
 import { getPreguntasSeguridad, completarRegistro } from '../../features/auth/services/authService';
 
 type Pregunta = { IdPregunta: number; TextoPregunta: string };
@@ -10,6 +11,7 @@ type Pregunta = { IdPregunta: number; TextoPregunta: string };
 export default function RegistroPreguntas2() {
     const insets = useSafeAreaInsets();
     const { datos, setRespuesta3, reiniciar } = useRegistro();
+    const { t } = useIdioma();
     const [terceraPregunta, setTerceraPregunta] = useState<Pregunta | null>(null);
     const [resp3, setResp3] = useState('');
     const [error, setError] = useState('');
@@ -19,13 +21,13 @@ export default function RegistroPreguntas2() {
     useEffect(() => {
         getPreguntasSeguridad()
             .then(preguntas => { if (preguntas[2]) setTerceraPregunta(preguntas[2]); })
-            .catch(() => setError('No se pudo cargar la pregunta. Intenta de nuevo.'))
+            .catch(() => setError(t('auth.register.securityQuestions.errors.loadFailedSingle')))
             .finally(() => setCargando(false));
     }, []);
 
     async function manejarFinalizar() {
         setError('');
-        if (!resp3.trim()) { setError('La respuesta es requerida'); return; }
+        if (!resp3.trim()) { setError(t('auth.register.securityQuestions.errors.answerRequired')); return; }
 
         setRespuesta3(resp3.trim());
         setEnviando(true);
@@ -47,10 +49,10 @@ export default function RegistroPreguntas2() {
             router.replace('/registro/completado');
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
-            if (cod === 'USERNAME_ALREADY_EXISTS') setError('El nombre de usuario ya está en uso. Vuelve atrás y elige otro.');
-            else if (cod === 'EMAIL_ALREADY_EXISTS') setError('Ya existe una cuenta con ese correo.');
-            else if (cod === 'INVALID_TOKEN') setError('Sesión expirada. Vuelve a iniciar el registro.');
-            else setError('No se pudo completar el registro. Intenta de nuevo.');
+            if (cod === 'USERNAME_ALREADY_EXISTS') setError(t('auth.register.securityQuestions.errors.usernameTaken'));
+            else if (cod === 'EMAIL_ALREADY_EXISTS') setError(t('auth.register.securityQuestions.errors.emailExists'));
+            else if (cod === 'INVALID_TOKEN') setError(t('auth.register.securityQuestions.errors.sessionExpired'));
+            else setError(t('auth.register.securityQuestions.errors.generic'));
         } finally {
             setEnviando(false);
         }
@@ -70,9 +72,9 @@ export default function RegistroPreguntas2() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.paso}>Paso 7 de 7</Text>
-                    <Text style={estilos.titulo}>Última Pregunta</Text>
-                    <Text style={estilos.subtitulo}>Recuerda: las respuestas distinguen mayúsculas y minúsculas</Text>
+                    <Text style={estilos.paso}>{t('auth.register.step', { current: 7, total: 7 })}</Text>
+                    <Text style={estilos.titulo}>{t('auth.register.securityQuestions.lastTitle')}</Text>
+                    <Text style={estilos.subtitulo}>{t('auth.register.securityQuestions.lastSubtitle')}</Text>
 
                     {terceraPregunta && (
                         <View style={estilos.campo}>
@@ -81,7 +83,7 @@ export default function RegistroPreguntas2() {
                                 style={estilos.input}
                                 value={resp3}
                                 onChangeText={v => { setResp3(v); setError(''); }}
-                                placeholder="Tu respuesta"
+                                placeholder={t('common.answerPlaceholder')}
                                 placeholderTextColor="#b0b0a8"
                                 autoCapitalize="none"
                             />
@@ -98,12 +100,12 @@ export default function RegistroPreguntas2() {
                     >
                         {enviando
                             ? <ActivityIndicator color="#fff" />
-                            : <Text style={estilos.botonTexto}>CREAR CUENTA</Text>
+                            : <Text style={estilos.botonTexto}>{t('auth.register.securityQuestions.submit')}</Text>
                         }
                     </Pressable>
 
                     <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>‹ Atrás</Text>
+                        <Text style={estilos.enlaceAtrasTexto}>{'‹ '}{t('common.back')}</Text>
                     </Pressable>
                 </View>
             </ScrollView>

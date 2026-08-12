@@ -4,9 +4,11 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecuperarContrasena } from '../../context/RecuperarContrasenaContext';
 import { enviarCodigoRecuperacion } from '../../features/auth/services/authService';
+import { useIdioma } from '../../context/IdiomaContext';
 
 export default function RecuperarContrasenaMetodo() {
     const insets = useSafeAreaInsets();
+    const { t } = useIdioma();
     const { datos, setMetodo } = useRecuperarContrasena();
     const [enviando, setEnviando] = useState(false);
     const [error, setError] = useState('');
@@ -19,7 +21,7 @@ export default function RecuperarContrasenaMetodo() {
             setMetodo('CORREO');
             router.push('/recuperar-contrasena/codigo' as any);
         } catch {
-            setError('No se pudo enviar el código. Intenta de nuevo.');
+            setError(t('auth.recoverPassword.errors.sendFailed'));
         } finally {
             setEnviando(false);
         }
@@ -34,8 +36,8 @@ export default function RecuperarContrasenaMetodo() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.titulo}>¿Cómo deseas recuperarla?</Text>
-                    <Text style={estilos.subtitulo}>Elige el método para verificar tu identidad</Text>
+                    <Text style={estilos.titulo}>{t('auth.recoverPassword.method.title')}</Text>
+                    <Text style={estilos.subtitulo}>{t('auth.recoverPassword.method.subtitle')}</Text>
 
                     {error ? <Text style={estilos.mensajeError}>{error}</Text> : null}
 
@@ -47,8 +49,8 @@ export default function RecuperarContrasenaMetodo() {
                     >
                         <Image source={require('@/assets/images/iconosv2/opcioncorreo.png')} style={estilos.opcionIcono} />
                         <View style={estilos.opcionTextos}>
-                            <Text style={estilos.opcionTitulo}>Código por correo</Text>
-                            <Text style={estilos.opcionDesc}>Te enviaremos un código de 6 dígitos</Text>
+                            <Text style={estilos.opcionTitulo}>{t('auth.recoverPassword.method.emailOption')}</Text>
+                            <Text style={estilos.opcionDesc}>{t('auth.recoverPassword.method.emailOptionSub')}</Text>
                         </View>
                         {enviando ? <ActivityIndicator color="#1b3022" size="small" /> : <Text style={estilos.flecha}>›</Text>}
                     </Pressable>
@@ -61,14 +63,14 @@ export default function RecuperarContrasenaMetodo() {
                     >
                         <Image source={require('@/assets/images/iconosv2/recuperacioncontrasena.png')} style={estilos.opcionIcono} />
                         <View style={estilos.opcionTextos}>
-                            <Text style={estilos.opcionTitulo}>Preguntas de seguridad</Text>
-                            <Text style={estilos.opcionDesc}>Responde tus preguntas de seguridad</Text>
+                            <Text style={estilos.opcionTitulo}>{t('auth.recoverPassword.method.questionsOption')}</Text>
+                            <Text style={estilos.opcionDesc}>{t('auth.recoverPassword.method.questionsOptionSub')}</Text>
                         </View>
                         <Text style={estilos.flecha}>›</Text>
                     </Pressable>
 
                     <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>‹ Atrás</Text>
+                        <Text style={estilos.enlaceAtrasTexto}>{t('common.back')}</Text>
                     </Pressable>
                 </View>
             </ScrollView>

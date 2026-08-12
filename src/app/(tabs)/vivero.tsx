@@ -7,11 +7,13 @@ import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 import { useVivero } from '../../features/vivero/hooks/useVivero';
 import { urlImagen } from '../../utils/urlImagen';
 import { useCarrito } from '../../context/CarritoContext';
+import { useIdioma } from '../../context/IdiomaContext';
 
 export default function Vivero() {
     const insets = useSafeAreaInsets();
     const { plantas, estaCargando, error } = useVivero();
     const { agregarAlCarrito, totalItems } = useCarrito();
+    const { t } = useIdioma();
     const [busqueda, setBusqueda] = useState('');
     const [filtroActivo, setFiltroActivo] = useState('Todos');
 
@@ -35,7 +37,7 @@ export default function Vivero() {
                 <Pressable style={estilos.botonEncabezado} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}>
                     <SymbolView name="line.3.horizontal" size={24} tintColor="#1b3022" />
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>Vivero</Text>
+                <Text style={estilos.encabezadoTitulo}>{t('shop.nursery.headerTitle')}</Text>
                 <Pressable style={estilos.botonEncabezado} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.push('/carrito')}>
                     <View>
                         <CarritoIcono width={30} height={30} fill="#1b3022" />
@@ -70,7 +72,7 @@ export default function Vivero() {
                                 <SymbolView name="magnifyingglass" size={18} tintColor="#737973" />
                                 <TextInput
                                     style={estilos.inputBusqueda}
-                                    placeholder="Buscar plantas..."
+                                    placeholder={t('shop.nursery.searchPlaceholder')}
                                     placeholderTextColor="#b0b0a8"
                                     value={busqueda}
                                     onChangeText={setBusqueda}
@@ -85,7 +87,7 @@ export default function Vivero() {
                                         onPress={() => setFiltroActivo(filtro)}
                                     >
                                         <Text style={[estilos.chipTexto, filtroActivo === filtro && estilos.chipTextoActivo]}>
-                                            {filtro}
+                                            {filtro === 'Todos' ? t('shop.allFilter') : filtro}
                                         </Text>
                                     </Pressable>
                                 ))}
@@ -93,7 +95,7 @@ export default function Vivero() {
                         </View>
                     }
                     ListEmptyComponent={
-                        <Text style={estilos.vacio}>No se encontraron plantas.</Text>
+                        <Text style={estilos.vacio}>{t('shop.nursery.empty')}</Text>
                     }
                     renderItem={({ item }) => (
                         <Pressable

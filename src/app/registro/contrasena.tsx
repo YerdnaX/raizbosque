@@ -3,33 +3,35 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRegistro } from '../../context/RegistroContext';
-
-function evaluarRequisitos(valor: string) {
-    return [
-        { texto: 'Al menos 6 caracteres',        ok: valor.length >= 6 },
-        { texto: 'Al menos una mayúscula',        ok: /[A-Z]/.test(valor) },
-        { texto: 'Al menos una minúscula',        ok: /[a-z]/.test(valor) },
-        { texto: 'Al menos un símbolo',           ok: /[^a-zA-Z0-9]/.test(valor) },
-        { texto: 'Sin caracteres consecutivos iguales', ok: !/(.)\1/.test(valor) && valor.length > 0 },
-    ];
-}
+import { useIdioma } from '../../context/IdiomaContext';
 
 export default function RegistroContrasena() {
     const insets = useSafeAreaInsets();
     const { setContrasena } = useRegistro();
+    const { t } = useIdioma();
     const [contrasena, setContrasenaLocal] = useState('');
     const [confirmar, setConfirmar] = useState('');
     const [mostrar, setMostrar] = useState(false);
     const [error, setError] = useState('');
+
+    function evaluarRequisitos(valor: string) {
+        return [
+            { texto: t('common.passwordRequirements.minLength'),        ok: valor.length >= 6 },
+            { texto: t('common.passwordRequirements.uppercase'),        ok: /[A-Z]/.test(valor) },
+            { texto: t('common.passwordRequirements.lowercase'),        ok: /[a-z]/.test(valor) },
+            { texto: t('common.passwordRequirements.symbol'),           ok: /[^a-zA-Z0-9]/.test(valor) },
+            { texto: t('common.passwordRequirements.noRepeats'), ok: !/(.)\1/.test(valor) && valor.length > 0 },
+        ];
+    }
 
     const requisitos = evaluarRequisitos(contrasena);
     const todosOk = requisitos.every(r => r.ok);
 
     function manejarSiguiente() {
         setError('');
-        if (!contrasena) { setError('La contraseña es requerida'); return; }
-        if (!todosOk) { setError('La contraseña no cumple todos los requisitos'); return; }
-        if (contrasena !== confirmar) { setError('Las contraseñas no coinciden'); return; }
+        if (!contrasena) { setError(t('auth.register.password.errors.required')); return; }
+        if (!todosOk) { setError(t('auth.register.password.errors.requirements')); return; }
+        if (contrasena !== confirmar) { setError(t('auth.register.password.errors.mismatch')); return; }
         setContrasena(contrasena);
         router.push('/registro/preguntas-1');
     }
@@ -38,12 +40,12 @@ export default function RegistroContrasena() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.paso}>Paso 6 de 7</Text>
-                    <Text style={estilos.titulo}>Contraseña</Text>
-                    <Text style={estilos.subtitulo}>Crea una contraseña segura para tu cuenta</Text>
+                    <Text style={estilos.paso}>{t('auth.register.step', { current: 6, total: 7 })}</Text>
+                    <Text style={estilos.titulo}>{t('auth.register.password.title')}</Text>
+                    <Text style={estilos.subtitulo}>{t('auth.register.password.subtitle')}</Text>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Contraseña <Text style={estilos.req}>*</Text></Text>
+                        <Text style={estilos.etiqueta}>{t('auth.register.password.label')} <Text style={estilos.req}>*</Text></Text>
                         <View style={estilos.inputContenedor}>
                             <TextInput
                                 style={[estilos.input, error && !todosOk ? estilos.inputError : null]}
@@ -51,7 +53,7 @@ export default function RegistroContrasena() {
                                 onChangeText={v => { setContrasenaLocal(v); setError(''); }}
                                 secureTextEntry={!mostrar}
                                 autoCapitalize="none"
-                                placeholder="Tu contraseña"
+                                placeholder={t('auth.register.password.placeholder')}
                                 placeholderTextColor="#b0b0a8"
                             />
                             <Pressable style={estilos.ojo} onPress={() => setMostrar(m => !m)}>
@@ -69,14 +71,14 @@ export default function RegistroContrasena() {
                     </View>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Confirmar Contraseña <Text style={estilos.req}>*</Text></Text>
+                        <Text style={estilos.etiqueta}>{t('auth.register.password.confirmLabel')} <Text style={estilos.req}>*</Text></Text>
                         <TextInput
                             style={[estilos.input, error && confirmar !== contrasena ? estilos.inputError : null]}
                             value={confirmar}
                             onChangeText={v => { setConfirmar(v); setError(''); }}
                             secureTextEntry={!mostrar}
                             autoCapitalize="none"
-                            placeholder="Repite tu contraseña"
+                            placeholder={t('auth.register.password.confirmPlaceholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                     </View>
@@ -88,11 +90,11 @@ export default function RegistroContrasena() {
                         android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                         onPress={manejarSiguiente}
                     >
-                        <Text style={estilos.botonTexto}>CONTINUAR</Text>
+                        <Text style={estilos.botonTexto}>{t('common.continue')}</Text>
                     </Pressable>
 
                     <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>‹ Atrás</Text>
+                        <Text style={estilos.enlaceAtrasTexto}>{'‹ '}{t('common.back')}</Text>
                     </Pressable>
                 </View>
             </ScrollView>

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import { obtenerItemRestaurantePorId } from '../services/restauranteService';
+import { useIdioma } from '../../../context/IdiomaContext';
 import type { ItemRestaurante } from '../types/itemRestaurante';
 
 export function useDetalleRestaurante(id: number) {
+    const { t } = useIdioma();
     const [item, setItem] = useState<ItemRestaurante | null>(null);
     const [estaCargando, setEstaCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -12,10 +14,10 @@ export function useDetalleRestaurante(id: number) {
             .then(setItem)
             .catch((err) => {
                 console.error('[useDetalleRestaurante]', err.message, err.code);
-                setError('No se pudo cargar la información del producto.');
+                setError(t('errors.loadDishDetail'));
             })
             .finally(() => setEstaCargando(false));
-    }, [id]);
+    }, [id, t]);
 
     return { item, estaCargando, error };
 }

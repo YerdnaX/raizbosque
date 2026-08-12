@@ -3,18 +3,20 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRegistro } from '../../context/RegistroContext';
+import { useIdioma } from '../../context/IdiomaContext';
 
 export default function RegistroContacto() {
     const insets = useSafeAreaInsets();
     const { datos, setTelefono, setDireccion } = useRegistro();
+    const { t } = useIdioma();
     const [telefono, setTelefonoLocal] = useState(datos.telefono);
     const [direccion, setDireccionLocal] = useState(datos.direccion);
     const [error, setError] = useState('');
 
     function manejarSiguiente() {
         setError('');
-        if (!telefono) { setError('El teléfono es requerido'); return; }
-        if (!/^\d{8}$/.test(telefono)) { setError('El teléfono debe tener exactamente 8 dígitos numéricos'); return; }
+        if (!telefono) { setError(t('auth.register.contact.errors.phoneRequired')); return; }
+        if (!/^\d{8}$/.test(telefono)) { setError(t('auth.register.contact.errors.phoneInvalid')); return; }
         setTelefono(telefono);
         setDireccion(direccion);
         router.push('/registro/contrasena');
@@ -24,32 +26,32 @@ export default function RegistroContacto() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.paso}>Paso 6 de 7</Text>
-                    <Text style={estilos.titulo}>Datos de Contacto</Text>
-                    <Text style={estilos.subtitulo}>Teléfono y dirección (opcional)</Text>
+                    <Text style={estilos.paso}>{t('auth.register.step', { current: 6, total: 7 })}</Text>
+                    <Text style={estilos.titulo}>{t('auth.register.contact.title')}</Text>
+                    <Text style={estilos.subtitulo}>{t('auth.register.contact.subtitle')}</Text>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Teléfono <Text style={estilos.req}>*</Text></Text>
+                        <Text style={estilos.etiqueta}>{t('auth.register.contact.phoneLabel')} <Text style={estilos.req}>*</Text></Text>
                         <TextInput
                             style={estilos.input}
                             value={telefono}
                             onChangeText={v => { setTelefonoLocal(v.replace(/[^0-9]/g, '')); setError(''); }}
                             keyboardType="numeric"
                             maxLength={8}
-                            placeholder="88888888"
+                            placeholder={t('auth.register.contact.phonePlaceholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                     </View>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Dirección</Text>
+                        <Text style={estilos.etiqueta}>{t('auth.register.contact.addressLabel')}</Text>
                         <TextInput
                             style={[estilos.input, estilos.inputMultilinea]}
                             value={direccion}
                             onChangeText={setDireccionLocal}
                             multiline
                             numberOfLines={2}
-                            placeholder="Tu dirección (opcional)"
+                            placeholder={t('auth.register.contact.addressPlaceholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                     </View>
@@ -61,11 +63,11 @@ export default function RegistroContacto() {
                         android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                         onPress={manejarSiguiente}
                     >
-                        <Text style={estilos.botonTexto}>CONTINUAR</Text>
+                        <Text style={estilos.botonTexto}>{t('common.continue')}</Text>
                     </Pressable>
 
                     <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>‹ Atrás</Text>
+                        <Text style={estilos.enlaceAtrasTexto}>{'‹ '}{t('common.back')}</Text>
                     </Pressable>
                 </View>
             </ScrollView>

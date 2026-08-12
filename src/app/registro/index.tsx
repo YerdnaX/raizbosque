@@ -3,19 +3,21 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRegistro } from '../../context/RegistroContext';
+import { useIdioma } from '../../context/IdiomaContext';
 import { enviarCodigoRegistro } from '../../features/auth/services/authService';
 
 export default function RegistroCorreo() {
     const insets = useSafeAreaInsets();
     const { datos, setCorreo } = useRegistro();
+    const { t } = useIdioma();
     const [correoLocal, setCorreoLocal] = useState(datos.correo);
     const [error, setError] = useState('');
     const [cargando, setCargando] = useState(false);
 
     async function manejarSiguiente() {
         setError('');
-        if (!correoLocal) { setError('El correo es requerido'); return; }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoLocal)) { setError('Ingresa un correo válido'); return; }
+        if (!correoLocal) { setError(t('auth.register.email.errors.required')); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoLocal)) { setError(t('auth.register.email.errors.invalid')); return; }
 
         setCargando(true);
         try {
@@ -25,15 +27,15 @@ export default function RegistroCorreo() {
         } catch (e: any) {
             const codigo = e?.response?.data?.codigo;
             if (codigo === 'EMAIL_ALREADY_EXISTS') {
-                setError('Ya existe una cuenta con ese correo');
+                setError(t('auth.register.email.errors.alreadyExists'));
             } else if (codigo === 'EMAIL_NETWORK_ERROR') {
-                setError('No se pudo conectar al servicio de correo. Intenta de nuevo en unos minutos.');
+                setError(t('common.emailServiceError'));
             } else if (e?.code === 'ECONNABORTED') {
-                setError('El servidor tardó demasiado en responder. Intenta nuevamente.');
+                setError(t('common.timeoutError'));
             } else if (!e?.response) {
-                setError('Sin conexión con el servidor. Verifica internet e intenta otra vez.');
+                setError(t('common.noConnectionError'));
             } else {
-                setError('No se pudo enviar el código. Intenta de nuevo.');
+                setError(t('auth.register.email.errors.sendFailed'));
             }
         } finally {
             setCargando(false);
@@ -44,21 +46,21 @@ export default function RegistroCorreo() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.paso}>Paso 1 de 7</Text>
-                    <Text style={estilos.titulo}>Crear Cuenta</Text>
+                    <Text style={estilos.paso}>{t('auth.register.step', { current: 1, total: 7 })}</Text>
+                    <Text style={estilos.titulo}>{t('auth.register.email.title')}</Text>
                     <Text style={estilos.subtitulo}>
-                        Ingresa tu correo electrónico. Te enviaremos un código de verificación.
+                        {t('auth.register.email.subtitle')}
                     </Text>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Correo Electrónico <Text style={estilos.req}>*</Text></Text>
+                        <Text style={estilos.etiqueta}>{t('auth.register.email.label')} <Text style={estilos.req}>*</Text></Text>
                         <TextInput
                             style={[estilos.input, error ? estilos.inputError : null]}
                             value={correoLocal}
                             onChangeText={v => { setCorreoLocal(v); setError(''); }}
                             keyboardType="email-address"
                             autoCapitalize="none"
-                            placeholder="correo@ejemplo.com"
+                            placeholder={t('common.emailPlaceholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                         {error ? <Text style={estilos.mensajeError}>{error}</Text> : null}
@@ -70,11 +72,11 @@ export default function RegistroCorreo() {
                         onPress={manejarSiguiente}
                         disabled={cargando}
                     >
-                        {cargando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>CONTINUAR</Text>}
+                        {cargando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>{t('common.continue')}</Text>}
                     </Pressable>
 
                     <Pressable style={estilos.enlace} onPress={() => router.replace('/login')}>
-                        <Text style={estilos.enlaceTexto}>¿Ya tienes cuenta? <Text style={estilos.enlaceDestacado}>Inicia Sesión</Text></Text>
+                        <Text style={estilos.enlaceTexto}>{t('auth.register.email.alreadyHaveAccount')} <Text style={estilos.enlaceDestacado}>{t('auth.register.email.login')}</Text></Text>
                     </Pressable>
                 </View>
             </ScrollView>

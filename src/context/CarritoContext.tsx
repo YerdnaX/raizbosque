@@ -1,6 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 import { Alert } from 'react-native';
 import { useUsuario } from './UsuarioContext';
+import { useIdioma } from './IdiomaContext';
 import type { ItemCarrito } from '../features/carrito/types/carritoItem';
 import {
     obtenerCarrito as obtenerCarritoService,
@@ -24,6 +25,7 @@ const CarritoContext = createContext<CarritoContextType | null>(null);
 
 export function CarritoProvider({ children }: { children: ReactNode }) {
     const { usuario } = useUsuario();
+    const { t } = useIdioma();
     const [items, setItems] = useState<ItemCarrito[]>([]);
     const [estaCargando, setEstaCargando] = useState(false);
 
@@ -63,7 +65,7 @@ export function CarritoProvider({ children }: { children: ReactNode }) {
 
     async function agregarAlCarrito(idProducto: number, precio: number): Promise<boolean> {
         if (!usuario) {
-            Alert.alert('Inicia sesión', 'Debes iniciar sesión para agregar productos al carrito.');
+            Alert.alert(t('cart.loginRequiredTitle'), t('cart.loginRequiredMessage'));
             return false;
         }
         try {
@@ -71,7 +73,7 @@ export function CarritoProvider({ children }: { children: ReactNode }) {
             await recargarCarrito();
             return true;
         } catch {
-            Alert.alert('Error', 'No se pudo agregar al carrito. Intenta de nuevo.');
+            Alert.alert(t('common.error'), t('cart.errors.add'));
             return false;
         }
     }
@@ -81,7 +83,7 @@ export function CarritoProvider({ children }: { children: ReactNode }) {
             await actualizarCantidadService(idDetalle, cantidad);
             await recargarCarrito();
         } catch {
-            Alert.alert('Error', 'No se pudo actualizar la cantidad.');
+            Alert.alert(t('common.error'), t('cart.errors.updateQuantity'));
         }
     }
 
@@ -94,7 +96,7 @@ export function CarritoProvider({ children }: { children: ReactNode }) {
             await eliminarItemService(idDetalle);
             await recargarCarrito();
         } catch {
-            Alert.alert('Error', 'No se pudo eliminar el artículo.');
+            Alert.alert(t('common.error'), t('cart.errors.remove'));
         }
     }
 

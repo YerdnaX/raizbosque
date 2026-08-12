@@ -1,24 +1,25 @@
 import { View, Text, StyleSheet } from 'react-native';
 import { COLORES } from '@/constants/colores';
+import { useIdioma } from '../../../context/IdiomaContext';
 import type { PasoCheckout } from '../types/checkoutEstado';
-
-const PASOS: { clave: PasoCheckout; titulo: string }[] = [
-    { clave: 'entrega', titulo: 'Entrega' },
-    { clave: 'pago', titulo: 'Pago' },
-    { clave: 'confirmacion', titulo: 'Confirmación' },
-];
 
 type Props = {
     pasoActual: PasoCheckout;
 };
 
 export function CheckoutProgress({ pasoActual }: Props) {
+    const { t, strings } = useIdioma();
+    const PASOS: { clave: PasoCheckout; titulo: string }[] = [
+        { clave: 'entrega', titulo: strings.checkout.steps.delivery },
+        { clave: 'pago', titulo: strings.checkout.steps.payment },
+        { clave: 'confirmacion', titulo: strings.checkout.steps.confirmation },
+    ];
     const indiceActual = PASOS.findIndex((paso) => paso.clave === pasoActual);
 
     return (
         <View style={estilos.contenedor}>
             <Text style={estilos.pasoTexto}>
-                Paso {indiceActual + 1} de {PASOS.length} · {PASOS[indiceActual].titulo}
+                {t('checkout.stepIndicator', { current: indiceActual + 1, total: PASOS.length, title: PASOS[indiceActual].titulo })}
             </Text>
             <View style={estilos.linea}>
                 {PASOS.map((paso, indice) => (

@@ -6,6 +6,7 @@ import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 import { useDetalleRestaurante } from '../../features/restaurante/hooks/useDetalleRestaurante';
 import { urlImagen } from '../../utils/urlImagen';
 import { useCarrito } from '../../context/CarritoContext';
+import { useIdioma } from '../../context/IdiomaContext';
 
 const IMAGEN_TOPBAR = require('@/assets/images/login/topBar.png');
 
@@ -40,6 +41,7 @@ export default function DetallePlato() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const { item, estaCargando, error } = useDetalleRestaurante(Number(id));
     const { agregarAlCarrito } = useCarrito();
+    const { t, tn } = useIdioma();
 
     if (estaCargando) {
         return (
@@ -47,7 +49,7 @@ export default function DetallePlato() {
                 <Encabezado />
                 <View style={estilos.centrado}>
                     <ActivityIndicator size="large" color="#1b3022" />
-                    <Text style={estilos.cargandoTexto}>Cargando :D</Text>
+                    <Text style={estilos.cargandoTexto}>{t('dishDetail.loading')}</Text>
                 </View>
             </View>
         );
@@ -58,9 +60,9 @@ export default function DetallePlato() {
             <View style={estilos.contenedor}>
                 <Encabezado />
                 <View style={estilos.centrado}>
-                    <Text style={estilos.errorTexto}>{error ?? 'Producto no encontrado.'}</Text>
+                    <Text style={estilos.errorTexto}>{error ?? t('dishDetail.notFound')}</Text>
                     <Pressable style={estilos.botonVolver} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={() => router.back()}>
-                        <Text style={estilos.botonVolverTexto}>Volver al Menú</Text>
+                        <Text style={estilos.botonVolverTexto}>{t('dishDetail.backToMenu')}</Text>
                     </Pressable>
                 </View>
             </View>
@@ -99,7 +101,7 @@ export default function DetallePlato() {
                         {item.Stock <= 5 && (
                             <View style={[estilos.tag, estilos.tagAgotando]}>
                                 <Text style={[estilos.tagTexto, estilos.tagAgotandoTexto]}>
-                                    Pocas unidades
+                                    {t('dishDetail.lowStock')}
                                 </Text>
                             </View>
                         )}
@@ -114,28 +116,28 @@ export default function DetallePlato() {
                     {/* Descripción */}
                     {item.Descripcion ? (
                         <View style={estilos.seccion}>
-                            <Text style={estilos.seccionTitulo}>Descripción</Text>
+                            <Text style={estilos.seccionTitulo}>{t('dishDetail.description')}</Text>
                             <Text style={estilos.descripcion}>{item.Descripcion}</Text>
                         </View>
                     ) : null}
 
                     {/* Info adicional */}
                     <View style={estilos.seccion}>
-                        <Text style={estilos.seccionTitulo}>Información</Text>
+                        <Text style={estilos.seccionTitulo}>{t('dishDetail.information')}</Text>
                         <View style={estilos.infoItems}>
                             <View style={estilos.infoItem}>
                                 <SymbolView name="fork.knife" size={22} tintColor="#526349" />
                                 <View style={estilos.infoTexto}>
-                                    <Text style={estilos.infoEtiqueta}>CATEGORÍA</Text>
+                                    <Text style={estilos.infoEtiqueta}>{t('dishDetail.categoryLabel')}</Text>
                                     <Text style={estilos.infoValor}>{item.NombreCategoria}</Text>
                                 </View>
                             </View>
                             <View style={estilos.infoItem}>
                                 <SymbolView name="bag.fill" size={22} tintColor="#526349" />
                                 <View style={estilos.infoTexto}>
-                                    <Text style={estilos.infoEtiqueta}>DISPONIBILIDAD</Text>
+                                    <Text style={estilos.infoEtiqueta}>{t('dishDetail.availabilityLabel')}</Text>
                                     <Text style={estilos.infoValor}>
-                                        {item.Stock > 0 ? `${item.Stock} disponibles` : 'Sin stock'}
+                                        {item.Stock > 0 ? tn('dishDetail.stockAvailable', item.Stock) : t('dishDetail.outOfStock')}
                                     </Text>
                                 </View>
                             </View>
@@ -152,7 +154,7 @@ export default function DetallePlato() {
                     onPress={() => agregarAlCarrito(Number(id), item.Precio)}
                 >
                     <SymbolView name="cart.fill.badge.plus" size={18} tintColor="#ffffff" />
-                    <Text style={estilos.botonAgregarTexto}>AGREGAR AL CARRITO</Text>
+                    <Text style={estilos.botonAgregarTexto}>{t('dishDetail.addToCart')}</Text>
                 </Pressable>
             </View>
         </View>

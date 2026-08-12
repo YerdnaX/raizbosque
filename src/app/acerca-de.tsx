@@ -2,9 +2,11 @@ import { View, Text, Image, Pressable, StyleSheet, ImageBackground } from "react
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import AtrasIcono from '@/assets/icons/atras.svg';
+import { useIdioma } from '../context/IdiomaContext';
 
 export default function AcercaDe() {
     const insets = useSafeAreaInsets();
+    const { t } = useIdioma();
 
     return (
         <View style={estilos.contenedor}>
@@ -18,7 +20,7 @@ export default function AcercaDe() {
                         <AtrasIcono width={24} height={24} fill="#ffffff" />
                     </View>
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>Acerca de</Text>
+                <Text style={estilos.encabezadoTitulo}>{t('about.headerTitle')}</Text>
                 <View style={estilos.espaciador} />
             </ImageBackground>
 
@@ -43,7 +45,7 @@ export default function AcercaDe() {
 
                 <View style={estilos.separadorGrande} />
 
-                <Text style={estilos.firma}>Hecho con ❤️</Text>
+                <Text style={estilos.firma}>{t('about.madeWith')}</Text>
             </View>
         </View>
     );

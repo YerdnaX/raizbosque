@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar, Dimensions } from 'react-native';
 import { useEffect } from 'react';
+import { IdiomaProvider } from '../context/IdiomaContext';
 import { UsuarioProvider } from '../context/UsuarioContext';
 import { CarritoProvider } from '../context/CarritoContext';
 import { RegistroProvider } from '../context/RegistroContext';
@@ -20,16 +21,18 @@ export default function Layout() {
     }, []);
 
     return (
-        <UsuarioProvider>
-            <CarritoProvider>
-                <RegistroProvider>
-                    <RecuperarContrasenaProvider>
-                        <RecuperarUsuarioProvider>
-                            <Stack screenOptions={{ headerShown: false }} />
-                        </RecuperarUsuarioProvider>
-                    </RecuperarContrasenaProvider>
-                </RegistroProvider>
-            </CarritoProvider>
-        </UsuarioProvider>
+        <IdiomaProvider>
+            <UsuarioProvider>
+                <CarritoProvider>
+                    <RegistroProvider>
+                        <RecuperarContrasenaProvider>
+                            <RecuperarUsuarioProvider>
+                                <Stack screenOptions={{ headerShown: false }} />
+                            </RecuperarUsuarioProvider>
+                        </RecuperarContrasenaProvider>
+                    </RegistroProvider>
+                </CarritoProvider>
+            </UsuarioProvider>
+        </IdiomaProvider>
     );
 }

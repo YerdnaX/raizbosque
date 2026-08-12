@@ -1,5 +1,6 @@
 import { View, Text, Pressable, ScrollView, StyleSheet, useWindowDimensions, ActivityIndicator, ImageBackground, Image } from "react-native";
 import { router } from "expo-router";
+import { useState } from "react";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
 import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
@@ -12,14 +13,9 @@ import { useInicio } from '../../features/inicio/hooks/useInicio';
 import { urlImagen } from '../../utils/urlImagen';
 import { useCarrito } from '../../context/CarritoContext';
 import { useUsuario } from '../../context/UsuarioContext';
+import { useIdioma } from '../../context/IdiomaContext';
+import { SelectorIdiomaCompacto } from '../../components/ui/SelectorIdioma';
 import type { Reservacion } from '../../features/reservaciones/types/reservacion';
-
-const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
-function formatearFechaReserva(fechaISO: string, hora: string): string {
-    const [, mes, dia] = fechaISO.split('-');
-    return `${parseInt(dia)} ${MESES[parseInt(mes) - 1]} · ${hora} Hrs`;
-}
 
 const ESTADO_COLOR: Record<string, { fondo: string; texto: string }> = {
     Pendiente:  { fondo: '#fff3cd', texto: '#856404' },
@@ -28,13 +24,12 @@ const ESTADO_COLOR: Record<string, { fondo: string; texto: string }> = {
     Cancelada:  { fondo: '#f8d7da', texto: '#842029' },
 };
 
-const SECCIONES = [
-    { titulo: 'Restaurante', ruta: '/(tabs)/restaurante', Icono: RestauranteIcono },
-    { titulo: 'Vivero',      ruta: '/(tabs)/vivero',      Icono: ViveroIcono      },
-    { titulo: 'Mi Jardín',   ruta: '/(tabs)/jardin',      Icono: JardinIcono      },
-    { titulo: 'Mi Perfil',   ruta: '/(tabs)/perfil',      Icono: PerfilIcono      },
-    { titulo: 'Productos',    ruta: '/(tabs)/productos',    Icono: ProductosIcono },
-];
+function formatearFechaReserva(fechaISO: string, hora: string, meses: readonly string[]): string {
+    const [, mes, dia] = fechaISO.split('-');
+    return `${parseInt(dia)} ${meses[parseInt(mes) - 1]} · ${hora} Hrs`;
+}
+
+type IdSeccion = 'restaurante' | 'vivero' | 'jardin' | 'perfil' | 'productos';
 
 export default function Inicio() {
     const insets = useSafeAreaInsets();
@@ -43,6 +38,16 @@ export default function Inicio() {
     const { plantaDelMes, platoDelDia, proximasReservaciones, estaCargando, error } = useInicio();
     const { totalItems } = useCarrito();
     const { usuario } = useUsuario();
+    const { t, strings } = useIdioma();
+    const [mostrarSelectorIdioma, setMostrarSelectorIdioma] = useState(false);
+
+    const SECCIONES: { id: IdSeccion; titulo: string; ruta: string; Icono: typeof RestauranteIcono }[] = [
+        { id: 'restaurante', titulo: strings.home.sections.restaurant, ruta: '/(tabs)/restaurante', Icono: RestauranteIcono },
+        { id: 'vivero',      titulo: strings.home.sections.nursery,     ruta: '/(tabs)/vivero',      Icono: ViveroIcono      },
+        { id: 'jardin',      titulo: strings.home.sections.garden,      ruta: '/(tabs)/jardin',      Icono: JardinIcono      },
+        { id: 'perfil',      titulo: strings.home.sections.profile,     ruta: '/(tabs)/perfil',      Icono: PerfilIcono      },
+        { id: 'productos',   titulo: strings.home.sections.products,    ruta: '/(tabs)/productos',   Icono: ProductosIcono   },
+    ];
 
     return (
         <View style={estilos.contenedor}>
@@ -54,7 +59,14 @@ export default function Inicio() {
                 <Pressable style={estilos.botonEncabezado} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}>
                     <SymbolView name="line.3.horizontal" size={24} tintColor="#1b3022" />
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>Inicio</Text>
+                <View style={estilos.encabezadoCentro}>
+                    <Text style={estilos.encabezadoTitulo}>{t('nav.home')}</Text>
+                    <SelectorIdiomaCompacto
+                        visible={mostrarSelectorIdioma}
+                        onAbrir={() => setMostrarSelectorIdioma(true)}
+                        onCerrar={() => setMostrarSelectorIdioma(false)}
+                    />
+                </View>
                 <Pressable style={estilos.botonCarrito} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.push('/carrito')}>
                     <View>
                         <CarritoIcono width={30} height={30} fill="#1b3022" />
@@ -73,16 +85,16 @@ export default function Inicio() {
             >
                 <View style={estilos.saludoSeccion}>
                     <Text style={[estilos.saludoTitulo, esHorizontal && { fontSize: 20 }]}>
-                        {usuario ? `¡Hola, ${usuario.Nombre}!` : '¡Bienvenido!'}
+                        {usuario ? t('home.greeting', { name: usuario.Nombre }) : t('home.greetingGuest')}
                     </Text>
-                    <Text style={estilos.saludoSubtitulo}>Descubre lo que Raíces tiene para vos hoy.</Text>
+                    <Text style={estilos.saludoSubtitulo}>{t('home.subtitle')}</Text>
                 </View>
 
                 {/* Planta del Mes */}
                 <View style={estilos.seccion}>
                     <View style={estilos.seccionTituloFila}>
                         <Image source={require('@/assets/images/iconosv2/plantadeldia.png')} style={estilos.seccionTituloIconoGrande} />
-                        <Text style={estilos.seccionTitulo}>Planta del Mes</Text>
+                        <Text style={estilos.seccionTitulo}>{t('home.plantOfMonth')}</Text>
                     </View>
                     {estaCargando ? (
                         <View style={estilos.tarjetaCargando}>
@@ -91,7 +103,7 @@ export default function Inicio() {
                     ) : error || !plantaDelMes ? (
                         <View style={estilos.tarjetaCargando}>
                             <Text style={estilos.errorTexto}>
-                                {error ?? 'No hay planta del mes disponible.'}
+                                {error ?? t('home.noPlantOfMonth')}
                             </Text>
                         </View>
                     ) : (
@@ -109,7 +121,7 @@ export default function Inicio() {
                                 {plantaDelMes.FrecuenciaRiego && (
                                     <View style={estilos.riegoFila}>
                                         <SymbolView name="drop.fill" size={13} tintColor="#526349" />
-                                        <Text style={estilos.riegoTexto}>Riego {plantaDelMes.FrecuenciaRiego}</Text>
+                                        <Text style={estilos.riegoTexto}>{t('home.watering', { frequency: plantaDelMes.FrecuenciaRiego })}</Text>
                                     </View>
                                 )}
                                 <View style={estilos.precioFila}>
@@ -119,7 +131,7 @@ export default function Inicio() {
                                         android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                                         onPress={() => router.navigate('/(tabs)/vivero')}
                                     >
-                                        <Text style={estilos.botonVerMasTexto}>Ver en Vivero</Text>
+                                        <Text style={estilos.botonVerMasTexto}>{t('home.viewInNursery')}</Text>
                                     </Pressable>
                                 </View>
                             </View>
@@ -131,7 +143,7 @@ export default function Inicio() {
                 <View style={estilos.seccion}>
                     <View style={estilos.seccionTituloFila}>
                         <Image source={require('@/assets/images/iconosv2/platodeldia.png')} style={estilos.seccionTituloIconoGrande} />
-                        <Text style={estilos.seccionTitulo}>Plato del Día</Text>
+                        <Text style={estilos.seccionTitulo}>{t('home.dishOfDay')}</Text>
                     </View>
                     {estaCargando ? (
                         <View style={estilos.tarjetaCargando}>
@@ -139,7 +151,7 @@ export default function Inicio() {
                         </View>
                     ) : !platoDelDia ? (
                         <View style={estilos.tarjetaCargando}>
-                            <Text style={estilos.errorTexto}>No hay plato del día disponible.</Text>
+                            <Text style={estilos.errorTexto}>{t('home.noDishOfDay')}</Text>
                         </View>
                     ) : (
                         <View style={estilos.tarjetaPlato}>
@@ -165,7 +177,7 @@ export default function Inicio() {
                                         android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                                         onPress={() => router.navigate('/(tabs)/restaurante')}
                                     >
-                                        <Text style={estilos.botonVerMasTexto}>Ver Menú</Text>
+                                        <Text style={estilos.botonVerMasTexto}>{t('home.viewMenu')}</Text>
                                     </Pressable>
                                 </View>
                             </View>
@@ -179,13 +191,13 @@ export default function Inicio() {
                         <View style={estilos.seccionEncabezado}>
                             <View style={estilos.seccionTituloFila}>
                                 <Image source={require('@/assets/images/iconosv2/proximasreservaciones.png')} style={estilos.seccionTituloIcono} />
-                                <Text style={estilos.seccionTitulo}>Próximas Reservaciones</Text>
+                                <Text style={estilos.seccionTitulo}>{t('home.upcomingReservations')}</Text>
                             </View>
                             <Pressable
                                 android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
                                 onPress={() => router.push('/reservaciones')}
                             >
-                                <Text style={estilos.verTodas}>Ver todas</Text>
+                                <Text style={estilos.verTodas}>{t('home.seeAll')}</Text>
                             </Pressable>
                         </View>
 
@@ -196,8 +208,8 @@ export default function Inicio() {
                                 onPress={() => router.push('/nueva-reservacion')}
                             >
                                 <SymbolView name="calendar.badge.plus" size={28} tintColor="#9ca09a" />
-                                <Text style={estilos.reservaVaciaTexto}>Sin reservaciones próximas</Text>
-                                <Text style={estilos.reservaVaciaSubtexto}>Toca para crear una</Text>
+                                <Text style={estilos.reservaVaciaTexto}>{t('home.noUpcomingReservations')}</Text>
+                                <Text style={estilos.reservaVaciaSubtexto}>{t('home.tapToCreate')}</Text>
                             </Pressable>
                         ) : (
                             <View style={estilos.listaReservas}>
@@ -211,16 +223,17 @@ export default function Inicio() {
 
                 {/* Explorar */}
                 <View style={estilos.seccion}>
-                    <Text style={estilos.seccionTitulo}>Explorar</Text>
+                    <Text style={estilos.seccionTitulo}>{t('home.explore')}</Text>
                     <View style={estilos.cuadricula}>
                         {SECCIONES.map((seccion) => (
                             <Pressable
-                                key={seccion.titulo}
+                                key={seccion.id}
                                 style={[estilos.celdaCuadricula, esHorizontal && { width: '23%', aspectRatio: 1.2 }]}
                                 android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                                 onPress={() => router.navigate(seccion.ruta as any)}
+                                accessibilityLabel={seccion.titulo}
                             >
-                                {seccion.titulo === 'Productos' ? (
+                                {seccion.id === 'productos' ? (
                                     <seccion.Icono width="100%" height="100%" color="#1b3022" />
                                 ) : (
                                     <seccion.Icono width="100%" height="100%" fill="#1b3022" />
@@ -234,24 +247,35 @@ export default function Inicio() {
     );
 }
 
+const ESTADO_CLAVE: Record<string, 'pendiente' | 'confirmada' | 'completada' | 'cancelada'> = {
+    Pendiente: 'pendiente',
+    Confirmada: 'confirmada',
+    Completada: 'completada',
+    Cancelada: 'cancelada',
+};
+
 function TarjetaReserva({ reservacion }: { reservacion: Reservacion }) {
+    const { tn, strings } = useIdioma();
     const config = ESTADO_COLOR[reservacion.Estado] ?? { fondo: '#e5e2dc', texto: '#434843' };
+    const claveEstado = ESTADO_CLAVE[reservacion.Estado];
+    const estadoTraducido = claveEstado ? strings.home.status[claveEstado] : reservacion.Estado;
+
     return (
         <View style={estilos.tarjetaReserva}>
             <View style={estilos.reservaFila}>
                 <SymbolView name="calendar" size={16} tintColor="#526349" />
                 <Text style={estilos.reservaFechaTexto}>
-                    {formatearFechaReserva(reservacion.FechaReservacion, reservacion.HoraReservacion)}
+                    {formatearFechaReserva(reservacion.FechaReservacion, reservacion.HoraReservacion, strings.common.months)}
                 </Text>
             </View>
             <View style={estilos.reservaFila}>
                 <SymbolView name="person.2" size={16} tintColor="#526349" />
                 <Text style={estilos.reservaPersonasTexto}>
-                    {reservacion.CantidadPersonas} persona{reservacion.CantidadPersonas !== 1 ? 's' : ''}
+                    {tn('home.personCount', reservacion.CantidadPersonas)}
                 </Text>
                 <View style={[estilos.estadoBadge, { backgroundColor: config.fondo }]}>
                     <Text style={[estilos.estadoBadgeTexto, { color: config.texto }]}>
-                        {reservacion.Estado}
+                        {estadoTraducido}
                     </Text>
                 </View>
             </View>
@@ -275,6 +299,11 @@ const estilos = StyleSheet.create({
     },
     botonEncabezado: {
         padding: 4,
+    },
+    encabezadoCentro: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 10,
     },
     encabezadoTitulo: {
         fontSize: 18,

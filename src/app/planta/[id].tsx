@@ -7,6 +7,7 @@ import { useDetallePlanta } from '../../features/vivero/hooks/useDetallePlanta';
 import { urlImagen } from '../../utils/urlImagen';
 import { useCarrito } from '../../context/CarritoContext';
 import { useUsuario } from '../../context/UsuarioContext';
+import { useIdioma } from '../../context/IdiomaContext';
 import { agregarAlJardin } from '../../features/jardin/services/jardinService';
 
 const IMAGEN_TOPBAR = require('@/assets/images/login/topBar.png');
@@ -43,21 +44,22 @@ export default function DetallePlanta() {
     const { planta, estaCargando, error } = useDetallePlanta(Number(id));
     const { agregarAlCarrito } = useCarrito();
     const { usuario } = useUsuario();
+    const { t, tn } = useIdioma();
 
     async function manejarAgregarJardin() {
         if (!usuario) {
-            Alert.alert('Inicia sesión', 'Debes iniciar sesión para agregar plantas a tu jardín.');
+            Alert.alert(t('plantDetail.loginRequiredTitle'), t('plantDetail.loginRequiredMessage'));
             return;
         }
         try {
             const { yaExiste } = await agregarAlJardin(usuario.IdUsuario, Number(id));
             if (yaExiste) {
-                Alert.alert('Ya está en tu jardín', `${planta?.Nombre} ya se encuentra en tu jardín.`);
+                Alert.alert(t('plantDetail.alreadyInGardenTitle'), t('plantDetail.alreadyInGardenMessage', { name: planta?.Nombre ?? '' }));
             } else {
-                Alert.alert('¡Agregada!', `${planta?.Nombre} fue agregada a tu jardín.`);
+                Alert.alert(t('plantDetail.addedTitle'), t('plantDetail.addedMessage', { name: planta?.Nombre ?? '' }));
             }
         } catch {
-            Alert.alert('Error', 'No se pudo agregar la planta al jardín.');
+            Alert.alert(t('plantDetail.addErrorTitle'), t('plantDetail.addErrorMessage'));
         }
     }
 
@@ -67,7 +69,7 @@ export default function DetallePlanta() {
                 <Encabezado />
                 <View style={estilos.centrado}>
                     <ActivityIndicator size="large" color="#1b3022" />
-                    <Text style={estilos.cargandoTexto}>Cargando :D</Text>
+                    <Text style={estilos.cargandoTexto}>{t('plantDetail.loading')}</Text>
                 </View>
             </View>
         );
@@ -78,9 +80,9 @@ export default function DetallePlanta() {
             <View style={estilos.contenedor}>
                 <Encabezado />
                 <View style={estilos.centrado}>
-                    <Text style={estilos.errorTexto}>{error ?? 'Planta no encontrada.'}</Text>
+                    <Text style={estilos.errorTexto}>{error ?? t('plantDetail.notFound')}</Text>
                     <Pressable style={estilos.botonVolver} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={() => router.back()}>
-                        <Text style={estilos.botonVolverTexto}>Volver al Vivero</Text>
+                        <Text style={estilos.botonVolverTexto}>{t('plantDetail.backToNursery')}</Text>
                     </Pressable>
                 </View>
             </View>
@@ -88,9 +90,9 @@ export default function DetallePlanta() {
     }
 
     const fichaItems = [
-        { icono: 'sun.max.fill',   etiqueta: 'LUZ',         valor: planta.NivelLuz },
-        { icono: 'drop.fill',      etiqueta: 'RIEGO',        valor: planta.FrecuenciaRiego },
-        { icono: 'thermometer',    etiqueta: 'TEMPERATURA',  valor: planta.TemperaturaRecomendada },
+        { icono: 'sun.max.fill',   etiqueta: t('plantDetail.light'),       valor: planta.NivelLuz },
+        { icono: 'drop.fill',      etiqueta: t('plantDetail.watering'),    valor: planta.FrecuenciaRiego },
+        { icono: 'thermometer',    etiqueta: t('plantDetail.temperature'), valor: planta.TemperaturaRecomendada },
     ].filter(item => item.valor);
 
     return (
@@ -126,7 +128,7 @@ export default function DetallePlanta() {
                         ) : null}
                         {planta.NivelDificultad ? (
                             <View style={estilos.tag}>
-                                <Text style={estilos.tagTexto}>{planta.NivelDificultad} Cuidado</Text>
+                                <Text style={estilos.tagTexto}>{t('plantDetail.careLevelSuffix', { level: planta.NivelDificultad })}</Text>
                             </View>
                         ) : null}
                     </View>
@@ -138,23 +140,23 @@ export default function DetallePlanta() {
                     <View style={estilos.separador} />
 
                     <View style={estilos.seccion}>
-                        <Text style={estilos.seccionTitulo}>Disponibilidad</Text>
+                        <Text style={estilos.seccionTitulo}>{t('plantDetail.availability')}</Text>
                         <View style={estilos.disponibilidadCard}>
-                            <Text style={estilos.disponibilidadEtiqueta}>RAICES</Text>
+                            <Text style={estilos.disponibilidadEtiqueta}>{t('plantDetail.stockLabel')}</Text>
                             <Text style={estilos.disponibilidadTexto}>
-                                {planta.Stock > 0 ? `${planta.Stock} disponibles` : 'Sin stock'}
+                                {planta.Stock > 0 ? tn('plantDetail.stockAvailable', planta.Stock) : t('plantDetail.outOfStock')}
                             </Text>
                         </View>
                         <View style={estilos.provedorCard}>
-                            <Text style={estilos.provedorEtiqueta}>PROVEDOR</Text>
+                            <Text style={estilos.provedorEtiqueta}>{t('plantDetail.providerLabel')}</Text>
                             <Text style={estilos.provedorTexto}>
                                 {planta.Provedor
-                                    ? `${planta.Provedor.cantidadDisponible} items disponibles`
-                                    : 'Sin disponibilidad del provedor'}
+                                    ? t('plantDetail.providerAvailable', { count: planta.Provedor.cantidadDisponible })
+                                    : t('plantDetail.providerUnavailable')}
                             </Text>
                             {planta.Provedor ? (
                                 <Text style={estilos.provedorDetalle}>
-                                    Reposicion en {planta.Provedor.tiempoReposicionDias} dias
+                                    {t('plantDetail.restockIn', { days: planta.Provedor.tiempoReposicionDias })}
                                 </Text>
                             ) : null}
                         </View>
@@ -163,7 +165,7 @@ export default function DetallePlanta() {
                     {/* Descripción */}
                     {planta.Descripcion ? (
                         <View style={estilos.seccion}>
-                            <Text style={estilos.seccionTitulo}>Descripción</Text>
+                            <Text style={estilos.seccionTitulo}>{t('plantDetail.description')}</Text>
                             <Text style={estilos.descripcion}>{planta.Descripcion}</Text>
                         </View>
                     ) : null}
@@ -171,7 +173,7 @@ export default function DetallePlanta() {
                     {/* Ficha Técnica */}
                     {fichaItems.length > 0 ? (
                         <View style={estilos.seccion}>
-                            <Text style={estilos.seccionTitulo}>Ficha Técnica</Text>
+                            <Text style={estilos.seccionTitulo}>{t('plantDetail.techSheet')}</Text>
                             <View style={estilos.fichaLista}>
                                 {fichaItems.map(item => (
                                     <View key={item.etiqueta} style={estilos.fichaItem}>
@@ -194,15 +196,15 @@ export default function DetallePlanta() {
                     onPress={async () => {
                         const agregado = await agregarAlCarrito(Number(id), planta.Precio);
                         if (agregado) {
-                            Alert.alert('¡Agregado!', `${planta.Nombre} fue agregado al carrito.`);
+                            Alert.alert(t('plantDetail.addedToCartTitle'), t('plantDetail.addedToCartMessage', { name: planta.Nombre }));
                         }
                     }}
                 >
-                    <Text style={estilos.botonComprarTexto}>COMPRAR</Text>
+                    <Text style={estilos.botonComprarTexto}>{t('plantDetail.buy')}</Text>
                 </Pressable>
                 <Pressable style={estilos.botonJardin} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={manejarAgregarJardin}>
                     <SymbolView name="leaf.fill" size={16} tintColor="#1b3022" />
-                    <Text style={estilos.botonJardinTexto}>AGREGAR A MI JARDÍN</Text>
+                    <Text style={estilos.botonJardinTexto}>{t('plantDetail.addToGarden')}</Text>
                 </Pressable>
             </View>
         </View>

@@ -1,6 +1,7 @@
 import { View, Text, Pressable, TextInput, StyleSheet, ActivityIndicator } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import { COLORES } from '@/constants/colores';
+import { useIdioma } from '../../../context/IdiomaContext';
 import type { Usuario } from '../../auth/types/usuario';
 import type { ItemCarrito } from '../../carrito/types/carritoItem';
 import type { CuponAplicado, TipoCambioVenta } from '../services/compraService';
@@ -63,19 +64,20 @@ export function PasoConfirmacion({
     estaProcesando,
     onConfirmar,
 }: Props) {
+    const { t } = useIdioma();
     return (
         <View style={estilos.contenedor}>
-            <Text style={estilos.pregunta}>Revisá tu pedido</Text>
+            <Text style={estilos.pregunta}>{t('checkout.confirmation.title')}</Text>
 
             <View style={estilos.tarjeta}>
                 <View style={estilos.filaEditable}>
                     <View style={{ flex: 1 }}>
-                        <Text style={estilos.etiquetaTarjeta}>Entrega</Text>
+                        <Text style={estilos.etiquetaTarjeta}>{t('checkout.confirmation.deliveryLabel')}</Text>
                         <Text style={estilos.valorTarjeta}>{entregaResumen.titulo}</Text>
                         {!!entregaResumen.detalle && <Text style={estilos.detalleTarjeta}>{entregaResumen.detalle}</Text>}
                     </View>
                     <Pressable onPress={onEditarEntrega} hitSlop={8}>
-                        <Text style={estilos.cambiar}>Cambiar</Text>
+                        <Text style={estilos.cambiar}>{t('checkout.confirmation.change')}</Text>
                     </Pressable>
                 </View>
 
@@ -83,19 +85,19 @@ export function PasoConfirmacion({
 
                 <View style={estilos.filaEditable}>
                     <View style={{ flex: 1 }}>
-                        <Text style={estilos.etiquetaTarjeta}>Pago</Text>
+                        <Text style={estilos.etiquetaTarjeta}>{t('checkout.confirmation.paymentLabel')}</Text>
                         <Text style={estilos.valorTarjeta}>{pagoResumen.titulo}</Text>
                         {!!pagoResumen.detalle && <Text style={estilos.detalleTarjeta}>{pagoResumen.detalle}</Text>}
                     </View>
                     <Pressable onPress={onEditarPago} hitSlop={8}>
-                        <Text style={estilos.cambiar}>Cambiar</Text>
+                        <Text style={estilos.cambiar}>{t('checkout.confirmation.change')}</Text>
                     </Pressable>
                 </View>
 
                 <View style={estilos.separador} />
 
                 <View>
-                    <Text style={estilos.etiquetaTarjeta}>Contacto</Text>
+                    <Text style={estilos.etiquetaTarjeta}>{t('checkout.confirmation.contactLabel')}</Text>
                     <Text style={estilos.detalleTarjeta}>{usuario.Nombre} {usuario.Apellidos}</Text>
                     <Text style={estilos.detalleTarjeta}>{usuario.Correo}</Text>
                     <Text style={estilos.detalleTarjeta}>{usuario.Telefono || telefono}</Text>
@@ -105,14 +107,14 @@ export function PasoConfirmacion({
             <View style={estilos.tarjeta}>
                 <View style={estilos.seccionEncabezado}>
                     <SymbolView name="ticket.fill" size={16} tintColor={COLORES.esmeraldaTinta} />
-                    <Text style={estilos.seccionTitulo}>¿Tenés un cupón?</Text>
+                    <Text style={estilos.seccionTitulo}>{t('checkout.confirmation.couponQuestion')}</Text>
                 </View>
                 <View style={estilos.cuponFila}>
                     <TextInput
                         style={[estilos.inputContenedor, estilos.inputCupon]}
                         value={codigoCupon}
                         onChangeText={onCambiarCupon}
-                        placeholder="Ej. RAICES10"
+                        placeholder={t('checkout.confirmation.couponPlaceholder')}
                         placeholderTextColor="#b0b0a8"
                         autoCapitalize="characters"
                     />
@@ -124,7 +126,7 @@ export function PasoConfirmacion({
                     >
                         {estaValidandoCupon
                             ? <ActivityIndicator color="#ffffff" size="small" />
-                            : <Text style={estilos.botonCuponTexto}>APLICAR</Text>}
+                            : <Text style={estilos.botonCuponTexto}>{t('checkout.confirmation.apply')}</Text>}
                     </Pressable>
                 </View>
                 {!!mensajeCupon && (
@@ -142,14 +144,14 @@ export function PasoConfirmacion({
             <View style={estilos.tarjeta}>
                 <View style={estilos.seccionEncabezado}>
                     <SymbolView name="list.bullet.rectangle.fill" size={16} tintColor={COLORES.esmeraldaTinta} />
-                    <Text style={estilos.seccionTitulo}>Tu pedido</Text>
+                    <Text style={estilos.seccionTitulo}>{t('checkout.confirmation.yourOrder')}</Text>
                 </View>
 
                 {items.map((item) => (
                     <View key={item.IdDetalle} style={estilos.itemResumen}>
                         <View style={estilos.itemResumenInfo}>
                             <Text style={estilos.itemResumenNombre} numberOfLines={1}>{item.Nombre}</Text>
-                            <Text style={estilos.itemResumenCant}>Cant: {item.Cantidad}</Text>
+                            <Text style={estilos.itemResumenCant}>{t('checkout.confirmation.quantityLabel', { quantity: item.Cantidad })}</Text>
                         </View>
                         <Text style={estilos.itemResumenSubtotal}>₡{item.Subtotal.toLocaleString('es-CR')}</Text>
                     </View>
@@ -158,12 +160,12 @@ export function PasoConfirmacion({
                 <View style={estilos.separador} />
 
                 <View style={estilos.totalFila}>
-                    <Text style={estilos.totalEtiqueta}>Subtotal</Text>
+                    <Text style={estilos.totalEtiqueta}>{t('checkout.confirmation.subtotal')}</Text>
                     <Text style={estilos.totalValor}>₡{subtotal.toLocaleString('es-CR')}</Text>
                 </View>
                 {descuento > 0 && (
                     <View style={estilos.totalFila}>
-                        <Text style={estilos.totalEtiqueta}>Descuento</Text>
+                        <Text style={estilos.totalEtiqueta}>{t('checkout.confirmation.discount')}</Text>
                         <Text style={estilos.descuentoValor}>-₡{descuento.toLocaleString('es-CR')}</Text>
                     </View>
                 )}
@@ -171,26 +173,26 @@ export function PasoConfirmacion({
                     <Text style={estilos.cuponDetalle}>{cuponAplicado.codigo}: {cuponAplicado.descripcion}</Text>
                 )}
                 <View style={estilos.totalFila}>
-                    <Text style={estilos.totalEtiqueta}>IVA (13%)</Text>
+                    <Text style={estilos.totalEtiqueta}>{t('checkout.confirmation.tax')}</Text>
                     <Text style={estilos.totalValor}>₡{impuesto.toLocaleString('es-CR')}</Text>
                 </View>
                 <View style={[estilos.totalFila, estilos.totalFilaFinal]}>
-                    <Text style={estilos.totalFinalEtiqueta}>Total</Text>
+                    <Text style={estilos.totalFinalEtiqueta}>{t('checkout.confirmation.total')}</Text>
                     <Text style={estilos.totalFinalValor}>₡{total.toLocaleString('es-CR', { minimumFractionDigits: 2 })}</Text>
                 </View>
 
                 <View style={estilos.tipoCambioCaja}>
                     <View style={estilos.totalFila}>
-                        <Text style={estilos.totalEtiqueta}>Tipo de cambio venta</Text>
+                        <Text style={estilos.totalEtiqueta}>{t('checkout.confirmation.exchangeRate')}</Text>
                         <Text style={estilos.totalValor}>
-                            {tipoCambioVenta ? `₡${tipoCambioVenta.valor.toLocaleString('es-CR', { minimumFractionDigits: 2 })}` : 'Cargando...'}
+                            {tipoCambioVenta ? `₡${tipoCambioVenta.valor.toLocaleString('es-CR', { minimumFractionDigits: 2 })}` : t('checkout.confirmation.loadingExchangeRate')}
                         </Text>
                     </View>
                     {tipoCambioVenta ? (
                         <>
-                            <Text style={estilos.tipoCambioFecha}>Fecha: {tipoCambioVenta.fecha}</Text>
+                            <Text style={estilos.tipoCambioFecha}>{t('checkout.confirmation.exchangeRateDate', { date: tipoCambioVenta.fecha })}</Text>
                             <View style={estilos.totalFila}>
-                                <Text style={estilos.totalEtiqueta}>Total en dólares</Text>
+                                <Text style={estilos.totalEtiqueta}>{t('checkout.confirmation.totalInDollars')}</Text>
                                 <Text style={estilos.totalValor}>{totalDolares !== null ? formatearMontoDolares(totalDolares) : '-'}</Text>
                             </View>
                         </>
@@ -213,7 +215,7 @@ export function PasoConfirmacion({
             >
                 {estaProcesando
                     ? <ActivityIndicator color="#ffffff" />
-                    : <Text style={estilos.botonConfirmarTexto}>Confirmar pedido</Text>}
+                    : <Text style={estilos.botonConfirmarTexto}>{t('checkout.confirmation.confirm')}</Text>}
             </Pressable>
         </View>
     );

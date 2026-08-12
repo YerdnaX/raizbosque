@@ -4,9 +4,11 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecuperarUsuario } from '../../context/RecuperarUsuarioContext';
 import { obtenerPreguntaRecuperacionUsuario, verificarRespuestaRecuperacionUsuario } from '../../features/auth/services/authService';
+import { useIdioma } from '../../context/IdiomaContext';
 
 export default function RecuperarUsuarioPregunta() {
     const insets = useSafeAreaInsets();
+    const { t } = useIdioma();
     const { datos, reiniciar } = useRecuperarUsuario();
     const [pregunta, setPregunta] = useState<{ IdPregunta: number; TextoPregunta: string } | null>(null);
     const [respuesta, setRespuesta] = useState('');
@@ -17,13 +19,13 @@ export default function RecuperarUsuarioPregunta() {
     useEffect(() => {
         obtenerPreguntaRecuperacionUsuario(datos.correo)
             .then(setPregunta)
-            .catch(() => setError('No se pudo cargar la pregunta. Verifica que el correo sea correcto.'))
+            .catch(() => setError(t('auth.recoverUsername.question.errors.loadFailed')))
             .finally(() => setCargando(false));
     }, []);
 
     async function manejarVerificar() {
         setError('');
-        if (!respuesta.trim()) { setError('La respuesta es requerida'); return; }
+        if (!respuesta.trim()) { setError(t('auth.recoverUsername.question.errors.required')); return; }
         if (!pregunta) return;
 
         setEnviando(true);
@@ -33,8 +35,8 @@ export default function RecuperarUsuarioPregunta() {
             router.replace('/recuperar-usuario/confirmacion' as any);
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
-            if (cod === 'INVALID_ANSWER') setError('La respuesta no es correcta. Recuerda que distingue mayúsculas y minúsculas.');
-            else setError('No se pudo verificar. Intenta de nuevo.');
+            if (cod === 'INVALID_ANSWER') setError(t('auth.recoverUsername.question.errors.incorrect'));
+            else setError(t('auth.recoverUsername.question.errors.generic'));
         } finally {
             setEnviando(false);
         }
@@ -54,8 +56,8 @@ export default function RecuperarUsuarioPregunta() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.titulo}>Pregunta de Seguridad</Text>
-                    <Text style={estilos.subtitulo}>La respuesta es sensible a mayúsculas y minúsculas</Text>
+                    <Text style={estilos.titulo}>{t('auth.recoverUsername.question.title')}</Text>
+                    <Text style={estilos.subtitulo}>{t('auth.recoverUsername.question.subtitle')}</Text>
 
                     {pregunta && (
                         <View style={estilos.campo}>
@@ -64,7 +66,7 @@ export default function RecuperarUsuarioPregunta() {
                                 style={[estilos.input, error ? estilos.inputError : null]}
                                 value={respuesta}
                                 onChangeText={v => { setRespuesta(v); setError(''); }}
-                                placeholder="Tu respuesta"
+                                placeholder={t('common.answerPlaceholder')}
                                 placeholderTextColor="#b0b0a8"
                                 autoCapitalize="none"
                             />
@@ -79,11 +81,11 @@ export default function RecuperarUsuarioPregunta() {
                         onPress={manejarVerificar}
                         disabled={enviando}
                     >
-                        {enviando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>VERIFICAR</Text>}
+                        {enviando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>{t('common.verify')}</Text>}
                     </Pressable>
 
                     <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>‹ Atrás</Text>
+                        <Text style={estilos.enlaceAtrasTexto}>{t('common.back')}</Text>
                     </Pressable>
                 </View>
             </ScrollView>

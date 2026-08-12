@@ -7,18 +7,24 @@ import { router, useFocusEffect } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 import { useUsuario } from '../context/UsuarioContext';
+import { useIdioma } from '../context/IdiomaContext';
 import {
     obtenerReservaciones,
     cancelarReservacion,
 } from '../features/reservaciones/services/reservacionService';
 import type { Reservacion } from '../features/reservaciones/types/reservacion';
 
-const MESES = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
-
-function formatearFecha(fechaISO: string): string {
+function formatearFecha(fechaISO: string, meses: readonly string[]): string {
     const [anio, mes, dia] = fechaISO.split('-');
-    return `${parseInt(dia)} ${MESES[parseInt(mes) - 1]}, ${anio}`;
+    return `${parseInt(dia)} ${meses[parseInt(mes) - 1]}, ${anio}`;
 }
+
+const ESTADO_CLAVE: Record<string, 'pendiente' | 'confirmada' | 'completada' | 'cancelada'> = {
+    Pendiente: 'pendiente',
+    Confirmada: 'confirmada',
+    Completada: 'completada',
+    Cancelada: 'cancelada',
+};
 
 function esProxima(reservacion: Reservacion): boolean {
     if (reservacion.Estado === 'Cancelada') return false;
@@ -40,6 +46,7 @@ const ESTADO_CONFIG: Record<string, EstadoConfig> = {
 export default function Reservaciones() {
     const insets = useSafeAreaInsets();
     const { usuario } = useUsuario();
+    const { t, strings } = useIdioma();
     const [reservaciones, setReservaciones] = useState<Reservacion[]>([]);
     const [estaCargando, setEstaCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -58,7 +65,7 @@ export default function Reservaciones() {
             const data = await obtenerReservaciones(usuario.IdUsuario);
             setReservaciones(data);
         } catch {
-            setError('No se pudo cargar las reservaciones.');
+            setError(t('reservations.loadError'));
         } finally {
             setEstaCargando(false);
         }
@@ -66,19 +73,19 @@ export default function Reservaciones() {
 
     async function manejarCancelar(idReservacion: number) {
         Alert.alert(
-            'Cancelar Reserva',
-            '¿Estás seguro de que deseas cancelar esta reservación?',
+            t('reservations.cancelConfirmTitle'),
+            t('reservations.cancelConfirmMessage'),
             [
-                { text: 'No', style: 'cancel' },
+                { text: t('reservations.cancelConfirmNo'), style: 'cancel' },
                 {
-                    text: 'Sí, cancelar',
+                    text: t('reservations.cancelConfirmYes'),
                     style: 'destructive',
                     onPress: async () => {
                         try {
                             await cancelarReservacion(idReservacion);
                             await cargarReservaciones();
                         } catch {
-                            Alert.alert('Error', 'No se pudo cancelar la reservación.');
+                            Alert.alert(t('reservations.cancelErrorTitle'), t('reservations.cancelErrorMessage'));
                         }
                     },
                 },
@@ -101,7 +108,7 @@ export default function Reservaciones() {
                         <Text style={estilos.botonAtrasTexto}>‹</Text>
                     </View>
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>Reservaciones</Text>
+                <Text style={estilos.encabezadoTitulo}>{t('reservations.headerTitle')}</Text>
                 <Pressable
                     style={estilos.botonNueva}
                     android_ripple={{ color: 'rgba(255,255,255,0.22)', foreground: true }}
@@ -119,27 +126,27 @@ export default function Reservaciones() {
                 <View style={estilos.centrado}>
                     <Text style={estilos.errorTexto}>{error}</Text>
                     <Pressable style={estilos.botonReintentar} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={cargarReservaciones}>
-                        <Text style={estilos.botonReintentarTexto}>Reintentar</Text>
+                        <Text style={estilos.botonReintentarTexto}>{t('reservations.retry')}</Text>
                     </Pressable>
                 </View>
             ) : reservaciones.length === 0 ? (
                 <View style={estilos.centrado}>
                     <SymbolView name="calendar.badge.clock" size={52} tintColor="#c3c8c1" />
-                    <Text style={estilos.vacioTitulo}>Sin reservaciones</Text>
-                    <Text style={estilos.vacioSubtitulo}>Aún no tienes reservaciones.</Text>
+                    <Text style={estilos.vacioTitulo}>{t('reservations.emptyTitle')}</Text>
+                    <Text style={estilos.vacioSubtitulo}>{t('reservations.emptySubtitle')}</Text>
                     <Pressable
                         style={estilos.botonCrearVacio}
                         android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                         onPress={() => router.push('/nueva-reservacion')}
                     >
-                        <Text style={estilos.botonCrearVacioTexto}>Crear Reservación</Text>
+                        <Text style={estilos.botonCrearVacioTexto}>{t('reservations.createButton')}</Text>
                     </Pressable>
                 </View>
             ) : (
                 <ScrollView contentContainerStyle={estilos.scroll} showsVerticalScrollIndicator={false}>
                     {proximas.length > 0 && (
                         <View style={estilos.seccion}>
-                            <Text style={estilos.seccionTitulo}>Próximas</Text>
+                            <Text style={estilos.seccionTitulo}>{t('reservations.upcoming')}</Text>
                             <View style={estilos.separadorTitulo} />
                             {proximas.map(r => (
                                 <TarjetaReservacion
@@ -154,7 +161,7 @@ export default function Reservaciones() {
 
                     {pasadas.length > 0 && (
                         <View style={estilos.seccion}>
-                            <Text style={estilos.seccionTitulo}>Pasadas</Text>
+                            <Text style={estilos.seccionTitulo}>{t('reservations.past')}</Text>
                             <View style={estilos.separadorTitulo} />
                             {pasadas.map(r => (
                                 <TarjetaReservacion
@@ -179,15 +186,18 @@ type TarjetaProps = {
 };
 
 function TarjetaReservacion({ reservacion, onCancelar, puedeCancel }: TarjetaProps) {
+    const { t, tn, strings } = useIdioma();
     const config = ESTADO_CONFIG[reservacion.Estado] ?? { color: '#434843', fondo: '#e5e2dc' };
     const esPasada = !puedeCancel;
+    const claveEstado = ESTADO_CLAVE[reservacion.Estado];
+    const estadoTraducido = claveEstado ? strings.reservations.status[claveEstado] : reservacion.Estado;
 
     return (
         <View style={[estilos.tarjeta, esPasada && estilos.tarjetaPasada]}>
             <View style={estilos.tarjetaEncabezado}>
                 <View style={[estilos.badge, { backgroundColor: config.fondo }]}>
                     <Text style={[estilos.badgeTexto, { color: config.color }]}>
-                        {reservacion.Estado}
+                        {estadoTraducido}
                     </Text>
                 </View>
             </View>
@@ -195,19 +205,19 @@ function TarjetaReservacion({ reservacion, onCancelar, puedeCancel }: TarjetaPro
             <View style={estilos.tarjetaFila}>
                 <SymbolView name="calendar" size={16} tintColor={esPasada ? '#9ca09a' : '#434843'} />
                 <Text style={[estilos.tarjetaTexto, esPasada && estilos.tarjetaTextoPasado]}>
-                    {formatearFecha(reservacion.FechaReservacion)}
+                    {formatearFecha(reservacion.FechaReservacion, strings.common.months)}
                 </Text>
             </View>
             <View style={estilos.tarjetaFila}>
                 <SymbolView name="clock" size={16} tintColor={esPasada ? '#9ca09a' : '#434843'} />
                 <Text style={[estilos.tarjetaTexto, esPasada && estilos.tarjetaTextoPasado]}>
-                    {reservacion.HoraReservacion} Hrs
+                    {t('reservations.hoursSuffix', { time: reservacion.HoraReservacion })}
                 </Text>
             </View>
             <View style={estilos.tarjetaFila}>
                 <SymbolView name="person.2" size={16} tintColor={esPasada ? '#9ca09a' : '#434843'} />
                 <Text style={[estilos.tarjetaTexto, esPasada && estilos.tarjetaTextoPasado]}>
-                    {reservacion.CantidadPersonas} Persona{reservacion.CantidadPersonas !== 1 ? 's' : ''}
+                    {tn('reservations.personCount', reservacion.CantidadPersonas)}
                 </Text>
             </View>
             {reservacion.Comentarios ? (
@@ -221,7 +231,7 @@ function TarjetaReservacion({ reservacion, onCancelar, puedeCancel }: TarjetaPro
 
             {puedeCancel && reservacion.Estado !== 'Cancelada' && (
                 <Pressable style={estilos.botonCancelar} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={onCancelar}>
-                    <Text style={estilos.botonCancelarTexto}>Cancelar Reserva</Text>
+                    <Text style={estilos.botonCancelarTexto}>{t('reservations.cancelButton')}</Text>
                 </Pressable>
             )}
         </View>

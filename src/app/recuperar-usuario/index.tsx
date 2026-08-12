@@ -3,9 +3,11 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecuperarUsuario } from '../../context/RecuperarUsuarioContext';
+import { useIdioma } from '../../context/IdiomaContext';
 
 export default function RecuperarUsuarioCorreo() {
     const insets = useSafeAreaInsets();
+    const { t } = useIdioma();
     const { setCorreo } = useRecuperarUsuario();
     const [correoLocal, setCorreoLocal] = useState('');
     const [error, setError] = useState('');
@@ -13,8 +15,8 @@ export default function RecuperarUsuarioCorreo() {
 
     function manejarSiguiente() {
         setError('');
-        if (!correoLocal) { setError('El correo es requerido'); return; }
-        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoLocal)) { setError('Ingresa un correo válido'); return; }
+        if (!correoLocal) { setError(t('auth.recoverUsername.errors.emailRequired')); return; }
+        if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(correoLocal)) { setError(t('auth.recoverUsername.errors.emailInvalid')); return; }
 
         setCargando(true);
         setCorreo(correoLocal);
@@ -26,18 +28,18 @@ export default function RecuperarUsuarioCorreo() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.titulo}>Recuperar Usuario</Text>
-                    <Text style={estilos.subtitulo}>Ingresa el correo asociado a tu cuenta para recuperar tu nombre de usuario</Text>
+                    <Text style={estilos.titulo}>{t('auth.recoverUsername.title')}</Text>
+                    <Text style={estilos.subtitulo}>{t('auth.recoverUsername.subtitle')}</Text>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Correo Electrónico <Text style={estilos.req}>*</Text></Text>
+                        <Text style={estilos.etiqueta}>{t('auth.recoverUsername.emailLabel')} <Text style={estilos.req}>*</Text></Text>
                         <TextInput
                             style={[estilos.input, error ? estilos.inputError : null]}
                             value={correoLocal}
                             onChangeText={v => { setCorreoLocal(v); setError(''); }}
                             keyboardType="email-address"
                             autoCapitalize="none"
-                            placeholder="correo@ejemplo.com"
+                            placeholder={t('common.emailPlaceholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                         {error ? <Text style={estilos.mensajeError}>{error}</Text> : null}
@@ -49,11 +51,11 @@ export default function RecuperarUsuarioCorreo() {
                         onPress={manejarSiguiente}
                         disabled={cargando}
                     >
-                        {cargando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>CONTINUAR</Text>}
+                        {cargando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>{t('common.continue')}</Text>}
                     </Pressable>
 
                     <Pressable style={estilos.enlaceAtras} onPress={() => router.replace('/login')}>
-                        <Text style={estilos.enlaceAtrasTexto}>‹ Volver al inicio</Text>
+                        <Text style={estilos.enlaceAtrasTexto}>{t('auth.recoverUsername.backHome')}</Text>
                     </Pressable>
                 </View>
             </ScrollView>

@@ -4,9 +4,11 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { login, verificarCodigo2FALogin } from "../features/auth/services/authService";
 import { useUsuario } from "../context/UsuarioContext";
+import { useIdioma } from "../context/IdiomaContext";
 import { COLORES } from "../constants/colores";
 
 export default function Login() {
+    const { t } = useIdioma();
     const [identificador, setIdentificador] = useState("");
     const [contrasena, setContrasena] = useState("");
     const [mostrarContrasena, setMostrarContrasena] = useState(false);
@@ -24,7 +26,7 @@ export default function Login() {
     async function manejarLogin() {
         setError('');
         if (!identificador || !contrasena) {
-            setError('Por favor completa todos los campos.');
+            setError(t('auth.login.errors.incompleteFields'));
             return;
         }
 
@@ -46,9 +48,9 @@ export default function Login() {
                 const correo = error?.response?.data?.correo ?? '';
                 router.push({ pathname: '/contrasena-vencida' as any, params: { correo } });
             } else if (status === 401 || cod === 'INVALID_CREDENTIALS') {
-                setError('Correo, nombre de usuario o contraseña incorrectos.');
+                setError(t('auth.login.errors.invalidCredentials'));
             } else {
-                setError('No se pudo iniciar sesión. Intenta de nuevo.');
+                setError(t('auth.login.errors.generic'));
             }
         } finally {
             setEstaCargando(false);
@@ -58,7 +60,7 @@ export default function Login() {
     async function manejarVerificar2FA() {
         setError2FA('');
         if (!codigo2FA || codigo2FA.length !== 6) {
-            setError2FA('Ingresa el código de 6 dígitos.');
+            setError2FA(t('auth.login.errors.codeRequired'));
             return;
         }
         setCargando2FA(true);
@@ -69,9 +71,9 @@ export default function Login() {
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
             if (cod === 'INVALID_2FA_CODE') {
-                setError2FA('Código inválido. Inténtalo nuevamente.');
+                setError2FA(t('auth.login.errors.invalidCode'));
             } else {
-                setError2FA('No se pudo verificar el código. Intenta de nuevo.');
+                setError2FA(t('auth.login.errors.verifyGeneric'));
             }
         } finally {
             setCargando2FA(false);
@@ -96,23 +98,23 @@ export default function Login() {
             >
                 <View style={estilos.tarjeta}>
                     <Text style={estilos.titulo}>RAÍCES BOSQUE</Text>
-                    <Text style={estilos.subtitulo}>Iniciar Sesión</Text>
+                    <Text style={estilos.subtitulo}>{t('auth.login.title')}</Text>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Correo o nombre de usuario</Text>
+                        <Text style={estilos.etiqueta}>{t('auth.login.emailOrUsernameLabel')}</Text>
                         <TextInput
                             style={[estilos.input, error ? estilos.inputError : null]}
                             value={identificador}
                             onChangeText={v => { setIdentificador(v); setError(''); }}
                             keyboardType="email-address"
                             autoCapitalize="none"
-                            placeholder="correo@ejemplo.com o usuario123"
+                            placeholder={t('auth.login.emailOrUsernamePlaceholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                     </View>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Contraseña</Text>
+                        <Text style={estilos.etiqueta}>{t('auth.login.passwordLabel')}</Text>
                         <View style={[estilos.inputContrasena, error ? estilos.inputError : null]}>
                             <TextInput
                                 style={estilos.inputDentro}
@@ -123,7 +125,7 @@ export default function Login() {
                             />
                             <Pressable android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => setMostrarContrasena(!mostrarContrasena)}>
                                 <Text style={estilos.toggleContrasena}>
-                                    {mostrarContrasena ? "Ocultar" : "Mostrar"}
+                                    {mostrarContrasena ? t('common.hide') : t('common.show')}
                                 </Text>
                             </Pressable>
                         </View>
@@ -136,13 +138,13 @@ export default function Login() {
                             android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
                             onPress={() => router.push('/recuperar-contrasena' as any)}
                         >
-                            <Text style={estilos.enlaceTexto}>¿Olvidaste tu contraseña?</Text>
+                            <Text style={estilos.enlaceTexto}>{t('auth.login.forgotPassword')}</Text>
                         </Pressable>
                         <Pressable
                             android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}
                             onPress={() => router.push('/recuperar-usuario' as any)}
                         >
-                            <Text style={estilos.enlaceTexto}>¿Olvidaste tu usuario?</Text>
+                            <Text style={estilos.enlaceTexto}>{t('auth.login.forgotUsername')}</Text>
                         </Pressable>
                     </View>
 
@@ -154,7 +156,7 @@ export default function Login() {
                     >
                         {estaCargando
                             ? <ActivityIndicator color="#ffffff" />
-                            : <Text style={estilos.botonEntrarTexto}>ENTRAR</Text>
+                            : <Text style={estilos.botonEntrarTexto}>{t('auth.login.submit')}</Text>
                         }
                     </Pressable>
 
@@ -163,7 +165,7 @@ export default function Login() {
                         android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                         onPress={() => router.push('/registro' as any)}
                     >
-                        <Text style={estilos.botonRegistrarseTexto}>REGISTRARSE</Text>
+                        <Text style={estilos.botonRegistrarseTexto}>{t('auth.login.registerCta')}</Text>
                     </Pressable>
                 </View>
             </ScrollView>
@@ -180,9 +182,9 @@ export default function Login() {
                     behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
                 >
                     <View style={estilos.modalTarjeta}>
-                        <Text style={estilos.modalTitulo}>Verificación en dos pasos</Text>
+                        <Text style={estilos.modalTitulo}>{t('auth.login.twoFactorTitle')}</Text>
                         <Text style={estilos.modalSubtitulo}>
-                            Abre Google Authenticator e ingresa el código de 6 dígitos para tu cuenta.
+                            {t('auth.login.twoFactorSubtitle')}
                         </Text>
 
                         <TextInput
@@ -191,7 +193,7 @@ export default function Login() {
                             onChangeText={v => { setCodigo2FA(v.replace(/\D/g, '')); setError2FA(''); }}
                             keyboardType="number-pad"
                             maxLength={6}
-                            placeholder="000000"
+                            placeholder={t('common.codePlaceholder')}
                             placeholderTextColor="#b0b0a8"
                         />
 
@@ -205,7 +207,7 @@ export default function Login() {
                         >
                             {cargando2FA
                                 ? <ActivityIndicator color="#ffffff" />
-                                : <Text style={estilos.botonEntrarTexto}>VERIFICAR</Text>
+                                : <Text style={estilos.botonEntrarTexto}>{t('auth.login.twoFactorVerify')}</Text>
                             }
                         </Pressable>
 
@@ -214,7 +216,7 @@ export default function Login() {
                             android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
                             onPress={cancelar2FA}
                         >
-                            <Text style={estilos.botonRegistrarseTexto}>CANCELAR</Text>
+                            <Text style={estilos.botonRegistrarseTexto}>{t('auth.login.twoFactorCancel')}</Text>
                         </Pressable>
                     </View>
                 </KeyboardAvoidingView>

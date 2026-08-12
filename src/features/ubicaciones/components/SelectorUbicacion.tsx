@@ -5,6 +5,7 @@ import {
 } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import { obtenerPaises, obtenerHijos, obtenerConfiguracionPais } from '../services/ubicacionService';
+import { useIdioma } from '../../../context/IdiomaContext';
 import type { Ubicacion, NivelConfiguracion } from '../types/ubicacion';
 
 type Props = {
@@ -12,6 +13,7 @@ type Props = {
 };
 
 export default function SelectorUbicacion({ onCambio }: Props) {
+    const { t } = useIdioma();
     const [cargandoPaises, setCargandoPaises] = useState(true);
     const [errorPaises, setErrorPaises] = useState(false);
 
@@ -97,14 +99,14 @@ export default function SelectorUbicacion({ onCambio }: Props) {
     function etiquetaDeNivel(nivelIndex: number): string {
         const configuracion = etiquetas.find((nivel) => nivel.nivel === nivelIndex + 1);
         if (configuracion) return configuracion.etiqueta;
-        return nivelIndex === 0 ? 'País' : `Nivel ${nivelIndex + 1}`;
+        return nivelIndex === 0 ? t('locationPicker.countryLabel') : t('locationPicker.levelLabel', { level: nivelIndex + 1 });
     }
 
     if (cargandoPaises) {
         return (
             <View style={estilos.estadoCarga}>
                 <ActivityIndicator color="#1b3022" />
-                <Text style={estilos.estadoTexto}>Cargando países...</Text>
+                <Text style={estilos.estadoTexto}>{t('locationPicker.loadingCountries')}</Text>
             </View>
         );
     }
@@ -112,9 +114,9 @@ export default function SelectorUbicacion({ onCambio }: Props) {
     if (errorPaises) {
         return (
             <View style={estilos.estadoCarga}>
-                <Text style={estilos.estadoTexto}>No se pudieron cargar los países.</Text>
+                <Text style={estilos.estadoTexto}>{t('locationPicker.countriesLoadFailed')}</Text>
                 <Pressable onPress={cargarPaises}>
-                    <Text style={estilos.reintentar}>Reintentar</Text>
+                    <Text style={estilos.reintentar}>{t('locationPicker.retry')}</Text>
                 </Pressable>
             </View>
         );
@@ -134,7 +136,7 @@ export default function SelectorUbicacion({ onCambio }: Props) {
                             onPress={() => setNivelAbierto(nivelIndex)}
                         >
                             <Text style={seleccionActual ? estilos.selectorTexto : estilos.selectorPlaceholder}>
-                                {seleccionActual ? seleccionActual.Nombre : `Selecciona ${etiqueta.toLowerCase()}`}
+                                {seleccionActual ? seleccionActual.Nombre : t('locationPicker.selectPlaceholder', { label: etiqueta.toLowerCase() })}
                             </Text>
                             <SymbolView name="chevron.down" size={14} tintColor="#737973" />
                         </Pressable>
@@ -149,7 +151,7 @@ export default function SelectorUbicacion({ onCambio }: Props) {
                             <View style={estilos.modalContenedor}>
                                 <Text style={estilos.modalTitulo}>{etiqueta}</Text>
                                 {opcionesNivel.length === 0 ? (
-                                    <Text style={estilos.estadoTexto}>No hay opciones disponibles.</Text>
+                                    <Text style={estilos.estadoTexto}>{t('locationPicker.noOptions')}</Text>
                                 ) : (
                                     <FlatList
                                         data={opcionesNivel}
@@ -175,16 +177,16 @@ export default function SelectorUbicacion({ onCambio }: Props) {
                 <View style={estilos.campo}>
                     <View style={estilos.estadoCargaSiguiente}>
                         <ActivityIndicator size="small" color="#1b3022" />
-                        <Text style={estilos.estadoTexto}>Cargando opciones...</Text>
+                        <Text style={estilos.estadoTexto}>{t('locationPicker.loadingOptions')}</Text>
                     </View>
                 </View>
             )}
 
             {errorSiguiente && (
                 <View style={estilos.campo}>
-                    <Text style={estilos.errorTexto}>No se pudieron cargar las siguientes opciones.</Text>
+                    <Text style={estilos.errorTexto}>{t('locationPicker.optionsLoadFailed')}</Text>
                     <Pressable onPress={reintentarSiguienteNivel}>
-                        <Text style={estilos.reintentar}>Reintentar</Text>
+                        <Text style={estilos.reintentar}>{t('locationPicker.retry')}</Text>
                     </Pressable>
                 </View>
             )}

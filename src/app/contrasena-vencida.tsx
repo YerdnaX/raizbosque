@@ -3,20 +3,22 @@ import { useState } from 'react';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { cambiarContrasenaVencida } from '../features/auth/services/authService';
+import { useIdioma } from '../context/IdiomaContext';
 
-function evaluarRequisitos(valor: string) {
+function evaluarRequisitos(valor: string, t: (key: string) => string) {
     return [
-        { texto: 'Al menos 6 caracteres',              ok: valor.length >= 6 },
-        { texto: 'Al menos una mayúscula',              ok: /[A-Z]/.test(valor) },
-        { texto: 'Al menos una minúscula',              ok: /[a-z]/.test(valor) },
-        { texto: 'Al menos un símbolo',                 ok: /[^a-zA-Z0-9]/.test(valor) },
-        { texto: 'Sin caracteres consecutivos iguales', ok: valor.length > 0 && !/(.)\1/.test(valor) },
+        { texto: t('common.passwordRequirements.minLength'), ok: valor.length >= 6 },
+        { texto: t('common.passwordRequirements.uppercase'), ok: /[A-Z]/.test(valor) },
+        { texto: t('common.passwordRequirements.lowercase'), ok: /[a-z]/.test(valor) },
+        { texto: t('common.passwordRequirements.symbol'),    ok: /[^a-zA-Z0-9]/.test(valor) },
+        { texto: t('common.passwordRequirements.noRepeats'), ok: valor.length > 0 && !/(.)\1/.test(valor) },
     ];
 }
 
 export default function ContrasenaVencida() {
     const insets = useSafeAreaInsets();
     const { correo } = useLocalSearchParams<{ correo: string }>();
+    const { t } = useIdioma();
 
     const [contrasenaActual, setContrasenaActual] = useState('');
     const [contrasenaNueva, setContrasenaNueva] = useState('');
@@ -24,13 +26,13 @@ export default function ContrasenaVencida() {
     const [error, setError] = useState('');
     const [enviando, setEnviando] = useState(false);
 
-    const requisitos = evaluarRequisitos(contrasenaNueva);
+    const requisitos = evaluarRequisitos(contrasenaNueva, t);
     const todosOk = requisitos.every(r => r.ok);
 
     async function manejarCambio() {
         setError('');
-        if (!contrasenaActual) { setError('Ingresa tu contraseña actual'); return; }
-        if (!todosOk) { setError('La contraseña nueva no cumple todos los requisitos'); return; }
+        if (!contrasenaActual) { setError(t('auth.expiredPassword.errors.currentRequired')); return; }
+        if (!todosOk) { setError(t('auth.expiredPassword.errors.requirements')); return; }
 
         setEnviando(true);
         try {
@@ -39,11 +41,11 @@ export default function ContrasenaVencida() {
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
             if (e?.response?.status === 401 || cod === 'INVALID_CREDENTIALS') {
-                setError('La contraseña actual es incorrecta.');
+                setError(t('auth.expiredPassword.errors.wrongCurrent'));
             } else if (cod === 'INVALID_PASSWORD_POLICY') {
-                setError('La contraseña nueva no cumple la política de seguridad.');
+                setError(t('auth.expiredPassword.errors.policy'));
             } else {
-                setError('No se pudo actualizar la contraseña. Intenta de nuevo.');
+                setError(t('auth.expiredPassword.errors.generic'));
             }
         } finally {
             setEnviando(false);
@@ -55,35 +57,35 @@ export default function ContrasenaVencida() {
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
                     <Image source={require('@/assets/images/iconosv2/contrasenavencida.png')} style={estilos.icono} />
-                    <Text style={estilos.titulo}>Contraseña Vencida</Text>
-                    <Text style={estilos.subtitulo}>Tu contraseña ha expirado. Crea una nueva para continuar.</Text>
+                    <Text style={estilos.titulo}>{t('auth.expiredPassword.title')}</Text>
+                    <Text style={estilos.subtitulo}>{t('auth.expiredPassword.subtitle')}</Text>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Contraseña Actual <Text style={estilos.req}>*</Text></Text>
+                        <Text style={estilos.etiqueta}>{t('auth.expiredPassword.currentLabel')} <Text style={estilos.req}>*</Text></Text>
                         <TextInput
                             style={estilos.input}
                             value={contrasenaActual}
                             onChangeText={v => { setContrasenaActual(v); setError(''); }}
                             secureTextEntry={!mostrar}
                             autoCapitalize="none"
-                            placeholder="Tu contraseña actual"
+                            placeholder={t('auth.expiredPassword.currentPlaceholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                     </View>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Contraseña Nueva <Text style={estilos.req}>*</Text></Text>
+                        <Text style={estilos.etiqueta}>{t('auth.expiredPassword.newLabel')} <Text style={estilos.req}>*</Text></Text>
                         <TextInput
                             style={estilos.input}
                             value={contrasenaNueva}
                             onChangeText={v => { setContrasenaNueva(v); setError(''); }}
                             secureTextEntry={!mostrar}
                             autoCapitalize="none"
-                            placeholder="Tu nueva contraseña"
+                            placeholder={t('auth.expiredPassword.newPlaceholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                         <Pressable onPress={() => setMostrar(m => !m)} style={estilos.toggleContenedor}>
-                            <Text style={estilos.toggleTexto}>{mostrar ? 'Ocultar contraseñas' : 'Mostrar contraseñas'}</Text>
+                            <Text style={estilos.toggleTexto}>{mostrar ? t('auth.expiredPassword.hidePasswords') : t('auth.expiredPassword.showPasswords')}</Text>
                         </Pressable>
                         <View style={estilos.requisitos}>
                             {requisitos.map(r => (
@@ -102,11 +104,11 @@ export default function ContrasenaVencida() {
                         onPress={manejarCambio}
                         disabled={enviando}
                     >
-                        {enviando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>ACTUALIZAR CONTRASEÑA</Text>}
+                        {enviando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>{t('auth.expiredPassword.submit')}</Text>}
                     </Pressable>
 
                     <Pressable style={estilos.enlaceAtras} onPress={() => router.replace('/login')}>
-                        <Text style={estilos.enlaceAtrasTexto}>‹ Volver al inicio</Text>
+                        <Text style={estilos.enlaceAtrasTexto}>{t('auth.expiredPassword.backHome')}</Text>
                     </Pressable>
                 </View>
             </ScrollView>

@@ -1,18 +1,20 @@
 import { View, Text, Pressable, StyleSheet, ImageBackground, Image } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIdioma } from '../../context/IdiomaContext';
 
 export default function RegistroCompletado() {
     const insets = useSafeAreaInsets();
+    const { t } = useIdioma();
 
     return (
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <View style={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]}>
                 <View style={estilos.tarjeta}>
                     <Image source={require('@/assets/images/iconosv2/registrocompletado.png')} style={estilos.icono} />
-                    <Text style={estilos.titulo}>¡Cuenta Creada!</Text>
+                    <Text style={estilos.titulo}>{t('auth.register.completed.title')}</Text>
                     <Text style={estilos.subtitulo}>
-                        Tu cuenta ha sido creada exitosamente. Ya puedes iniciar sesión con tu correo o nombre de usuario.
+                        {t('auth.register.completed.message')}
                     </Text>
 
                     <Pressable
@@ -20,7 +22,7 @@ export default function RegistroCompletado() {
                         android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                         onPress={() => router.replace('/login')}
                     >
-                        <Text style={estilos.botonTexto}>INICIAR SESIÓN</Text>
+                        <Text style={estilos.botonTexto}>{t('auth.register.completed.login')}</Text>
                     </Pressable>
                 </View>
             </View>

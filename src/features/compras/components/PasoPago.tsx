@@ -1,6 +1,7 @@
 import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import { COLORES } from '@/constants/colores';
+import { useIdioma } from '../../../context/IdiomaContext';
 import VisaLogo from '@/assets/images/checkout/logo-payment-visa.svg';
 import MastercardLogo from '@/assets/images/checkout/logo-payment-mastercard.svg';
 import type { MarcaTarjeta, MetodoPago } from '../types/checkoutEstado';
@@ -42,16 +43,17 @@ export function PasoPago({
     onVolver,
     onContinuar,
 }: Props) {
+    const { t } = useIdioma();
     const LogoTarjeta = marcaTarjeta === 'Visa' ? VisaLogo : marcaTarjeta === 'Mastercard' ? MastercardLogo : null;
 
     return (
         <View style={estilos.contenedor}>
             <Pressable onPress={onVolver} hitSlop={8} style={estilos.volver}>
                 <SymbolView name="chevron.left" size={14} tintColor="#737973" />
-                <Text style={estilos.volverTexto}>Entrega</Text>
+                <Text style={estilos.volverTexto}>{t('checkout.payment.backToDelivery')}</Text>
             </Pressable>
 
-            <Text style={estilos.pregunta}>¿Cómo querés pagar?</Text>
+            <Text style={estilos.pregunta}>{t('checkout.payment.question')}</Text>
 
             <Pressable
                 style={[estilos.opcion, metodoPago === 'SINPE' && estilos.opcionActiva]}
@@ -61,8 +63,8 @@ export function PasoPago({
                 <View style={estilos.opcionIzq}>
                     <SymbolView name="iphone" size={22} tintColor={metodoPago === 'SINPE' ? COLORES.esmeraldaTinta : '#737973'} />
                     <View>
-                        <Text style={[estilos.opcionNombre, metodoPago === 'SINPE' && estilos.opcionNombreActivo]}>SINPE Móvil</Text>
-                        <Text style={estilos.opcionDetalle}>Transferencia desde tu número</Text>
+                        <Text style={[estilos.opcionNombre, metodoPago === 'SINPE' && estilos.opcionNombreActivo]}>{t('checkout.payment.sinpeTitle')}</Text>
+                        <Text style={estilos.opcionDetalle}>{t('checkout.payment.sinpeSub')}</Text>
                     </View>
                 </View>
                 <View style={[estilos.radio, metodoPago === 'SINPE' && estilos.radioActivo]}>
@@ -73,12 +75,12 @@ export function PasoPago({
             {metodoPago === 'SINPE' && (
                 <View style={estilos.formulario}>
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Teléfono SINPE</Text>
+                        <Text style={estilos.etiqueta}>{t('checkout.payment.sinpePhoneLabel')}</Text>
                         <TextInput
                             style={estilos.inputContenedor}
                             value={telefonoSinpe}
                             onChangeText={onCambiarTelefonoSinpe}
-                            placeholder="8888-8888"
+                            placeholder={t('checkout.payment.sinpePhonePlaceholder')}
                             placeholderTextColor="#b0b0a8"
                             keyboardType="phone-pad"
                             maxLength={9}
@@ -95,8 +97,8 @@ export function PasoPago({
                 <View style={estilos.opcionIzq}>
                     <SymbolView name="creditcard.fill" size={22} tintColor={metodoPago === 'Tarjeta' ? COLORES.esmeraldaTinta : '#737973'} />
                     <View>
-                        <Text style={[estilos.opcionNombre, metodoPago === 'Tarjeta' && estilos.opcionNombreActivo]}>Tarjeta</Text>
-                        <Text style={estilos.opcionDetalle}>Visa o Mastercard</Text>
+                        <Text style={[estilos.opcionNombre, metodoPago === 'Tarjeta' && estilos.opcionNombreActivo]}>{t('checkout.payment.cardTitle')}</Text>
+                        <Text style={estilos.opcionDetalle}>{t('checkout.payment.cardSub')}</Text>
                     </View>
                 </View>
                 <View style={[estilos.radio, metodoPago === 'Tarjeta' && estilos.radioActivo]}>
@@ -107,13 +109,13 @@ export function PasoPago({
             {metodoPago === 'Tarjeta' && (
                 <View style={estilos.formulario}>
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Número de tarjeta</Text>
+                        <Text style={estilos.etiqueta}>{t('checkout.payment.cardNumberLabel')}</Text>
                         <View style={estilos.inputTarjetaFila}>
                             <TextInput
                                 style={estilos.inputTarjeta}
                                 value={numeroTarjeta}
                                 onChangeText={onCambiarNumeroTarjeta}
-                                placeholder="0000 0000 0000 0000"
+                                placeholder={t('checkout.payment.cardNumberPlaceholder')}
                                 placeholderTextColor="#b0b0a8"
                                 keyboardType="number-pad"
                             />
@@ -122,12 +124,12 @@ export function PasoPago({
                     </View>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Nombre de quien es dueño de la tarjeta</Text>
+                        <Text style={estilos.etiqueta}>{t('checkout.payment.cardHolderLabel')}</Text>
                         <TextInput
                             style={estilos.inputContenedor}
                             value={nombreTarjeta}
                             onChangeText={onCambiarNombreTarjeta}
-                            placeholder="Nombre y apellidos"
+                            placeholder={t('checkout.payment.cardHolderPlaceholder')}
                             placeholderTextColor="#b0b0a8"
                             autoCapitalize="words"
                         />
@@ -135,12 +137,12 @@ export function PasoPago({
 
                     <View style={estilos.filaPago}>
                         <View style={[estilos.campo, estilos.campoMitad]}>
-                            <Text style={estilos.etiqueta}>Vencimiento</Text>
+                            <Text style={estilos.etiqueta}>{t('checkout.payment.expiryLabel')}</Text>
                             <TextInput
                                 style={estilos.inputContenedor}
                                 value={fechaVencimiento}
                                 onChangeText={onCambiarFechaVencimiento}
-                                placeholder="MM/AA"
+                                placeholder={t('checkout.payment.expiryPlaceholder')}
                                 placeholderTextColor="#b0b0a8"
                                 keyboardType="number-pad"
                                 maxLength={5}
@@ -148,12 +150,12 @@ export function PasoPago({
                         </View>
 
                         <View style={[estilos.campo, estilos.campoMitad]}>
-                            <Text style={estilos.etiqueta}>CVV</Text>
+                            <Text style={estilos.etiqueta}>{t('checkout.payment.cvvLabel')}</Text>
                             <TextInput
                                 style={estilos.inputContenedor}
                                 value={cvv}
                                 onChangeText={onCambiarCvv}
-                                placeholder="123"
+                                placeholder={t('checkout.payment.cvvPlaceholder')}
                                 placeholderTextColor="#b0b0a8"
                                 keyboardType="number-pad"
                                 maxLength={3}
@@ -171,8 +173,8 @@ export function PasoPago({
                 <View style={estilos.opcionIzq}>
                     <SymbolView name="globe" size={22} tintColor={metodoPago === 'PayPal' ? COLORES.esmeraldaTinta : '#737973'} />
                     <View>
-                        <Text style={[estilos.opcionNombre, metodoPago === 'PayPal' && estilos.opcionNombreActivo]}>PayPal</Text>
-                        <Text style={estilos.opcionDetalle}>Vas a salir a PayPal para pagar</Text>
+                        <Text style={[estilos.opcionNombre, metodoPago === 'PayPal' && estilos.opcionNombreActivo]}>{t('checkout.payment.paypalTitle')}</Text>
+                        <Text style={estilos.opcionDetalle}>{t('checkout.payment.paypalSub')}</Text>
                     </View>
                 </View>
                 <View style={[estilos.radio, metodoPago === 'PayPal' && estilos.radioActivo]}>
@@ -191,7 +193,7 @@ export function PasoPago({
                 android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                 onPress={onContinuar}
             >
-                <Text style={estilos.botonContinuarTexto}>Revisar pedido</Text>
+                <Text style={estilos.botonContinuarTexto}>{t('checkout.payment.continue')}</Text>
             </Pressable>
         </View>
     );

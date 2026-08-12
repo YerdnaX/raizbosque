@@ -4,10 +4,12 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { actualizarPerfil } from "../features/auth/services/authService";
 import { useUsuario } from "../context/UsuarioContext";
+import { useIdioma } from "../context/IdiomaContext";
 
 export default function EditarPerfil() {
     const insets = useSafeAreaInsets();
     const { usuario, guardarUsuario } = useUsuario();
+    const { t } = useIdioma();
 
     const [nombre, setNombre] = useState(usuario?.Nombre ?? '');
     const [apellidos, setApellidos] = useState(usuario?.Apellidos ?? '');
@@ -17,7 +19,7 @@ export default function EditarPerfil() {
 
     async function manejarGuardar() {
         if (!nombre || !apellidos) {
-            Alert.alert('Campos requeridos', 'El nombre y los apellidos son obligatorios.');
+            Alert.alert(t('editProfile.requiredFieldsTitle'), t('editProfile.requiredFieldsMessage'));
             return;
         }
         if (!usuario) return;
@@ -26,11 +28,11 @@ export default function EditarPerfil() {
         try {
             await actualizarPerfil(usuario.IdUsuario, { nombre, apellidos, telefono, direccion });
             guardarUsuario({ ...usuario, Nombre: nombre, Apellidos: apellidos, Telefono: telefono, Direccion: direccion });
-            Alert.alert('Listo', 'Tu perfil fue actualizado correctamente.', [
+            Alert.alert(t('editProfile.successTitle'), t('editProfile.successMessage'), [
                 { text: 'OK', onPress: () => router.back() },
             ]);
         } catch {
-            Alert.alert('Error', 'No se pudo actualizar el perfil. Intenta de nuevo.');
+            Alert.alert(t('common.error'), t('editProfile.errorMessage'));
         } finally {
             setEstaCargando(false);
         }
@@ -48,7 +50,7 @@ export default function EditarPerfil() {
                         <Text style={estilos.botonAtrasTexto}>‹</Text>
                     </View>
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>Editar Perfil</Text>
+                <Text style={estilos.encabezadoTitulo}>{t('editProfile.headerTitle')}</Text>
                 <View style={estilos.espaciador} />
             </ImageBackground>
 
@@ -59,10 +61,10 @@ export default function EditarPerfil() {
             >
                 <View style={estilos.tarjeta}>
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Nombre <Text style={estilos.requerido}>*</Text></Text>
+                        <Text style={estilos.etiqueta}>{t('editProfile.nameLabel')} <Text style={estilos.requerido}>*</Text></Text>
                         <TextInput
                             style={estilos.input}
-                            placeholder="Tu nombre"
+                            placeholder={t('editProfile.namePlaceholder')}
                             placeholderTextColor="#b0b0a8"
                             value={nombre}
                             onChangeText={setNombre}
@@ -73,10 +75,10 @@ export default function EditarPerfil() {
                     <View style={estilos.divisor} />
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Apellidos <Text style={estilos.requerido}>*</Text></Text>
+                        <Text style={estilos.etiqueta}>{t('editProfile.lastNameLabel')} <Text style={estilos.requerido}>*</Text></Text>
                         <TextInput
                             style={estilos.input}
-                            placeholder="Tus apellidos"
+                            placeholder={t('editProfile.lastNamePlaceholder')}
                             placeholderTextColor="#b0b0a8"
                             value={apellidos}
                             onChangeText={setApellidos}
@@ -87,10 +89,10 @@ export default function EditarPerfil() {
                     <View style={estilos.divisor} />
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Teléfono</Text>
+                        <Text style={estilos.etiqueta}>{t('editProfile.phoneLabel')}</Text>
                         <TextInput
                             style={estilos.input}
-                            placeholder="+506 8888 8888"
+                            placeholder={t('editProfile.phonePlaceholder')}
                             placeholderTextColor="#b0b0a8"
                             value={telefono}
                             onChangeText={setTelefono}
@@ -101,10 +103,10 @@ export default function EditarPerfil() {
                     <View style={estilos.divisor} />
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Dirección</Text>
+                        <Text style={estilos.etiqueta}>{t('editProfile.addressLabel')}</Text>
                         <TextInput
                             style={[estilos.input, estilos.inputMultilinea]}
-                            placeholder="Tu dirección"
+                            placeholder={t('editProfile.addressPlaceholder')}
                             placeholderTextColor="#b0b0a8"
                             value={direccion}
                             onChangeText={setDireccion}
@@ -122,16 +124,16 @@ export default function EditarPerfil() {
                 >
                     {estaCargando
                         ? <ActivityIndicator color="#ffffff" />
-                        : <Text style={estilos.botonGuardarTexto}>GUARDAR CAMBIOS</Text>
+                        : <Text style={estilos.botonGuardarTexto}>{t('editProfile.submit')}</Text>
                     }
                 </Pressable>
 
                 <View style={estilos.infoCorreo}>
                     <Text style={estilos.infoCorreoTexto}>
-                        Correo: {usuario?.Correo ?? ''}
+                        {t('editProfile.emailPrefix', { email: usuario?.Correo ?? '' })}
                     </Text>
                     <Text style={estilos.infoCorreoNota}>
-                        El correo no se puede modificar.
+                        {t('editProfile.emailImmutable')}
                     </Text>
                 </View>
             </ScrollView>

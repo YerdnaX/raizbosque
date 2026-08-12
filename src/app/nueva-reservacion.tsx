@@ -7,24 +7,25 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 import { useUsuario } from '../context/UsuarioContext';
+import { useIdioma } from '../context/IdiomaContext';
 import {
     obtenerDisponibilidad,
     crearReservacion,
 } from '../features/reservaciones/services/reservacionService';
 
-const DIAS_SEMANA = ['D', 'L', 'M', 'M', 'J', 'V', 'S'];
-const MESES_NOMBRE = [
-    'Enero','Febrero','Marzo','Abril','Mayo','Junio',
-    'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre',
-];
-
 const PERIODOS = {
-    manana: { label: 'Mañana', horas: ['07:00','08:00','09:00','10:00','11:00'] },
-    tarde:  { label: 'Tarde',  horas: ['12:00','13:00','14:00','15:00','16:00','17:00','18:00'] },
-    noche:  { label: 'Noche',  horas: ['19:00','20:00','21:00','22:00'] },
+    manana: { horas: ['07:00','08:00','09:00','10:00','11:00'] },
+    tarde:  { horas: ['12:00','13:00','14:00','15:00','16:00','17:00','18:00'] },
+    noche:  { horas: ['19:00','20:00','21:00','22:00'] },
 } as const;
 
 type Periodo = keyof typeof PERIODOS;
+
+const PERIODO_CLAVE: Record<Periodo, 'morning' | 'afternoon' | 'evening'> = {
+    manana: 'morning',
+    tarde: 'afternoon',
+    noche: 'evening',
+};
 
 function buildFechaStr(anio: number, mes: number, dia: number): string {
     return `${anio}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`;
@@ -38,6 +39,7 @@ function hoy(): { anio: number; mes: number; dia: number } {
 export default function NuevaReservacion() {
     const insets = useSafeAreaInsets();
     const { usuario } = useUsuario();
+    const { t, strings } = useIdioma();
 
     const { anio: anioHoy, mes: mesHoy, dia: diaHoy } = hoy();
 
@@ -121,8 +123,8 @@ export default function NuevaReservacion() {
 
     async function confirmar() {
         if (!usuario) return;
-        if (!diaSeleccionado) { Alert.alert('Falta la fecha', 'Selecciona un día en el calendario.'); return; }
-        if (!horaSeleccionada) { Alert.alert('Falta la hora', 'Selecciona un horario disponible.'); return; }
+        if (!diaSeleccionado) { Alert.alert(t('reservations.new.missingDateTitle'), t('reservations.new.missingDateMessage')); return; }
+        if (!horaSeleccionada) { Alert.alert(t('reservations.new.missingTimeTitle'), t('reservations.new.missingTimeMessage')); return; }
 
         const fecha = buildFechaStr(anioActual, mesActual, diaSeleccionado);
         setEstaProcesando(true);
@@ -135,13 +137,13 @@ export default function NuevaReservacion() {
                 comentarios: comentarios.trim() || undefined,
             });
             Alert.alert(
-                '¡Reservación confirmada!',
-                `Tu reservación para el ${fecha} a las ${horaSeleccionada} Hrs ha sido registrada.`,
-                [{ text: 'Ver mis reservaciones', onPress: () => router.replace('/reservaciones') }],
+                t('reservations.new.confirmedTitle'),
+                t('reservations.new.confirmedMessage', { date: fecha, time: horaSeleccionada }),
+                [{ text: t('reservations.new.viewReservations'), onPress: () => router.replace('/reservaciones') }],
             );
         } catch (error: any) {
-            const msg = error?.response?.data?.message ?? 'No se pudo crear la reservación. Intenta de nuevo.';
-            Alert.alert('Error', msg);
+            const msg = error?.response?.data?.message ?? t('reservations.new.errorGeneric');
+            Alert.alert(t('reservations.new.errorTitle'), msg);
         } finally {
             setEstaProcesando(false);
         }
@@ -164,7 +166,7 @@ export default function NuevaReservacion() {
                         <Text style={estilos.botonAtrasTexto}>‹</Text>
                     </View>
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>Nueva Reservación</Text>
+                <Text style={estilos.encabezadoTitulo}>{t('reservations.new.headerTitle')}</Text>
                 <View style={estilos.espaciador} />
             </ImageBackground>
 
@@ -175,7 +177,7 @@ export default function NuevaReservacion() {
             >
                 {/* Número de personas */}
                 <View style={estilos.seccion}>
-                    <Text style={estilos.etiqueta}>NÚMERO DE PERSONAS</Text>
+                    <Text style={estilos.etiqueta}>{t('reservations.new.peopleLabel')}</Text>
                     <View style={estilos.contador}>
                         <Pressable
                             style={[estilos.botonContador, personas <= 1 && estilos.botonContadorDesactivado]}
@@ -201,7 +203,7 @@ export default function NuevaReservacion() {
 
                 {/* Calendario */}
                 <View style={estilos.seccion}>
-                    <Text style={estilos.etiqueta}>FECHA</Text>
+                    <Text style={estilos.etiqueta}>{t('reservations.new.dateLabel')}</Text>
                     <View style={estilos.calendario}>
                         <View style={estilos.calMesHeader}>
                             <Pressable
@@ -214,7 +216,7 @@ export default function NuevaReservacion() {
                                 <SymbolView name="chevron.left" size={20} tintColor={puedeMesAnterior ? '#1c1c18' : '#c3c8c1'} />
                             </Pressable>
                             <Text style={estilos.calMesTitulo}>
-                                {MESES_NOMBRE[mesActual].toUpperCase()} {anioActual}
+                                {strings.common.months[mesActual].toUpperCase()} {anioActual}
                             </Text>
                             <Pressable
                                 onPress={mesSiguiente}
@@ -230,7 +232,7 @@ export default function NuevaReservacion() {
                         <View style={estilos.calSeparador} />
 
                         <View style={estilos.calSemana}>
-                            {DIAS_SEMANA.map((d, i) => (
+                            {strings.common.weekdaysShort.map((d, i) => (
                                 <Text key={i} style={[estilos.calDiaNombre, i === 1 && estilos.calLunesNombre]}>
                                     {d}
                                 </Text>
@@ -269,14 +271,14 @@ export default function NuevaReservacion() {
                     </View>
                     {diaSeleccionado === null && (
                         <Text style={estilos.ayuda}>
-                            Lunes no disponible · Días pasados no disponibles
+                            {t('reservations.new.unavailableHint')}
                         </Text>
                     )}
                 </View>
 
                 {/* Selector de hora */}
                 <View style={estilos.seccion}>
-                    <Text style={estilos.etiqueta}>HORA</Text>
+                    <Text style={estilos.etiqueta}>{t('reservations.new.timeLabel')}</Text>
                     <Pressable
                         style={[estilos.selectorHora, !diaSeleccionado && estilos.selectorHoraDesactivado]}
                         onPress={() => diaSeleccionado && setMostrarHorario(true)}
@@ -294,10 +296,10 @@ export default function NuevaReservacion() {
                                 />
                                 <Text style={[estilos.selectorHoraTexto, !horaSeleccionada && estilos.selectorHoraPlaceholder]}>
                                     {horaSeleccionada
-                                        ? `${horaSeleccionada} Hrs`
+                                        ? t('reservations.new.hoursSuffix', { time: horaSeleccionada })
                                         : diaSeleccionado
-                                            ? 'Seleccionar horario'
-                                            : 'Selecciona una fecha primero'}
+                                            ? t('reservations.new.selectTime')
+                                            : t('reservations.new.selectDateFirst')}
                                 </Text>
                                 <SymbolView name="chevron.right" size={14} tintColor={diaSeleccionado ? '#9ca09a' : '#c3c8c1'} />
                             </>
@@ -307,12 +309,12 @@ export default function NuevaReservacion() {
 
                 {/* Notas */}
                 <View style={estilos.seccion}>
-                    <Text style={estilos.etiqueta}>NOTAS ESPECIALES (OPCIONAL)</Text>
+                    <Text style={estilos.etiqueta}>{t('reservations.new.notesLabel')}</Text>
                     <TextInput
                         style={estilos.textArea}
                         value={comentarios}
                         onChangeText={setComentarios}
-                        placeholder="Alergias, solicitudes de ubicación, celebraciones..."
+                        placeholder={t('reservations.new.notesPlaceholder')}
                         placeholderTextColor="#b0b0a8"
                         multiline
                         numberOfLines={3}
@@ -333,7 +335,7 @@ export default function NuevaReservacion() {
                 >
                     {estaProcesando
                         ? <ActivityIndicator color="#ffffff" />
-                        : <Text style={estilos.botonConfirmarTexto}>CONFIRMAR RESERVACIÓN</Text>
+                        : <Text style={estilos.botonConfirmarTexto}>{t('reservations.new.confirmButton')}</Text>
                     }
                 </Pressable>
             </View>
@@ -355,7 +357,7 @@ export default function NuevaReservacion() {
 
                         {/* Encabezado */}
                         <View style={estilos.sheetEncabezado}>
-                            <Text style={estilos.sheetTitulo}>Seleccionar Horario</Text>
+                            <Text style={estilos.sheetTitulo}>{t('reservations.new.selectTimeSheetTitle')}</Text>
                             <Pressable
                                 onPress={() => setMostrarHorario(false)}
                                 hitSlop={14}
@@ -375,7 +377,7 @@ export default function NuevaReservacion() {
                                     android_ripple={{ color: '#c3c8c1' }}
                                 >
                                     <Text style={[estilos.segmentoTexto, periodoActivo === p && estilos.segmentoTextoActivo]}>
-                                        {PERIODOS[p].label}
+                                        {t(`reservations.new.periods.${PERIODO_CLAVE[p]}`)}
                                     </Text>
                                 </Pressable>
                             ))}
@@ -410,10 +412,10 @@ export default function NuevaReservacion() {
                                             {hora}
                                         </Text>
                                         {lleno && (
-                                            <Text style={estilos.chipEtiquetaLleno}>Lleno</Text>
+                                            <Text style={estilos.chipEtiquetaLleno}>{t('reservations.new.full')}</Text>
                                         )}
                                         {estado === 'casi-lleno' && !seleccionado && (
-                                            <Text style={estilos.chipEtiquetaCasi}>Casi lleno</Text>
+                                            <Text style={estilos.chipEtiquetaCasi}>{t('reservations.new.almostFull')}</Text>
                                         )}
                                     </Pressable>
                                 );
@@ -424,15 +426,15 @@ export default function NuevaReservacion() {
                         <View style={estilos.leyenda}>
                             <View style={estilos.leyendaItem}>
                                 <View style={[estilos.leyendaPunto, estilos.leyendaDisp]} />
-                                <Text style={estilos.leyendaTexto}>Disponible</Text>
+                                <Text style={estilos.leyendaTexto}>{t('reservations.new.legend.available')}</Text>
                             </View>
                             <View style={estilos.leyendaItem}>
                                 <View style={[estilos.leyendaPunto, estilos.leyendaCasi]} />
-                                <Text style={estilos.leyendaTexto}>Casi lleno</Text>
+                                <Text style={estilos.leyendaTexto}>{t('reservations.new.legend.almostFull')}</Text>
                             </View>
                             <View style={estilos.leyendaItem}>
                                 <View style={[estilos.leyendaPunto, estilos.leyendaNoDisp]} />
-                                <Text style={estilos.leyendaTexto}>No disponible</Text>
+                                <Text style={estilos.leyendaTexto}>{t('reservations.new.legend.unavailable')}</Text>
                             </View>
                         </View>
 
@@ -443,7 +445,7 @@ export default function NuevaReservacion() {
                             onPress={() => horaSeleccionada && setMostrarHorario(false)}
                             disabled={!horaSeleccionada}
                         >
-                            <Text style={estilos.botonContinuarTexto}>Continuar</Text>
+                            <Text style={estilos.botonContinuarTexto}>{t('reservations.new.continue')}</Text>
                         </Pressable>
                     </View>
                 </View>

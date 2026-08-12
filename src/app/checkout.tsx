@@ -9,6 +9,7 @@ import * as Linking from 'expo-linking';
 import * as WebBrowser from 'expo-web-browser';
 import { useUsuario } from '../context/UsuarioContext';
 import { useCarrito } from '../context/CarritoContext';
+import { useIdioma } from '../context/IdiomaContext';
 import {
     capturarPagoPaypal,
     crearOrdenPaypal,
@@ -126,6 +127,7 @@ export default function Checkout() {
     const insets = useSafeAreaInsets();
     const { usuario } = useUsuario();
     const { items, total, limpiarCarrito } = useCarrito();
+    const { t } = useIdioma();
 
     const [paso, setPaso] = useState<PasoCheckout>('entrega');
 
@@ -174,16 +176,16 @@ export default function Checkout() {
     const direccionMostrada = metodoEntrega === 'Domicilio'
         ? (usarDireccionGuardada && usuario?.Direccion
             ? usuario.Direccion
-            : (ubicacionSeleccion.completo && direccionExacta.trim() ? direccionExacta.trim() : 'Pendiente de completar'))
+            : (ubicacionSeleccion.completo && direccionExacta.trim() ? direccionExacta.trim() : t('checkout.delivery.pendingAddress')))
         : '';
 
     const entregaResumen: ResumenPaso = {
-        titulo: metodoEntrega === 'Tienda' ? 'Retiro en tienda' : 'Envío a domicilio',
-        detalle: metodoEntrega === 'Tienda' ? 'RaízBosque · listo en 1 hora' : direccionMostrada,
+        titulo: metodoEntrega === 'Tienda' ? t('checkout.delivery.pickupTitle') : t('checkout.delivery.homeTitle'),
+        detalle: metodoEntrega === 'Tienda' ? t('checkout.delivery.storePickupSummary') : direccionMostrada,
     };
 
     const pagoResumen: ResumenPaso = {
-        titulo: metodoPago === 'Tarjeta' ? 'Tarjeta' : metodoPago === 'SINPE' ? 'SINPE Móvil' : metodoPago === 'PayPal' ? 'PayPal' : 'Sin elegir',
+        titulo: metodoPago === 'Tarjeta' ? t('checkout.payment.cardTitle') : metodoPago === 'SINPE' ? t('checkout.payment.sinpeTitle') : metodoPago === 'PayPal' ? t('checkout.payment.paypalTitle') : t('checkout.payment.notChosen'),
         detalle: metodoPago === 'Tarjeta' && numeroTarjeta
             ? enmascararUltimosCuatro(numeroTarjeta, '•••• ')
             : metodoPago === 'SINPE' && telefonoSinpe
@@ -205,7 +207,7 @@ export default function Checkout() {
             } catch (error) {
                 if (!activo) return;
                 setTipoCambioVenta(null);
-                setErrorTipoCambio('No se pudo cargar el tipo de cambio.');
+                setErrorTipoCambio(t('checkout.confirmation.errors.exchangeRateFailed'));
             }
         }
 
@@ -234,17 +236,17 @@ export default function Checkout() {
 
     function validarEntregaCompleta(): string | null {
         if (!telefonoYaRegistrado && !telefono.trim()) {
-            return 'Ingresá un número de teléfono para que te contactemos.';
+            return t('checkout.delivery.errors.phoneRequired');
         }
         if (metodoEntrega === 'Domicilio' && !construirDatosDireccion()) {
-            return 'Elegí una dirección para continuar.';
+            return t('checkout.delivery.errors.addressRequired');
         }
         return null;
     }
 
     function validarPagoSeleccionado(): string | null {
         if (!metodoPago) {
-            return 'Elegí cómo querés pagar para continuar.';
+            return t('checkout.payment.errors.methodRequired');
         }
 
         if (metodoPago === 'PayPal') {
@@ -253,7 +255,7 @@ export default function Checkout() {
 
         if (metodoPago === 'SINPE') {
             if (obtenerSoloDigitos(telefonoSinpe).length !== 8) {
-                return 'Ingresá un número SINPE de 8 dígitos.';
+                return t('checkout.payment.errors.sinpeInvalid');
             }
             return null;
         }
@@ -263,11 +265,11 @@ export default function Checkout() {
         const palabrasNombre = nombreLimpio.split(/\s+/).filter(Boolean);
 
         if (!numeroLimpio || !nombreLimpio || !fechaVencimiento.trim() || !cvv.trim()) {
-            return 'Completá los datos de tu tarjeta.';
+            return t('checkout.payment.errors.cardIncomplete');
         }
 
         if (!marcaTarjeta) {
-            return 'Ingresá una tarjeta Visa o Mastercard válida.';
+            return t('checkout.payment.errors.cardInvalid');
         }
 
         const longitudValida = marcaTarjeta === 'Visa'
@@ -275,19 +277,19 @@ export default function Checkout() {
             : numeroLimpio.length === 16;
 
         if (!longitudValida || !validarLuhn(numeroLimpio)) {
-            return 'Ingresá una tarjeta Visa o Mastercard válida.';
+            return t('checkout.payment.errors.cardInvalid');
         }
 
         if (palabrasNombre.length < 2) {
-            return 'Ingresá el nombre completo de quien es dueño de la tarjeta.';
+            return t('checkout.payment.errors.cardHolderIncomplete');
         }
 
         if (!validarFechaVencimiento(fechaVencimiento)) {
-            return 'Ingresá una fecha de vencimiento válida.';
+            return t('checkout.payment.errors.expiryInvalid');
         }
 
         if (obtenerSoloDigitos(cvv).length !== 3) {
-            return 'Ingresá el CVV de 3 dígitos.';
+            return t('checkout.payment.errors.cvvInvalid');
         }
 
         return null;
@@ -355,7 +357,7 @@ export default function Checkout() {
         if (!codigo) {
             setResumenCompra(null);
             setMensajeCupon('');
-            setErrorCupon('Ingresá un código de cupón.');
+            setErrorCupon(t('checkout.confirmation.errors.couponRequired'));
             return;
         }
 
@@ -368,11 +370,11 @@ export default function Checkout() {
             setResumenCompra(resumen);
             if (resumen.cupon) {
                 setCodigoCupon(resumen.cupon.codigo);
-                setMensajeCupon(`Cupón aplicado. Rebaja de ₡${resumen.descuento.toLocaleString('es-CR')}.`);
+                setMensajeCupon(t('checkout.confirmation.couponApplied', { amount: `₡${resumen.descuento.toLocaleString('es-CR')}` }));
             }
         } catch (error) {
             setResumenCompra(null);
-            setErrorCupon(obtenerMensajeError(error, 'No se pudo validar el cupón.'));
+            setErrorCupon(obtenerMensajeError(error, t('checkout.confirmation.errors.couponInvalid')));
         } finally {
             setEstaValidandoCupon(false);
         }
@@ -392,13 +394,13 @@ export default function Checkout() {
             const resultadoAuth = await WebBrowser.openAuthSessionAsync(orden.approveUrl, urlRetorno);
 
             if (resultadoAuth.type !== 'success') {
-                Alert.alert('Pago cancelado', 'No se completo el pago con PayPal.');
+                Alert.alert(t('checkout.paypal.cancelledTitle'), t('checkout.paypal.cancelledMessage'));
                 return;
             }
 
             const payerId = obtenerParametroUrl(resultadoAuth.url, 'PayerID');
             if (!payerId) {
-                Alert.alert('Pago cancelado', 'No se completo el pago con PayPal.');
+                Alert.alert(t('checkout.paypal.cancelledTitle'), t('checkout.paypal.cancelledMessage'));
                 return;
             }
 
@@ -424,7 +426,7 @@ export default function Checkout() {
                 },
             });
         } catch (error) {
-            Alert.alert('Error', obtenerMensajeError(error, 'No se pudo procesar el pago con PayPal.'));
+            Alert.alert(t('checkout.paypal.errorTitle'), obtenerMensajeError(error, t('checkout.paypal.paypalFailed')));
         }
     }
 
@@ -433,7 +435,7 @@ export default function Checkout() {
 
         const datosPago = construirMetodoPago();
         if (!datosPago) {
-            setErrorConfirmacion('Elegí cómo querés pagar para continuar.');
+            setErrorConfirmacion(t('checkout.confirmation.errors.paymentMethodRequired'));
             return;
         }
 
@@ -464,7 +466,7 @@ export default function Checkout() {
                 },
             });
         } catch (error) {
-            Alert.alert('Error', obtenerMensajeError(error, 'No se pudo procesar la compra. Intenta de nuevo.'));
+            Alert.alert(t('checkout.paypal.errorTitle'), obtenerMensajeError(error, t('checkout.paypal.purchaseFailed')));
         }
     }
 
@@ -478,7 +480,7 @@ export default function Checkout() {
         }
 
         if (codigoCupon.trim() && !resumenCompra?.cupon) {
-            setErrorConfirmacion('Presioná Aplicar para validar el cupón antes de confirmar.');
+            setErrorConfirmacion(t('checkout.confirmation.errors.applyCouponFirst'));
             return;
         }
 
@@ -521,7 +523,7 @@ export default function Checkout() {
                         <Text style={estilos.botonAtrasTexto}>‹</Text>
                     </View>
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>Checkout</Text>
+                <Text style={estilos.encabezadoTitulo}>{t('checkout.headerTitle')}</Text>
                 <View style={estilos.espaciador} />
             </ImageBackground>
 

@@ -1,21 +1,23 @@
 import { View, Text, Pressable, StyleSheet, ImageBackground, Image } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIdioma } from '../../context/IdiomaContext';
 
 export default function RecuperarUsuarioConfirmacion() {
     const insets = useSafeAreaInsets();
+    const { t } = useIdioma();
 
     return (
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <View style={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]}>
                 <View style={estilos.tarjeta}>
                     <Image source={require('@/assets/images/iconosv2/confirmacionrecuperacioncorreo.png')} style={estilos.icono} />
-                    <Text style={estilos.titulo}>Revisa tu Correo</Text>
+                    <Text style={estilos.titulo}>{t('auth.recoverUsername.confirmation.title')}</Text>
                     <Text style={estilos.subtitulo}>
-                        Hemos enviado tu nombre de usuario al correo registrado en tu cuenta.
+                        {t('auth.recoverUsername.confirmation.message')}
                     </Text>
                     <Text style={estilos.nota}>
-                        Si el correo no llega en unos minutos, revisa tu carpeta de spam.
+                        {t('auth.recoverUsername.confirmation.spamHint')}
                     </Text>
 
                     <Pressable
@@ -23,7 +25,7 @@ export default function RecuperarUsuarioConfirmacion() {
                         android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                         onPress={() => router.replace('/login')}
                     >
-                        <Text style={estilos.botonTexto}>INICIAR SESIÓN</Text>
+                        <Text style={estilos.botonTexto}>{t('auth.recoverUsername.confirmation.login')}</Text>
                     </Pressable>
                 </View>
             </View>

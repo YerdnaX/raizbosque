@@ -7,10 +7,16 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 import { useUsuario } from '../context/UsuarioContext';
+import { useIdioma } from '../context/IdiomaContext';
 import { obtenerHistorial } from '../features/compras/services/compraService';
 import type { Compra } from '../features/compras/types/compra';
 
-const FILTROS = ['Todos', 'Pendiente', 'Completado'];
+type ClaveFiltro = 'filterAll' | 'filterPending' | 'filterCompleted';
+const FILTROS: { valor: string; claveEtiqueta: ClaveFiltro }[] = [
+    { valor: 'Todos', claveEtiqueta: 'filterAll' },
+    { valor: 'Pendiente', claveEtiqueta: 'filterPending' },
+    { valor: 'Completado', claveEtiqueta: 'filterCompleted' },
+];
 
 type EstadoConfig = { fondo: string; texto: string; icono: string };
 const ESTADO_CONFIG: Record<string, EstadoConfig> = {
@@ -20,9 +26,15 @@ const ESTADO_CONFIG: Record<string, EstadoConfig> = {
     Cancelado:   { fondo: '#f8d7da', texto: '#842029', icono: 'xmark.circle.fill' },
 };
 
-function formatearFecha(fechaISO: string): string {
+const ESTADO_CLAVE: Record<string, 'pendiente' | 'completado' | 'enCamino' | 'cancelado'> = {
+    Pendiente: 'pendiente',
+    Completado: 'completado',
+    'En Camino': 'enCamino',
+    Cancelado: 'cancelado',
+};
+
+function formatearFecha(fechaISO: string, meses: readonly string[]): string {
     const fecha = new Date(fechaISO);
-    const meses = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
     const dia = fecha.getDate().toString().padStart(2, '0');
     return `${dia} ${meses[fecha.getMonth()]}, ${fecha.getFullYear()}`;
 }
@@ -30,6 +42,7 @@ function formatearFecha(fechaISO: string): string {
 export default function Historial() {
     const insets = useSafeAreaInsets();
     const { usuario } = useUsuario();
+    const { t, strings } = useIdioma();
     const [compras, setCompras] = useState<Compra[]>([]);
     const [estaCargando, setEstaCargando] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -49,7 +62,7 @@ export default function Historial() {
             const data = await obtenerHistorial(usuario.IdUsuario);
             setCompras(data);
         } catch {
-            setError('No se pudo cargar el historial. Intenta de nuevo.');
+            setError(t('purchaseHistory.loadError'));
         } finally {
             setEstaCargando(false);
         }
@@ -58,6 +71,8 @@ export default function Historial() {
     const comprasFiltradas = filtro === 'Todos'
         ? compras
         : compras.filter(c => c.EstadoCompra === filtro);
+
+    const etiquetaFiltroActual = t(`purchaseHistory.${FILTROS.find(f => f.valor === filtro)?.claveEtiqueta ?? 'filterAll'}`);
 
     return (
         <View style={estilos.contenedor}>
@@ -71,7 +86,7 @@ export default function Historial() {
                         <Text style={estilos.botonAtrasTexto}>‹</Text>
                     </View>
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>Historial de Compras</Text>
+                <Text style={estilos.encabezadoTitulo}>{t('purchaseHistory.headerTitle')}</Text>
                 <View style={estilos.espaciador} />
             </ImageBackground>
 
@@ -80,13 +95,13 @@ export default function Historial() {
                 <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={estilos.filtros}>
                     {FILTROS.map(f => (
                         <Pressable
-                            key={f}
-                            style={[estilos.chip, filtro === f && estilos.chipActivo]}
+                            key={f.valor}
+                            style={[estilos.chip, filtro === f.valor && estilos.chipActivo]}
                             android_ripple={{ color: 'rgba(0,0,0,0.10)' }}
-                            onPress={() => setFiltro(f)}
+                            onPress={() => setFiltro(f.valor)}
                         >
-                            <Text style={[estilos.chipTexto, filtro === f && estilos.chipTextoActivo]}>
-                                {f === 'Todos' ? 'Todos los Pedidos' : f}
+                            <Text style={[estilos.chipTexto, filtro === f.valor && estilos.chipTextoActivo]}>
+                                {f.valor === 'Todos' ? t('purchaseHistory.allOrdersTitle') : t(`purchaseHistory.${f.claveEtiqueta}`)}
                             </Text>
                         </Pressable>
                     ))}
@@ -101,17 +116,17 @@ export default function Historial() {
                 <View style={estilos.centrado}>
                     <Text style={estilos.errorTexto}>{error}</Text>
                     <Pressable style={estilos.botonReintentar} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={cargarHistorial}>
-                        <Text style={estilos.botonReintentarTexto}>Reintentar</Text>
+                        <Text style={estilos.botonReintentarTexto}>{t('purchaseHistory.retry')}</Text>
                     </Pressable>
                 </View>
             ) : comprasFiltradas.length === 0 ? (
                 <View style={estilos.centrado}>
                     <SymbolView name="bag" size={52} tintColor="#c3c8c1" />
-                    <Text style={estilos.vacioTitulo}>Sin pedidos</Text>
+                    <Text style={estilos.vacioTitulo}>{t('purchaseHistory.emptyTitle')}</Text>
                     <Text style={estilos.vacioSubtitulo}>
                         {filtro === 'Todos'
-                            ? 'Aún no has realizado ninguna compra.'
-                            : `No tienes pedidos con estado "${filtro}".`}
+                            ? t('purchaseHistory.emptySubtitle')
+                            : t('purchaseHistory.emptyFiltered', { filter: etiquetaFiltroActual })}
                     </Text>
                 </View>
             ) : (
@@ -139,9 +154,9 @@ export default function Historial() {
                             <View style={estilos.modalEncabezado}>
                                 <View>
                                     <Text style={estilos.modalTitulo}>
-                                        COMPRA #{String(compraDetalle.IdCompra).padStart(4, '0')}
+                                        {t('purchaseHistory.orderNumber', { number: String(compraDetalle.IdCompra).padStart(4, '0') })}
                                     </Text>
-                                    <Text style={estilos.modalFecha}>{formatearFecha(compraDetalle.FechaCompra)}</Text>
+                                    <Text style={estilos.modalFecha}>{formatearFecha(compraDetalle.FechaCompra, strings.common.months)}</Text>
                                 </View>
                                 <Pressable onPress={() => setCompraDetalle(null)} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} style={estilos.modalCerrar}>
                                     <SymbolView name="xmark" size={18} tintColor="#434843" />
@@ -152,17 +167,17 @@ export default function Historial() {
                                 <BadgeEstado estado={compraDetalle.EstadoCompra} />
 
                                 <View style={estilos.modalSeccion}>
-                                    <Text style={estilos.modalSeccionTitulo}>Entrega</Text>
+                                    <Text style={estilos.modalSeccionTitulo}>{t('purchaseHistory.deliveryLabel')}</Text>
                                     <Text style={estilos.modalTexto}>
                                         {compraDetalle.MetodoEntrega === 'Tienda'
-                                            ? 'Recoger en tienda'
-                                            : `Domicilio: ${compraDetalle.DireccionEntrega ?? '—'}`}
+                                            ? t('purchaseHistory.storePickup')
+                                            : t('purchaseHistory.homeDelivery', { address: compraDetalle.DireccionEntrega ?? '—' })}
                                     </Text>
                                 </View>
 
                                 <View style={estilos.separador} />
 
-                                <Text style={estilos.modalSeccionTitulo}>Productos</Text>
+                                <Text style={estilos.modalSeccionTitulo}>{t('purchaseHistory.productsLabel')}</Text>
                                 {compraDetalle.items.map(item => (
                                     <View key={item.IdProducto} style={estilos.modalItem}>
                                         <View style={estilos.modalItemInfo}>
@@ -178,15 +193,15 @@ export default function Historial() {
                                 <View style={estilos.separador} />
 
                                 <View style={estilos.modalTotalFila}>
-                                    <Text style={estilos.modalTotalEtiqueta}>Subtotal</Text>
+                                    <Text style={estilos.modalTotalEtiqueta}>{t('purchaseHistory.subtotal')}</Text>
                                     <Text style={estilos.modalTotalValor}>₡{compraDetalle.Subtotal.toLocaleString('es-CR')}</Text>
                                 </View>
                                 <View style={estilos.modalTotalFila}>
-                                    <Text style={estilos.modalTotalEtiqueta}>IVA (13%)</Text>
+                                    <Text style={estilos.modalTotalEtiqueta}>{t('purchaseHistory.tax')}</Text>
                                     <Text style={estilos.modalTotalValor}>₡{compraDetalle.Impuesto.toLocaleString('es-CR')}</Text>
                                 </View>
                                 <View style={[estilos.modalTotalFila, estilos.modalTotalFilaFinal]}>
-                                    <Text style={estilos.modalTotalFinalEtiqueta}>Total</Text>
+                                    <Text style={estilos.modalTotalFinalEtiqueta}>{t('purchaseHistory.total')}</Text>
                                     <Text style={estilos.modalTotalFinalValor}>
                                         ₡{compraDetalle.Total.toLocaleString('es-CR', { minimumFractionDigits: 2 })}
                                     </Text>
@@ -201,16 +216,20 @@ export default function Historial() {
 }
 
 function BadgeEstado({ estado }: { estado: string }) {
+    const { strings } = useIdioma();
     const config = ESTADO_CONFIG[estado] ?? { fondo: '#e5e2dc', texto: '#434843', icono: 'questionmark.circle' };
+    const claveEstado = ESTADO_CLAVE[estado];
+    const estadoTraducido = claveEstado ? strings.purchaseHistory.status[claveEstado] : estado;
     return (
         <View style={[estilos.badge, { backgroundColor: config.fondo }]}>
             <SymbolView name={config.icono as any} size={13} tintColor={config.texto} />
-            <Text style={[estilos.badgeTexto, { color: config.texto }]}>{estado}</Text>
+            <Text style={[estilos.badgeTexto, { color: config.texto }]}>{estadoTraducido}</Text>
         </View>
     );
 }
 
 function TarjetaCompra({ compra, onVerDetalle }: { compra: Compra; onVerDetalle: () => void }) {
+    const { t, tn, strings } = useIdioma();
     const nombresProductos = compra.items.map(i => i.Nombre).join(', ');
     const totalItems = compra.items.reduce((s, i) => s + i.Cantidad, 0);
 
@@ -219,9 +238,9 @@ function TarjetaCompra({ compra, onVerDetalle }: { compra: Compra; onVerDetalle:
             <View style={estilos.tarjetaEncabezado}>
                 <View>
                     <Text style={estilos.tarjetaNumero}>
-                        COMPRA #{String(compra.IdCompra).padStart(4, '0')}
+                        {t('purchaseHistory.orderNumber', { number: String(compra.IdCompra).padStart(4, '0') })}
                     </Text>
-                    <Text style={estilos.tarjetaFecha}>{formatearFecha(compra.FechaCompra)}</Text>
+                    <Text style={estilos.tarjetaFecha}>{formatearFecha(compra.FechaCompra, strings.common.months)}</Text>
                 </View>
                 <BadgeEstado estado={compra.EstadoCompra} />
             </View>
@@ -234,7 +253,7 @@ function TarjetaCompra({ compra, onVerDetalle }: { compra: Compra; onVerDetalle:
                 </View>
                 <View style={estilos.tarjetaInfo}>
                     <Text style={estilos.tarjetaProductosTitulo} numberOfLines={1}>
-                        {totalItems} producto{totalItems !== 1 ? 's' : ''}
+                        {tn('purchaseHistory.itemsCount', totalItems)}
                     </Text>
                     <Text style={estilos.tarjetaProductosLista} numberOfLines={2}>
                         {nombresProductos}
@@ -247,7 +266,7 @@ function TarjetaCompra({ compra, onVerDetalle }: { compra: Compra; onVerDetalle:
 
             <View style={estilos.tarjetaAcciones}>
                 <Pressable style={estilos.botonDetalle} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={onVerDetalle}>
-                    <Text style={estilos.botonDetalleTexto}>Ver detalles</Text>
+                    <Text style={estilos.botonDetalleTexto}>{t('purchaseHistory.viewDetails')}</Text>
                 </Pressable>
             </View>
         </View>

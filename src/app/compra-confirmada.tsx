@@ -5,11 +5,13 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { SymbolView } from 'expo-symbols';
 import CajaIcono from '@/assets/icons/bottomBar/caja.svg';
 import CamionIcono from '@/assets/icons/bottomBar/camion.svg';
+import { useIdioma } from '../context/IdiomaContext';
 
 const IMAGEN_TOPBAR = require('@/assets/images/login/topBar.png');
 
 export default function CompraConfirmada() {
     const insets = useSafeAreaInsets();
+    const { t } = useIdioma();
     const { metodoEntrega, numeroOrden, trackingNumber, direccionEntrega, metodoPago, detallePago } = useLocalSearchParams<{
         metodoEntrega?: string;
         numeroOrden?: string;
@@ -38,7 +40,7 @@ export default function CompraConfirmada() {
                 style={[estilos.encabezado, { paddingTop: insets.top }]}
                 resizeMode="cover"
             >
-                <Text style={estilos.encabezadoTitulo}>Compra confirmada</Text>
+                <Text style={estilos.encabezadoTitulo}>{t('orderConfirmation.headerTitle')}</Text>
             </ImageBackground>
 
             <View style={estilos.contenido}>
@@ -47,11 +49,11 @@ export default function CompraConfirmada() {
                         <View style={estilos.iconoMarco}>
                             <Image source={require('@/assets/images/iconosv2/registrocompletado.png')} style={estilos.icono} />
                         </View>
-                        <Text style={estilos.titulo}>Pedido registrado</Text>
+                        <Text style={estilos.titulo}>{t('orderConfirmation.registered')}</Text>
                         <Text style={estilos.descripcion}>
                             {esDomicilio
-                                ? 'Tu compra fue registrada y sera enviada a la direccion indicada.'
-                                : 'Tu compra fue registrada y estara lista para recoger en tienda.'}
+                                ? t('orderConfirmation.descriptionHome')
+                                : t('orderConfirmation.descriptionPickup')}
                         </Text>
                     </View>
 
@@ -64,11 +66,11 @@ export default function CompraConfirmada() {
                     <View style={estilos.ticketDetalle}>
                         <View style={estilos.filaDetalle}>
                             <View style={estilos.detalleBloque}>
-                                <Text style={estilos.detalleEtiqueta}>ORDEN</Text>
+                                <Text style={estilos.detalleEtiqueta}>{t('orderConfirmation.orderLabel')}</Text>
                                 <Text style={estilos.numeroOrden}>#{numeroOrden ?? '-'}</Text>
                             </View>
                             <View style={estilos.estadoBadge}>
-                                <Text style={estilos.estadoTexto}>Confirmada</Text>
+                                <Text style={estilos.estadoTexto}>{t('orderConfirmation.statusConfirmed')}</Text>
                             </View>
                         </View>
 
@@ -79,13 +81,13 @@ export default function CompraConfirmada() {
                                 <SymbolView name="storefront.fill" size={22} tintColor="#526349" />
                             )}
                             <View style={estilos.infoTexto}>
-                                <Text style={estilos.infoEtiqueta}>Metodo de entrega</Text>
+                                <Text style={estilos.infoEtiqueta}>{t('orderConfirmation.deliveryMethodLabel')}</Text>
                                 <Text style={estilos.infoValor}>
-                                    {esDomicilio ? 'Entrega a domicilio' : 'Recoger en tienda'}
+                                    {esDomicilio ? t('orderConfirmation.homeDelivery') : t('orderConfirmation.storePickup')}
                                 </Text>
                                 {esDomicilio ? (
                                     <>
-                                        <Text style={estilos.infoEtiquetaSecundaria}>Direccion de entrega</Text>
+                                        <Text style={estilos.infoEtiquetaSecundaria}>{t('orderConfirmation.deliveryAddressLabel')}</Text>
                                         <Text style={estilos.direccionTexto}>{direccionEntrega || '-'}</Text>
                                     </>
                                 ) : null}
@@ -99,11 +101,11 @@ export default function CompraConfirmada() {
                                 tintColor="#526349"
                             />
                             <View style={estilos.infoTexto}>
-                                <Text style={estilos.infoEtiqueta}>Metodo de pago</Text>
+                                <Text style={estilos.infoEtiqueta}>{t('orderConfirmation.paymentMethodLabel')}</Text>
                                 <Text style={estilos.infoValor}>
-                                    {metodoPago === 'Tarjeta' ? 'Tarjeta' : metodoPago === 'PayPal' ? 'PayPal' : 'SINPE'}
+                                    {metodoPago === 'Tarjeta' ? t('checkout.payment.cardTitle') : metodoPago === 'PayPal' ? t('checkout.payment.paypalTitle') : t('checkout.payment.sinpeTitle')}
                                 </Text>
-                                <Text style={estilos.infoEtiquetaSecundaria}>Detalle</Text>
+                                <Text style={estilos.infoEtiquetaSecundaria}>{t('orderConfirmation.detailLabel')}</Text>
                                 <Text style={estilos.infoValor}>{detallePago || '-'}</Text>
                             </View>
                         </View>
@@ -113,10 +115,10 @@ export default function CompraConfirmada() {
                                 <View style={estilos.trackingCard}>
                                     <View style={estilos.trackingEncabezado}>
                                         <CajaIcono width={22} height={22} color="#526349" />
-                                        <Text style={estilos.infoEtiqueta}>Numero de seguimiento</Text>
+                                        <Text style={estilos.infoEtiqueta}>{t('orderConfirmation.trackingLabel')}</Text>
                                     </View>
                                     <Text style={tieneTracking ? estilos.trackingTexto : estilos.trackingError}>
-                                        {tieneTracking ? trackingNumber : 'No se pudo generar el tracking en este momento.'}
+                                        {tieneTracking ? trackingNumber : t('orderConfirmation.trackingUnavailable')}
                                     </Text>
                                 </View>
                             </>
@@ -131,7 +133,7 @@ export default function CompraConfirmada() {
                     android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                     onPress={volverInicio}
                 >
-                    <Text style={estilos.botonInicioTexto}>VOLVER AL INICIO</Text>
+                    <Text style={estilos.botonInicioTexto}>{t('orderConfirmation.backHome')}</Text>
                 </Pressable>
             </View>
         </View>

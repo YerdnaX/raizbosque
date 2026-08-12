@@ -4,9 +4,11 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecuperarContrasena } from '../../context/RecuperarContrasenaContext';
 import { verificarCodigoRecuperacion, enviarCodigoRecuperacion } from '../../features/auth/services/authService';
+import { useIdioma } from '../../context/IdiomaContext';
 
 export default function RecuperarContrasenaCodigo() {
     const insets = useSafeAreaInsets();
+    const { t } = useIdioma();
     const { datos, setToken } = useRecuperarContrasena();
     const [codigo, setCodigo] = useState('');
     const [error, setError] = useState('');
@@ -16,7 +18,7 @@ export default function RecuperarContrasenaCodigo() {
 
     async function manejarVerificar() {
         setError('');
-        if (!codigo || codigo.length !== 6) { setError('Ingresa el código de 6 dígitos'); return; }
+        if (!codigo || codigo.length !== 6) { setError(t('auth.recoverPassword.code.errors.required')); return; }
 
         setCargando(true);
         try {
@@ -25,8 +27,8 @@ export default function RecuperarContrasenaCodigo() {
             router.push('/recuperar-contrasena/nueva-contrasena' as any);
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
-            if (cod === 'EXPIRED_CODE') setError('El código ha vencido. Solicita uno nuevo.');
-            else setError('Código incorrecto. Verifica e intenta de nuevo.');
+            if (cod === 'EXPIRED_CODE') setError(t('auth.recoverPassword.code.errors.expired'));
+            else setError(t('auth.recoverPassword.code.errors.incorrect'));
         } finally {
             setCargando(false);
         }
@@ -38,9 +40,9 @@ export default function RecuperarContrasenaCodigo() {
         setReenviando(true);
         try {
             await enviarCodigoRecuperacion(datos.correo);
-            setMensajeExito('Nuevo código enviado al correo.');
+            setMensajeExito(t('auth.recoverPassword.code.resent'));
         } catch {
-            setError('No se pudo reenviar el código. Intenta de nuevo.');
+            setError(t('auth.recoverPassword.code.errors.resendFailed'));
         } finally {
             setReenviando(false);
         }
@@ -50,21 +52,21 @@ export default function RecuperarContrasenaCodigo() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.titulo}>Código de Verificación</Text>
+                    <Text style={estilos.titulo}>{t('auth.recoverPassword.code.title')}</Text>
                     <Text style={estilos.subtitulo}>
-                        Ingresa el código enviado a{'\n'}
+                        {t('auth.recoverPassword.code.subtitle')}{'\n'}
                         <Text style={estilos.correoDestacado}>{datos.correo}</Text>
                     </Text>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Código de 6 dígitos</Text>
+                        <Text style={estilos.etiqueta}>{t('auth.recoverPassword.code.label')}</Text>
                         <TextInput
                             style={[estilos.inputCodigo, error ? estilos.inputError : null]}
                             value={codigo}
                             onChangeText={v => { setCodigo(v.replace(/[^0-9]/g, '')); setError(''); }}
                             keyboardType="numeric"
                             maxLength={6}
-                            placeholder="000000"
+                            placeholder={t('common.codePlaceholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                         {error ? <Text style={estilos.mensajeError}>{error}</Text> : null}
@@ -77,18 +79,18 @@ export default function RecuperarContrasenaCodigo() {
                         onPress={manejarVerificar}
                         disabled={cargando}
                     >
-                        {cargando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>VERIFICAR</Text>}
+                        {cargando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>{t('common.verify')}</Text>}
                     </Pressable>
 
                     <Pressable style={estilos.enlace} onPress={manejarReenviar} disabled={reenviando}>
                         {reenviando
                             ? <ActivityIndicator color="#526349" size="small" />
-                            : <Text style={estilos.enlaceTexto}>¿No recibiste el código? <Text style={estilos.enlaceDestacado}>Reenviar</Text></Text>
+                            : <Text style={estilos.enlaceTexto}>{t('auth.recoverPassword.code.resendPrompt')} <Text style={estilos.enlaceDestacado}>{t('auth.recoverPassword.code.resend')}</Text></Text>
                         }
                     </Pressable>
 
                     <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>‹ Cambiar método</Text>
+                        <Text style={estilos.enlaceAtrasTexto}>{t('auth.recoverPassword.code.changeMethod')}</Text>
                     </Pressable>
                 </View>
             </ScrollView>

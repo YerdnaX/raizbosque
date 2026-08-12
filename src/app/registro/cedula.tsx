@@ -3,11 +3,13 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRegistro } from '../../context/RegistroContext';
+import { useIdioma } from '../../context/IdiomaContext';
 import { consultarPersonaPorCedula } from '../../features/auth/services/identidadService';
 
 export default function RegistroCedula() {
     const insets = useSafeAreaInsets();
     const { setNombre, setApellidos } = useRegistro();
+    const { t } = useIdioma();
     const [cedula, setCedula] = useState('');
     const [error, setError] = useState('');
     const [mensaje, setMensaje] = useState('');
@@ -26,7 +28,7 @@ export default function RegistroCedula() {
         setMensaje('');
 
         if (!esCedulaValida(cedula)) {
-            setError('La cedula debe tener entre 9 y 14 digitos numericos');
+            setError(t('auth.register.cedula.errors.invalid'));
             return;
         }
 
@@ -41,7 +43,7 @@ export default function RegistroCedula() {
                 return;
             }
 
-            setMensaje('No encontramos datos para esta cedula. Puedes continuar y llenar tus datos manualmente.');
+            setMensaje(t('auth.register.cedula.notFound'));
         } finally {
             setCargando(false);
         }
@@ -51,19 +53,19 @@ export default function RegistroCedula() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.paso}>Paso 3 de 7</Text>
-                    <Text style={estilos.titulo}>Cedula</Text>
-                    <Text style={estilos.subtitulo}>Ingresa tu numero de cedula para buscar tus datos personales.</Text>
+                    <Text style={estilos.paso}>{t('auth.register.step', { current: 3, total: 7 })}</Text>
+                    <Text style={estilos.titulo}>{t('auth.register.cedula.title')}</Text>
+                    <Text style={estilos.subtitulo}>{t('auth.register.cedula.subtitle')}</Text>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Numero de cedula</Text>
+                        <Text style={estilos.etiqueta}>{t('auth.register.cedula.label')}</Text>
                         <TextInput
                             style={[estilos.input, error ? estilos.inputError : null]}
                             value={cedula}
                             onChangeText={v => { setCedula(v.replace(/[^0-9]/g, '')); setError(''); setMensaje(''); }}
                             keyboardType="numeric"
                             maxLength={14}
-                            placeholder="Ej. 101110111"
+                            placeholder={t('auth.register.cedula.placeholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                         {error ? <Text style={estilos.mensajeError}>{error}</Text> : null}
@@ -76,7 +78,7 @@ export default function RegistroCedula() {
                         onPress={manejarConsultar}
                         disabled={cargando}
                     >
-                        {cargando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>CONSULTAR Y CONTINUAR</Text>}
+                        {cargando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>{t('auth.register.cedula.submit')}</Text>}
                     </Pressable>
 
                     <Pressable
@@ -85,11 +87,11 @@ export default function RegistroCedula() {
                         onPress={continuarSinDatos}
                         disabled={cargando}
                     >
-                        <Text style={estilos.botonSecundarioTexto}>CONTINUAR SIN DATOS</Text>
+                        <Text style={estilos.botonSecundarioTexto}>{t('auth.register.cedula.skip')}</Text>
                     </Pressable>
 
                     <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>{"<"} Atras</Text>
+                        <Text style={estilos.enlaceAtrasTexto}>{"<"} {t('common.back')}</Text>
                     </Pressable>
                 </View>
             </ScrollView>

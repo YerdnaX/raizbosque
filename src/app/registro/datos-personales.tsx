@@ -3,18 +3,20 @@ import { useState } from 'react';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRegistro } from '../../context/RegistroContext';
+import { useIdioma } from '../../context/IdiomaContext';
 
 export default function RegistroDatosPersonales() {
     const insets = useSafeAreaInsets();
     const { datos, setNombre, setApellidos } = useRegistro();
+    const { t } = useIdioma();
     const [nombre, setNombreLocal] = useState(datos.nombre);
     const [apellidos, setApellidosLocal] = useState(datos.apellidos);
     const [error, setError] = useState('');
 
     function manejarSiguiente() {
         setError('');
-        if (!nombre.trim()) { setError('El nombre es requerido'); return; }
-        if (!apellidos.trim()) { setError('Los apellidos son requeridos'); return; }
+        if (!nombre.trim()) { setError(t('auth.register.personalData.errors.nameRequired')); return; }
+        if (!apellidos.trim()) { setError(t('auth.register.personalData.errors.lastNameRequired')); return; }
         setNombre(nombre.trim());
         setApellidos(apellidos.trim());
         router.push('/registro/contacto');
@@ -24,30 +26,30 @@ export default function RegistroDatosPersonales() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.paso}>Paso 5 de 7</Text>
-                    <Text style={estilos.titulo}>Datos Personales</Text>
-                    <Text style={estilos.subtitulo}>¿Cuál es tu nombre completo?</Text>
+                    <Text style={estilos.paso}>{t('auth.register.step', { current: 5, total: 7 })}</Text>
+                    <Text style={estilos.titulo}>{t('auth.register.personalData.title')}</Text>
+                    <Text style={estilos.subtitulo}>{t('auth.register.personalData.subtitle')}</Text>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Nombre <Text style={estilos.req}>*</Text></Text>
+                        <Text style={estilos.etiqueta}>{t('auth.register.personalData.nameLabel')} <Text style={estilos.req}>*</Text></Text>
                         <TextInput
                             style={estilos.input}
                             value={nombre}
                             onChangeText={v => { setNombreLocal(v); setError(''); }}
                             autoCapitalize="words"
-                            placeholder="Ej. Juan"
+                            placeholder={t('auth.register.personalData.namePlaceholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                     </View>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Apellidos <Text style={estilos.req}>*</Text></Text>
+                        <Text style={estilos.etiqueta}>{t('auth.register.personalData.lastNameLabel')} <Text style={estilos.req}>*</Text></Text>
                         <TextInput
                             style={estilos.input}
                             value={apellidos}
                             onChangeText={v => { setApellidosLocal(v); setError(''); }}
                             autoCapitalize="words"
-                            placeholder="Ej. Santamaría Pérez"
+                            placeholder={t('auth.register.personalData.lastNamePlaceholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                     </View>
@@ -59,11 +61,11 @@ export default function RegistroDatosPersonales() {
                         android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                         onPress={manejarSiguiente}
                     >
-                        <Text style={estilos.botonTexto}>CONTINUAR</Text>
+                        <Text style={estilos.botonTexto}>{t('common.continue')}</Text>
                     </Pressable>
 
                     <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>‹ Atrás</Text>
+                        <Text style={estilos.enlaceAtrasTexto}>{'‹ '}{t('common.back')}</Text>
                     </Pressable>
                 </View>
             </ScrollView>

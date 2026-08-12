@@ -1,21 +1,23 @@
 import { View, Text, Pressable, StyleSheet, ImageBackground, Image } from 'react-native';
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useIdioma } from '../context/IdiomaContext';
 
 export default function CuentaBloqueada() {
     const insets = useSafeAreaInsets();
+    const { t } = useIdioma();
 
     return (
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <View style={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]}>
                 <View style={estilos.tarjeta}>
                     <Image source={require('@/assets/images/iconosv2/cuentabloqueada.png')} style={estilos.icono} />
-                    <Text style={estilos.titulo}>Cuenta Bloqueada</Text>
+                    <Text style={estilos.titulo}>{t('auth.blockedAccount.title')}</Text>
                     <Text style={estilos.descripcion}>
-                        Tu cuenta ha sido bloqueada por múltiples intentos fallidos de inicio de sesión.
+                        {t('auth.blockedAccount.message')}
                     </Text>
                     <Text style={estilos.instruccion}>
-                        Para desbloquearla, debes recuperar tu contraseña.
+                        {t('auth.blockedAccount.hint')}
                     </Text>
 
                     <Pressable
@@ -23,11 +25,11 @@ export default function CuentaBloqueada() {
                         android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                         onPress={() => router.replace('/recuperar-contrasena' as any)}
                     >
-                        <Text style={estilos.botonTexto}>RECUPERAR CONTRASEÑA</Text>
+                        <Text style={estilos.botonTexto}>{t('auth.blockedAccount.recover')}</Text>
                     </Pressable>
 
                     <Pressable style={estilos.enlaceAtras} onPress={() => router.replace('/login')}>
-                        <Text style={estilos.enlaceAtrasTexto}>‹ Volver al inicio</Text>
+                        <Text style={estilos.enlaceAtrasTexto}>{t('auth.blockedAccount.backHome')}</Text>
                     </Pressable>
                 </View>
             </View>

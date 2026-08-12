@@ -4,19 +4,21 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecuperarContrasena } from '../../context/RecuperarContrasenaContext';
 import { establecerNuevaContrasena } from '../../features/auth/services/authService';
+import { useIdioma } from '../../context/IdiomaContext';
 
-function evaluarRequisitos(valor: string) {
+function evaluarRequisitos(valor: string, t: (key: string) => string) {
     return [
-        { texto: 'Al menos 6 caracteres',              ok: valor.length >= 6 },
-        { texto: 'Al menos una mayúscula',              ok: /[A-Z]/.test(valor) },
-        { texto: 'Al menos una minúscula',              ok: /[a-z]/.test(valor) },
-        { texto: 'Al menos un símbolo',                 ok: /[^a-zA-Z0-9]/.test(valor) },
-        { texto: 'Sin caracteres consecutivos iguales', ok: valor.length > 0 && !/(.)\1/.test(valor) },
+        { texto: t('common.passwordRequirements.minLength'),  ok: valor.length >= 6 },
+        { texto: t('common.passwordRequirements.uppercase'),  ok: /[A-Z]/.test(valor) },
+        { texto: t('common.passwordRequirements.lowercase'),  ok: /[a-z]/.test(valor) },
+        { texto: t('common.passwordRequirements.symbol'),     ok: /[^a-zA-Z0-9]/.test(valor) },
+        { texto: t('common.passwordRequirements.noRepeats'),  ok: valor.length > 0 && !/(.)\1/.test(valor) },
     ];
 }
 
 export default function RecuperarContrasenaNueva() {
     const insets = useSafeAreaInsets();
+    const { t } = useIdioma();
     const { datos, reiniciar } = useRecuperarContrasena();
     const [contrasena, setContrasena] = useState('');
     const [confirmar, setConfirmar] = useState('');
@@ -24,13 +26,13 @@ export default function RecuperarContrasenaNueva() {
     const [error, setError] = useState('');
     const [enviando, setEnviando] = useState(false);
 
-    const requisitos = evaluarRequisitos(contrasena);
+    const requisitos = evaluarRequisitos(contrasena, t);
     const todosOk = requisitos.every(r => r.ok);
 
     async function manejarGuardar() {
         setError('');
-        if (!todosOk) { setError('La contraseña no cumple todos los requisitos'); return; }
-        if (contrasena !== confirmar) { setError('Las contraseñas no coinciden'); return; }
+        if (!todosOk) { setError(t('auth.recoverPassword.newPassword.errors.requirements')); return; }
+        if (contrasena !== confirmar) { setError(t('auth.recoverPassword.newPassword.errors.mismatch')); return; }
 
         setEnviando(true);
         try {
@@ -40,9 +42,9 @@ export default function RecuperarContrasenaNueva() {
             router.replace('/recuperar-contrasena/completado' as any);
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
-            if (cod === 'INVALID_TOKEN') setError('Sesión expirada. Inicia el proceso de nuevo.');
-            else if (cod === 'INVALID_PASSWORD_POLICY') setError('La contraseña no cumple la política de seguridad.');
-            else setError('No se pudo actualizar la contraseña. Intenta de nuevo.');
+            if (cod === 'INVALID_TOKEN') setError(t('auth.recoverPassword.newPassword.errors.sessionExpired'));
+            else if (cod === 'INVALID_PASSWORD_POLICY') setError(t('auth.recoverPassword.newPassword.errors.policy'));
+            else setError(t('auth.recoverPassword.newPassword.errors.generic'));
         } finally {
             setEnviando(false);
         }
@@ -52,18 +54,18 @@ export default function RecuperarContrasenaNueva() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.titulo}>Nueva Contraseña</Text>
-                    <Text style={estilos.subtitulo}>Crea una contraseña segura para tu cuenta</Text>
+                    <Text style={estilos.titulo}>{t('auth.recoverPassword.newPassword.title')}</Text>
+                    <Text style={estilos.subtitulo}>{t('auth.recoverPassword.newPassword.subtitle')}</Text>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Nueva Contraseña <Text style={estilos.req}>*</Text></Text>
+                        <Text style={estilos.etiqueta}>{t('auth.recoverPassword.newPassword.label')} <Text style={estilos.req}>*</Text></Text>
                         <TextInput
                             style={estilos.input}
                             value={contrasena}
                             onChangeText={v => { setContrasena(v); setError(''); }}
                             secureTextEntry={!mostrar}
                             autoCapitalize="none"
-                            placeholder="Tu nueva contraseña"
+                            placeholder={t('auth.recoverPassword.newPassword.placeholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                         <View style={estilos.requisitos}>
@@ -76,18 +78,18 @@ export default function RecuperarContrasenaNueva() {
                     </View>
 
                     <View style={estilos.campo}>
-                        <Text style={estilos.etiqueta}>Confirmar Contraseña <Text style={estilos.req}>*</Text></Text>
+                        <Text style={estilos.etiqueta}>{t('auth.recoverPassword.newPassword.confirmLabel')} <Text style={estilos.req}>*</Text></Text>
                         <TextInput
                             style={estilos.input}
                             value={confirmar}
                             onChangeText={v => { setConfirmar(v); setError(''); }}
                             secureTextEntry={!mostrar}
                             autoCapitalize="none"
-                            placeholder="Repite tu contraseña"
+                            placeholder={t('auth.recoverPassword.newPassword.confirmPlaceholder')}
                             placeholderTextColor="#b0b0a8"
                         />
                         <Pressable onPress={() => setMostrar(m => !m)} style={estilos.toggleContenedor}>
-                            <Text style={estilos.toggleTexto}>{mostrar ? 'Ocultar' : 'Mostrar'}</Text>
+                            <Text style={estilos.toggleTexto}>{mostrar ? t('common.hide') : t('common.show')}</Text>
                         </Pressable>
                     </View>
 
@@ -99,7 +101,7 @@ export default function RecuperarContrasenaNueva() {
                         onPress={manejarGuardar}
                         disabled={enviando || !todosOk}
                     >
-                        {enviando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>GUARDAR CONTRASEÑA</Text>}
+                        {enviando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>{t('auth.recoverPassword.newPassword.submit')}</Text>}
                     </Pressable>
                 </View>
             </ScrollView>

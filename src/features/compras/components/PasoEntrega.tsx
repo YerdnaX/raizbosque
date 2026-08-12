@@ -1,6 +1,7 @@
 import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
 import { SymbolView } from 'expo-symbols';
 import { COLORES } from '@/constants/colores';
+import { useIdioma } from '../../../context/IdiomaContext';
 import SelectorUbicacion from '../../ubicaciones/components/SelectorUbicacion';
 import type { Usuario } from '../../auth/types/usuario';
 import type { MetodoEntrega, SeleccionUbicacion } from '../types/checkoutEstado';
@@ -38,9 +39,10 @@ export function PasoEntrega({
     error,
     onContinuar,
 }: Props) {
+    const { t } = useIdioma();
     return (
         <View style={estilos.contenedor}>
-            <Text style={estilos.pregunta}>¿Cómo querés recibir tu pedido?</Text>
+            <Text style={estilos.pregunta}>{t('checkout.delivery.question')}</Text>
 
             <Pressable
                 style={[estilos.opcion, metodoEntrega === 'Tienda' && estilos.opcionActiva]}
@@ -51,9 +53,9 @@ export function PasoEntrega({
                     <SymbolView name="storefront.fill" size={22} tintColor={metodoEntrega === 'Tienda' ? COLORES.esmeraldaTinta : '#737973'} />
                     <View>
                         <Text style={[estilos.opcionNombre, metodoEntrega === 'Tienda' && estilos.opcionNombreActivo]}>
-                            Retiro en tienda
+                            {t('checkout.delivery.pickupTitle')}
                         </Text>
-                        <Text style={estilos.opcionDetalle}>Recogelo en RaízBosque · listo en 1 hora</Text>
+                        <Text style={estilos.opcionDetalle}>{t('checkout.delivery.pickupSub')}</Text>
                     </View>
                 </View>
                 <View style={[estilos.radio, metodoEntrega === 'Tienda' && estilos.radioActivo]}>
@@ -70,9 +72,9 @@ export function PasoEntrega({
                     <SymbolView name="truck.box.fill" size={22} tintColor={metodoEntrega === 'Domicilio' ? COLORES.esmeraldaTinta : '#737973'} />
                     <View>
                         <Text style={[estilos.opcionNombre, metodoEntrega === 'Domicilio' && estilos.opcionNombreActivo]}>
-                            Envío a domicilio
+                            {t('checkout.delivery.homeTitle')}
                         </Text>
-                        <Text style={estilos.opcionDetalle}>Lo llevamos hasta vos</Text>
+                        <Text style={estilos.opcionDetalle}>{t('checkout.delivery.homeSub')}</Text>
                     </View>
                 </View>
                 <View style={[estilos.radio, metodoEntrega === 'Domicilio' && estilos.radioActivo]}>
@@ -82,7 +84,7 @@ export function PasoEntrega({
 
             {metodoEntrega === 'Domicilio' && (
                 <View style={estilos.seccionDireccion}>
-                    <Text style={estilos.subpregunta}>¿Dónde lo entregamos?</Text>
+                    <Text style={estilos.subpregunta}>{t('checkout.delivery.whereQuestion')}</Text>
                     {usuario.Direccion ? (
                         <>
                             <Pressable
@@ -94,7 +96,7 @@ export function PasoEntrega({
                                     {usarDireccionGuardada && <View style={estilos.radioPunto} />}
                                 </View>
                                 <View style={estilos.opcionDireccionInfo}>
-                                    <Text style={estilos.opcionDireccionTitulo}>Tu dirección guardada</Text>
+                                    <Text style={estilos.opcionDireccionTitulo}>{t('checkout.delivery.savedAddress')}</Text>
                                     <Text style={estilos.opcionDireccionTexto}>{usuario.Direccion}</Text>
                                 </View>
                             </Pressable>
@@ -107,7 +109,7 @@ export function PasoEntrega({
                                 <View style={[estilos.radio, !usarDireccionGuardada && estilos.radioActivo]}>
                                     {!usarDireccionGuardada && <View style={estilos.radioPunto} />}
                                 </View>
-                                <Text style={estilos.opcionDireccionTitulo}>Usar otra dirección</Text>
+                                <Text style={estilos.opcionDireccionTitulo}>{t('checkout.delivery.useOtherAddress')}</Text>
                             </Pressable>
 
                             {!usarDireccionGuardada && (
@@ -115,12 +117,12 @@ export function PasoEntrega({
                                     <SelectorUbicacion onCambio={onCambiarUbicacion} />
                                     {ubicacionSeleccion.completo && (
                                         <View style={estilos.campo}>
-                                            <Text style={estilos.etiqueta}>Dirección exacta</Text>
+                                            <Text style={estilos.etiqueta}>{t('checkout.delivery.exactAddressLabel')}</Text>
                                             <TextInput
                                                 style={estilos.inputContenedor}
                                                 value={direccionExacta}
                                                 onChangeText={onCambiarDireccionExacta}
-                                                placeholder="Ej. 200 metros norte de la iglesia"
+                                                placeholder={t('checkout.delivery.exactAddressPlaceholder')}
                                                 placeholderTextColor="#b0b0a8"
                                                 multiline
                                             />
@@ -134,12 +136,12 @@ export function PasoEntrega({
                             <SelectorUbicacion onCambio={onCambiarUbicacion} />
                             {ubicacionSeleccion.completo && (
                                 <View style={estilos.campo}>
-                                    <Text style={estilos.etiqueta}>Dirección exacta</Text>
+                                    <Text style={estilos.etiqueta}>{t('checkout.delivery.exactAddressLabel')}</Text>
                                     <TextInput
                                         style={estilos.inputContenedor}
                                         value={direccionExacta}
                                         onChangeText={onCambiarDireccionExacta}
-                                        placeholder="Ej. 200 metros norte de la iglesia"
+                                        placeholder={t('checkout.delivery.exactAddressPlaceholder')}
                                         placeholderTextColor="#b0b0a8"
                                         multiline
                                     />
@@ -152,12 +154,12 @@ export function PasoEntrega({
 
             {!telefonoYaRegistrado && (
                 <View style={estilos.campo}>
-                    <Text style={estilos.etiqueta}>¿A qué número te contactamos?</Text>
+                    <Text style={estilos.etiqueta}>{t('checkout.delivery.contactPhoneQuestion')}</Text>
                     <TextInput
                         style={estilos.inputContenedor}
                         value={telefono}
                         onChangeText={onCambiarTelefono}
-                        placeholder="Ej. 8888-8888"
+                        placeholder={t('checkout.delivery.phonePlaceholder')}
                         placeholderTextColor="#b0b0a8"
                         keyboardType="phone-pad"
                     />
@@ -175,7 +177,7 @@ export function PasoEntrega({
                 android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }}
                 onPress={onContinuar}
             >
-                <Text style={estilos.botonContinuarTexto}>Continuar al pago</Text>
+                <Text style={estilos.botonContinuarTexto}>{t('checkout.delivery.continue')}</Text>
             </Pressable>
         </View>
     );

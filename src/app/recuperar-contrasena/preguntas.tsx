@@ -4,11 +4,13 @@ import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useRecuperarContrasena } from '../../context/RecuperarContrasenaContext';
 import { obtenerPreguntasRecuperacion, verificarRespuestasSeguridad } from '../../features/auth/services/authService';
+import { useIdioma } from '../../context/IdiomaContext';
 
 type Pregunta = { IdPregunta: number; TextoPregunta: string };
 
 export default function RecuperarContrasenaPreguntas() {
     const insets = useSafeAreaInsets();
+    const { t } = useIdioma();
     const { datos, setToken } = useRecuperarContrasena();
     const [preguntas, setPreguntas] = useState<Pregunta[]>([]);
     const [resp1, setResp1] = useState('');
@@ -20,14 +22,14 @@ export default function RecuperarContrasenaPreguntas() {
     useEffect(() => {
         obtenerPreguntasRecuperacion(datos.correo)
             .then(setPreguntas)
-            .catch(() => setError('No se pudieron cargar las preguntas. Verifica que el correo sea correcto.'))
+            .catch(() => setError(t('auth.recoverPassword.questions.errors.loadFailed')))
             .finally(() => setCargando(false));
     }, []);
 
     async function manejarVerificar() {
         setError('');
-        if (!resp1.trim() || !resp2.trim()) { setError('Completa todas las respuestas'); return; }
-        if (preguntas.length < 2) { setError('Error al cargar las preguntas'); return; }
+        if (!resp1.trim() || !resp2.trim()) { setError(t('auth.recoverPassword.questions.errors.incomplete')); return; }
+        if (preguntas.length < 2) { setError(t('auth.recoverPassword.questions.errors.loadError')); return; }
 
         setEnviando(true);
         try {
@@ -36,8 +38,8 @@ export default function RecuperarContrasenaPreguntas() {
             router.push('/recuperar-contrasena/nueva-contrasena' as any);
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
-            if (cod === 'INVALID_ANSWERS') setError('Las respuestas no son correctas. Recuerda que distinguen mayúsculas y minúsculas.');
-            else setError('No se pudo verificar. Intenta de nuevo.');
+            if (cod === 'INVALID_ANSWERS') setError(t('auth.recoverPassword.questions.errors.incorrect'));
+            else setError(t('auth.recoverPassword.questions.errors.generic'));
         } finally {
             setEnviando(false);
         }
@@ -57,8 +59,8 @@ export default function RecuperarContrasenaPreguntas() {
         <ImageBackground source={require('@/assets/images/login/inicio.png')} style={estilos.fondo} resizeMode="cover">
             <ScrollView contentContainerStyle={[estilos.contenedor, { paddingTop: Math.max(20, insets.top) }]} keyboardShouldPersistTaps="handled">
                 <View style={estilos.tarjeta}>
-                    <Text style={estilos.titulo}>Preguntas de Seguridad</Text>
-                    <Text style={estilos.subtitulo}>Las respuestas son sensibles a mayúsculas y minúsculas</Text>
+                    <Text style={estilos.titulo}>{t('auth.recoverPassword.questions.title')}</Text>
+                    <Text style={estilos.subtitulo}>{t('auth.recoverPassword.questions.subtitle')}</Text>
 
                     {preguntas[0] && (
                         <View style={estilos.campo}>
@@ -67,7 +69,7 @@ export default function RecuperarContrasenaPreguntas() {
                                 style={estilos.input}
                                 value={resp1}
                                 onChangeText={v => { setResp1(v); setError(''); }}
-                                placeholder="Tu respuesta"
+                                placeholder={t('common.answerPlaceholder')}
                                 placeholderTextColor="#b0b0a8"
                                 autoCapitalize="none"
                             />
@@ -81,7 +83,7 @@ export default function RecuperarContrasenaPreguntas() {
                                 style={estilos.input}
                                 value={resp2}
                                 onChangeText={v => { setResp2(v); setError(''); }}
-                                placeholder="Tu respuesta"
+                                placeholder={t('common.answerPlaceholder')}
                                 placeholderTextColor="#b0b0a8"
                                 autoCapitalize="none"
                             />
@@ -96,11 +98,11 @@ export default function RecuperarContrasenaPreguntas() {
                         onPress={manejarVerificar}
                         disabled={enviando}
                     >
-                        {enviando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>VERIFICAR</Text>}
+                        {enviando ? <ActivityIndicator color="#fff" /> : <Text style={estilos.botonTexto}>{t('common.verify')}</Text>}
                     </Pressable>
 
                     <Pressable style={estilos.enlaceAtras} onPress={() => router.back()}>
-                        <Text style={estilos.enlaceAtrasTexto}>‹ Cambiar método</Text>
+                        <Text style={estilos.enlaceAtrasTexto}>{t('auth.recoverPassword.questions.changeMethod')}</Text>
                     </Pressable>
                 </View>
             </ScrollView>

@@ -3,12 +3,14 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { SymbolView } from "expo-symbols";
 import { useCarrito } from '../context/CarritoContext';
+import { useIdioma } from '../context/IdiomaContext';
 import { urlImagen } from '../utils/urlImagen';
 import type { ItemCarrito } from '../features/carrito/types/carritoItem';
 
 export default function Carrito() {
     const insets = useSafeAreaInsets();
     const { items, total, totalItems, estaCargando, actualizarCantidad, eliminarDelCarrito } = useCarrito();
+    const { t, tn } = useIdioma();
 
     function manejarDecrementar(item: ItemCarrito) {
         if (item.Cantidad <= 1) {
@@ -30,7 +32,7 @@ export default function Carrito() {
                         <Text style={estilos.botonAtrasTexto}>‹</Text>
                     </View>
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>Mi Carrito</Text>
+                <Text style={estilos.encabezadoTitulo}>{t('cart.headerTitle')}</Text>
                 <View style={estilos.espaciador} />
             </ImageBackground>
 
@@ -41,10 +43,10 @@ export default function Carrito() {
             ) : items.length === 0 ? (
                 <View style={estilos.centrado}>
                     <SymbolView name="cart" size={56} tintColor="#c3c8c1" />
-                    <Text style={estilos.vacioTitulo}>Carrito vacío</Text>
-                    <Text style={estilos.vacioSubtitulo}>Agrega productos desde el vivero o restaurante.</Text>
+                    <Text style={estilos.vacioTitulo}>{t('cart.emptyTitle')}</Text>
+                    <Text style={estilos.vacioSubtitulo}>{t('cart.emptySubtitle')}</Text>
                     <Pressable style={estilos.botonExplorar} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={() => router.back()}>
-                        <Text style={estilos.botonExplorarTexto}>Explorar</Text>
+                        <Text style={estilos.botonExplorarTexto}>{t('cart.explore')}</Text>
                     </Pressable>
                 </View>
             ) : (
@@ -67,14 +69,14 @@ export default function Carrito() {
                     <View style={estilos.pie}>
                         <View style={estilos.totalFila}>
                             <Text style={estilos.totalEtiqueta}>
-                                Total ({totalItems} artículo{totalItems !== 1 ? 's' : ''})
+                                {tn('cart.total', totalItems)}
                             </Text>
                             <Text style={estilos.totalValor}>
                                 ₡{total.toLocaleString('es-CR', { minimumFractionDigits: 2 })}
                             </Text>
                         </View>
                         <Pressable style={estilos.botonFinalizar} android_ripple={{ color: 'rgba(255,255,255,0.25)', foreground: true }} onPress={() => router.push('/checkout')}>
-                            <Text style={estilos.botonFinalizarTexto}>FINALIZAR COMPRA</Text>
+                            <Text style={estilos.botonFinalizarTexto}>{t('cart.checkout')}</Text>
                         </Pressable>
                     </View>
                 </>
@@ -91,6 +93,7 @@ type TarjetaItemProps = {
 };
 
 function TarjetaItem({ item, onIncrementar, onDecrementar, onEliminar }: TarjetaItemProps) {
+    const { t } = useIdioma();
     const imageUrl = urlImagen(item.Imagen);
     return (
         <View style={estilos.tarjeta}>
@@ -104,7 +107,7 @@ function TarjetaItem({ item, onIncrementar, onDecrementar, onEliminar }: Tarjeta
             <View style={estilos.infoItem}>
                 <Text style={estilos.nombreItem} numberOfLines={2}>{item.Nombre}</Text>
                 <Text style={estilos.precioUnitario}>
-                    ₡{item.PrecioUnitario.toLocaleString('es-CR')} c/u
+                    ₡{item.PrecioUnitario.toLocaleString('es-CR')} {t('cart.unitSuffix')}
                 </Text>
                 <View style={estilos.controlFila}>
                     <View style={estilos.controles}>

@@ -1,6 +1,7 @@
 import { Tabs } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { COLORES } from '@/constants/colores';
+import { useIdioma } from '@/context/IdiomaContext';
 import InicioIcono from '@/assets/icons/bottomBar/inicio.svg';
 import RestauranteIcono from '@/assets/icons/bottomBar/restaurante.svg';
 import ViveroIcono from '@/assets/icons/bottomBar/vivero.svg';
@@ -10,6 +11,7 @@ import PerfilIcono from '@/assets/icons/bottomBar/perfil.svg';
 
 export default function TabsLayout() {
     const insets = useSafeAreaInsets();
+    const { t } = useIdioma();
 
     return (
         <Tabs
@@ -34,7 +36,7 @@ export default function TabsLayout() {
             <Tabs.Screen
                 name="index"
                 options={{
-                    title: 'Inicio',
+                    title: t('nav.home'),
                     tabBarIcon: ({ color, size }) => (
                         <InicioIcono width={size} height={size} fill={color} />
                     ),
@@ -43,7 +45,7 @@ export default function TabsLayout() {
             <Tabs.Screen
                 name="restaurante"
                 options={{
-                    title: 'Restaurante',
+                    title: t('nav.restaurant'),
                     tabBarIcon: ({ color, size }) => (
                         <RestauranteIcono width={size} height={size} fill={color} />
                     ),
@@ -52,7 +54,7 @@ export default function TabsLayout() {
             <Tabs.Screen
                 name="vivero"
                 options={{
-                    title: 'Vivero',
+                    title: t('nav.nursery'),
                     tabBarIcon: ({ color, size }) => (
                         <ViveroIcono width={size} height={size} fill={color} />
                     ),
@@ -61,7 +63,7 @@ export default function TabsLayout() {
             <Tabs.Screen
                 name="productos"
                 options={{
-                    title: 'Productos',
+                    title: t('nav.products'),
                     tabBarIcon: ({ color, size }) => (
                         <ProductosIcono width={size} height={size} color={color} />
                     ),
@@ -70,7 +72,7 @@ export default function TabsLayout() {
             <Tabs.Screen
                 name="jardin"
                 options={{
-                    title: 'Mi Jardín',
+                    title: t('nav.garden'),
                     tabBarIcon: ({ color, size }) => (
                         <JardinIcono width={size} height={size} fill={color} />
                     ),
@@ -79,7 +81,7 @@ export default function TabsLayout() {
             <Tabs.Screen
                 name="perfil"
                 options={{
-                    title: 'Perfil',
+                    title: t('nav.profile'),
                     tabBarIcon: ({ color, size }) => (
                         <PerfilIcono width={size} height={size} fill={color} />
                     ),

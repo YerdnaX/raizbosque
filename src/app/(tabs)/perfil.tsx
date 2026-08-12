@@ -8,6 +8,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useState } from "react";
 import { useUsuario } from "../../context/UsuarioContext";
 import { useCarrito } from "../../context/CarritoContext";
+import { useIdioma } from "../../context/IdiomaContext";
+import { SelectorIdiomaFila } from "../../components/ui/SelectorIdioma";
 import {
     iniciarConfiguracion2FA,
     verificarActivacion2FA,
@@ -16,12 +18,6 @@ import {
 import CarritoIcono from '@/assets/icons/bottomBar/carritocompra.svg';
 
 type Opcion = { titulo: string; icono: string; ruta?: string };
-
-const opcionesExtras: Opcion[] = [
-    { titulo: 'Cambiar Contraseña',   icono: 'lock',     ruta: '/cambiar-contrasena' },
-    { titulo: 'Reservaciones',        icono: 'calendar',  ruta: '/reservaciones' },
-    { titulo: 'Historial de Compras', icono: 'bag',      ruta: '/historial' },
-];
 
 type Fase =
     | null
@@ -36,6 +32,13 @@ export default function Perfil() {
     const esHorizontal = width > height;
     const { usuario, cerrarSesion, actualizarTotp2FA } = useUsuario();
     const { totalItems } = useCarrito();
+    const { t } = useIdioma();
+
+    const opcionesExtras: Opcion[] = [
+        { titulo: t('profile.changePassword'), icono: 'lock',     ruta: '/cambiar-contrasena' },
+        { titulo: t('profile.reservations'),   icono: 'calendar', ruta: '/reservaciones' },
+        { titulo: t('profile.purchaseHistory'), icono: 'bag',     ruta: '/historial' },
+    ];
 
     // Modal 2FA
     const [fase, setFase] = useState<Fase>(null);
@@ -46,6 +49,7 @@ export default function Perfil() {
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState('');
     const [exito, setExito] = useState('');
+    const [mostrarSelectorIdioma, setMostrarSelectorIdioma] = useState(false);
 
     const nombreCompleto = usuario ? [usuario.Nombre, usuario.Apellidos].filter(Boolean).join(' ') : '';
     const primeraLetra   = usuario?.Nombre?.[0]?.toUpperCase() ?? '?';
@@ -75,8 +79,8 @@ export default function Perfil() {
             setFase('google-qr');
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
-            if (cod === '2FA_YA_ACTIVO') setError('Ya tienes 2FA activo. Desactívalo primero.');
-            else setError('No se pudo iniciar la configuración. Intenta de nuevo.');
+            if (cod === '2FA_YA_ACTIVO') setError(t('profile.twoFactorModal.errors.alreadyActive'));
+            else setError(t('profile.twoFactorModal.errors.startFailed'));
             setFase('elegir-metodo');
         } finally { setCargando(false); }
     }
@@ -89,25 +93,25 @@ export default function Perfil() {
             setFase('personal-instruccion');
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
-            if (cod === '2FA_YA_ACTIVO') setError('Ya tienes 2FA activo. Desactívalo primero.');
-            else setError('No se pudo iniciar la configuración. Intenta de nuevo.');
+            if (cod === '2FA_YA_ACTIVO') setError(t('profile.twoFactorModal.errors.alreadyActive'));
+            else setError(t('profile.twoFactorModal.errors.startFailed'));
             setFase('elegir-metodo');
         } finally { setCargando(false); }
     }
 
     async function manejarVerificarActivacion() {
         setError('');
-        if (!codigo || codigo.length !== 6) { setError('Ingresa el código de 6 dígitos.'); return; }
+        if (!codigo || codigo.length !== 6) { setError(t('profile.twoFactorModal.errors.codeRequired')); return; }
         setCargando(true);
         try {
             await verificarActivacion2FA(usuario!.IdUsuario, codigo);
             actualizarTotp2FA(true);
-            setExito('¡Verificación en dos pasos activada correctamente!');
+            setExito(t('profile.twoFactorModal.activatedSuccess'));
             setTimeout(cerrarModal, 1800);
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
-            if (cod === 'INVALID_2FA_CODE') setError('Código inválido. Inténtalo nuevamente.');
-            else setError('No se pudo activar. Intenta de nuevo.');
+            if (cod === 'INVALID_2FA_CODE') setError(t('profile.twoFactorModal.errors.invalidCode'));
+            else setError(t('profile.twoFactorModal.errors.activateFailed'));
         } finally { setCargando(false); }
     }
 
@@ -115,19 +119,19 @@ export default function Perfil() {
 
     async function manejarDesactivar() {
         setError('');
-        if (!contrasena2FA) { setError('Ingresa tu contraseña actual.'); return; }
-        if (!codigo || codigo.length !== 6) { setError('Ingresa el código de 6 dígitos de tu app autenticadora.'); return; }
+        if (!contrasena2FA) { setError(t('profile.twoFactorModal.errors.passwordRequired')); return; }
+        if (!codigo || codigo.length !== 6) { setError(t('profile.twoFactorModal.errors.authCodeRequired')); return; }
         setCargando(true);
         try {
             await desactivar2FA(usuario!.IdUsuario, contrasena2FA, codigo);
             actualizarTotp2FA(false);
-            setExito('Verificación en dos pasos desactivada.');
+            setExito(t('profile.twoFactorModal.deactivatedSuccess'));
             setTimeout(cerrarModal, 1800);
         } catch (e: any) {
             const cod = e?.response?.data?.codigo;
-            if (cod === 'INVALID_2FA_CODE') setError('Código OTP inválido. Inténtalo nuevamente.');
-            else if (cod === 'INVALID_CREDENTIALS') setError('Contraseña incorrecta.');
-            else setError('No se pudo desactivar. Intenta de nuevo.');
+            if (cod === 'INVALID_2FA_CODE') setError(t('profile.twoFactorModal.errors.invalidOtpCode'));
+            else if (cod === 'INVALID_CREDENTIALS') setError(t('profile.twoFactorModal.errors.wrongPassword'));
+            else setError(t('profile.twoFactorModal.errors.deactivateFailed'));
         } finally { setCargando(false); }
     }
 
@@ -141,7 +145,7 @@ export default function Perfil() {
                 <Pressable style={estilos.botonEncabezado} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }}>
                     <SymbolView name="line.3.horizontal" size={24} tintColor="#1b3022" />
                 </Pressable>
-                <Text style={estilos.encabezadoTitulo}>Mi Perfil</Text>
+                <Text style={estilos.encabezadoTitulo}>{t('profile.headerTitle')}</Text>
                 <Pressable style={estilos.botonEncabezado} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.push('/carrito')}>
                     <View>
                         <CarritoIcono width={30} height={30} fill="#1b3022" />
@@ -166,7 +170,7 @@ export default function Perfil() {
                     <Text style={estilos.nombre}>{nombreCompleto}</Text>
                     <Text style={estilos.correo}>{usuario?.Correo ?? ''}</Text>
                     <Pressable style={estilos.botonEditar} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={() => router.push('/editar-perfil')}>
-                        <Text style={estilos.botonEditarTexto}>EDITAR PERFIL</Text>
+                        <Text style={estilos.botonEditarTexto}>{t('profile.editProfile')}</Text>
                     </Pressable>
                 </View>
 
@@ -191,24 +195,32 @@ export default function Perfil() {
                     >
                         <SymbolView name="lock.shield" size={22} tintColor="#434843" />
                         <View style={estilos.opcionConEstado}>
-                            <Text style={estilos.opcionTexto}>Verificación en dos pasos</Text>
+                            <Text style={estilos.opcionTexto}>{t('profile.twoFactor')}</Text>
                             <Text style={tieneTotp2FA ? estilos.estadoActivo : estilos.estadoInactivo}>
                                 {tieneTotp2FA
-                                    ? (metodo2FA === 'PERSONAL_AUTHENTICATOR' ? 'Activa · Raíces OTP' : 'Activa · Google Authenticator')
-                                    : 'Inactiva'}
+                                    ? (metodo2FA === 'PERSONAL_AUTHENTICATOR' ? t('profile.twoFactorActivePersonal') : t('profile.twoFactorActiveGoogle'))
+                                    : t('profile.twoFactorInactive')}
                             </Text>
                         </View>
                         <SymbolView name="chevron.right" size={16} tintColor="#737973" />
                     </Pressable>
+                    <View style={estilos.divisor} />
+
+                    {/* Idioma */}
+                    <SelectorIdiomaFila
+                        visible={mostrarSelectorIdioma}
+                        onAbrir={() => setMostrarSelectorIdioma(true)}
+                        onCerrar={() => setMostrarSelectorIdioma(false)}
+                    />
                 </View>
 
                 <Pressable style={estilos.botonCerrarSesion} android_ripple={{ color: 'rgba(0,0,0,0.10)' }} onPress={manejarCerrarSesion}>
                     <SymbolView name="rectangle.portrait.and.arrow.right" size={20} tintColor="#ba1a1a" />
-                    <Text style={estilos.cerrarSesionTexto}>Cerrar Sesión</Text>
+                    <Text style={estilos.cerrarSesionTexto}>{t('profile.logout')}</Text>
                 </Pressable>
 
                 <Pressable style={estilos.botonAcercaDe} android_ripple={{ color: 'rgba(0,0,0,0.10)', borderless: true }} onPress={() => router.push('/acerca-de')}>
-                    <Text style={estilos.acercaDeTexto}>Hecho con ❤️ Wilberth Mora</Text>
+                    <Text style={estilos.acercaDeTexto}>{t('profile.madeWith')}</Text>
                 </Pressable>
             </ScrollView>
 
@@ -220,8 +232,8 @@ export default function Perfil() {
                         {/* ─ Elegir método ─ */}
                         {fase === 'elegir-metodo' && (
                             <>
-                                <Text style={estilos.modalTitulo}>Activar verificación en dos pasos</Text>
-                                <Text style={estilos.modalSubtitulo}>Elige cómo generarás tus códigos de verificación.</Text>
+                                <Text style={estilos.modalTitulo}>{t('profile.twoFactorModal.chooseTitle')}</Text>
+                                <Text style={estilos.modalSubtitulo}>{t('profile.twoFactorModal.chooseSubtitle')}</Text>
                                 {error ? <Text style={estilos.mensajeError}>{error}</Text> : null}
 
                                 <Pressable
@@ -232,8 +244,8 @@ export default function Perfil() {
                                 >
                                     <SymbolView name="qrcode" size={28} tintColor="#1b3022" />
                                     <View style={estilos.opcionMetodoTextos}>
-                                        <Text style={estilos.opcionMetodoTitulo}>Google Authenticator</Text>
-                                        <Text style={estilos.opcionMetodoSub}>Compatible con Microsoft Authenticator, Authy y otras apps TOTP</Text>
+                                        <Text style={estilos.opcionMetodoTitulo}>{t('profile.twoFactorModal.googleTitle')}</Text>
+                                        <Text style={estilos.opcionMetodoSub}>{t('profile.twoFactorModal.googleSub')}</Text>
                                     </View>
                                     {cargando ? <ActivityIndicator color="#1b3022" size="small" /> : <SymbolView name="chevron.right" size={16} tintColor="#737973" />}
                                 </Pressable>
@@ -248,8 +260,8 @@ export default function Perfil() {
                                 >
                                     <SymbolView name="shield.checkered" size={28} tintColor="#1b3022" />
                                     <View style={estilos.opcionMetodoTextos}>
-                                        <Text style={estilos.opcionMetodoTitulo}>Autenticador Raíces de Bosque</Text>
-                                        <Text style={estilos.opcionMetodoSub}>Usa la app exclusiva Raíces de Bosque OTP</Text>
+                                        <Text style={estilos.opcionMetodoTitulo}>{t('profile.twoFactorModal.personalTitle')}</Text>
+                                        <Text style={estilos.opcionMetodoSub}>{t('profile.twoFactorModal.personalSub')}</Text>
                                     </View>
                                     <SymbolView name="chevron.right" size={16} tintColor="#737973" />
                                 </Pressable>
@@ -259,9 +271,9 @@ export default function Perfil() {
                         {/* ─ QR de Google Auth ─ */}
                         {fase === 'google-qr' && (
                             <>
-                                <Text style={estilos.modalTitulo}>Configurar Google Authenticator</Text>
+                                <Text style={estilos.modalTitulo}>{t('profile.twoFactorModal.googleSetupTitle')}</Text>
                                 <Text style={estilos.modalSubtitulo}>
-                                    Escanea el código QR con Google Authenticator (u otra app compatible) y luego ingresa el código generado.
+                                    {t('profile.twoFactorModal.googleSetupSubtitle')}
                                 </Text>
                                 {qrImagen ? (
                                     <View style={estilos.qrContenedor}>
@@ -270,20 +282,20 @@ export default function Perfil() {
                                 ) : null}
                                 {claveManual ? (
                                     <View style={estilos.claveManualContenedor}>
-                                        <Text style={estilos.claveManualLabel}>Clave manual</Text>
+                                        <Text style={estilos.claveManualLabel}>{t('profile.twoFactorModal.manualKeyLabel')}</Text>
                                         <Text style={estilos.claveManualValor} selectable>{claveManual}</Text>
                                     </View>
                                 ) : null}
                                 {!exito && (
                                     <>
-                                        <Text style={estilos.modalEtiqueta}>Código de 6 dígitos</Text>
+                                        <Text style={estilos.modalEtiqueta}>{t('profile.twoFactorModal.codeLabel')}</Text>
                                         <TextInput
                                             style={[estilos.inputCodigo, error ? estilos.inputCodigoError : null]}
                                             value={codigo}
                                             onChangeText={v => { setCodigo(v.replace(/\D/g, '')); setError(''); }}
                                             keyboardType="number-pad"
                                             maxLength={6}
-                                            placeholder="000000"
+                                            placeholder={t('common.codePlaceholder')}
                                             placeholderTextColor="#b0b0a8"
                                         />
                                         {error ? <Text style={estilos.mensajeError}>{error}</Text> : null}
@@ -293,7 +305,7 @@ export default function Perfil() {
                                             onPress={manejarVerificarActivacion}
                                             disabled={cargando}
                                         >
-                                            {cargando ? <ActivityIndicator color="#fff" size="small" /> : <Text style={estilos.botonPrincipalTexto}>VERIFICAR Y ACTIVAR</Text>}
+                                            {cargando ? <ActivityIndicator color="#fff" size="small" /> : <Text style={estilos.botonPrincipalTexto}>{t('profile.twoFactorModal.verifyAndActivate')}</Text>}
                                         </Pressable>
                                     </>
                                 )}
@@ -304,15 +316,15 @@ export default function Perfil() {
                         {/* ─ Instrucciones Personal Auth ─ */}
                         {fase === 'personal-instruccion' && (
                             <>
-                                <Text style={estilos.modalTitulo}>Autenticador Raíces de Bosque</Text>
+                                <Text style={estilos.modalTitulo}>{t('profile.twoFactorModal.personalInstructionsTitle')}</Text>
                                 <Text style={estilos.modalSubtitulo}>
-                                    Tu cuenta está lista para vincularse con la app autenticadora personal.
+                                    {t('profile.twoFactorModal.personalInstructionsSubtitle')}
                                 </Text>
                                 <View style={estilos.pasosList}>
-                                    <Text style={estilos.paso}>{'1.'} Instala la app <Text style={estilos.pasoNegrita}>Raíces de Bosque OTP</Text> en tu dispositivo.</Text>
-                                    <Text style={estilos.paso}>{'2.'} Ábrela e inicia sesión con tu usuario y contraseña de Raíces de Bosque.</Text>
-                                    <Text style={estilos.paso}>{'3.'} Toca <Text style={estilos.pasoNegrita}>Vincular este dispositivo</Text> y confirma con el código generado.</Text>
-                                    <Text style={estilos.paso}>{'4.'} Una vez vinculado, la verificación en dos pasos quedará activa automáticamente.</Text>
+                                    <Text style={estilos.paso}>{'1.'} {t('profile.twoFactorModal.step1', { app: t('profile.twoFactorModal.step1App') })}</Text>
+                                    <Text style={estilos.paso}>{'2.'} {t('profile.twoFactorModal.step2')}</Text>
+                                    <Text style={estilos.paso}>{'3.'} {t('profile.twoFactorModal.step3', { action: t('profile.twoFactorModal.step3Action') })}</Text>
+                                    <Text style={estilos.paso}>{'4.'} {t('profile.twoFactorModal.step4')}</Text>
                                 </View>
                             </>
                         )}
@@ -320,29 +332,29 @@ export default function Perfil() {
                         {/* ─ Desactivar ─ */}
                         {fase === 'desactivar' && (
                             <>
-                                <Text style={estilos.modalTitulo}>Desactivar verificación en dos pasos</Text>
+                                <Text style={estilos.modalTitulo}>{t('profile.twoFactorModal.deactivateTitle')}</Text>
                                 <Text style={estilos.modalSubtitulo}>
-                                    Para desactivarla necesitas tu contraseña actual y el código actual de tu app autenticadora.
+                                    {t('profile.twoFactorModal.deactivateSubtitle')}
                                 </Text>
                                 {!exito && (
                                     <>
-                                        <Text style={estilos.modalEtiqueta}>Contraseña actual</Text>
+                                        <Text style={estilos.modalEtiqueta}>{t('profile.twoFactorModal.currentPasswordLabel')}</Text>
                                         <TextInput
                                             style={[estilos.inputContrasena, error ? estilos.inputCodigoError : null]}
                                             value={contrasena2FA}
                                             onChangeText={v => { setContrasena2FA(v); setError(''); }}
                                             secureTextEntry
-                                            placeholder="Tu contraseña"
+                                            placeholder={t('profile.twoFactorModal.currentPasswordPlaceholder')}
                                             placeholderTextColor="#b0b0a8"
                                         />
-                                        <Text style={[estilos.modalEtiqueta, { marginTop: 12 }]}>Código de 6 dígitos (autenticador)</Text>
+                                        <Text style={[estilos.modalEtiqueta, { marginTop: 12 }]}>{t('profile.twoFactorModal.authenticatorCodeLabel')}</Text>
                                         <TextInput
                                             style={[estilos.inputCodigo, error ? estilos.inputCodigoError : null]}
                                             value={codigo}
                                             onChangeText={v => { setCodigo(v.replace(/\D/g, '')); setError(''); }}
                                             keyboardType="number-pad"
                                             maxLength={6}
-                                            placeholder="000000"
+                                            placeholder={t('common.codePlaceholder')}
                                             placeholderTextColor="#b0b0a8"
                                         />
                                         {error ? <Text style={estilos.mensajeError}>{error}</Text> : null}
@@ -352,7 +364,7 @@ export default function Perfil() {
                                             onPress={manejarDesactivar}
                                             disabled={cargando}
                                         >
-                                            {cargando ? <ActivityIndicator color="#fff" size="small" /> : <Text style={estilos.botonPrincipalTexto}>DESACTIVAR</Text>}
+                                            {cargando ? <ActivityIndicator color="#fff" size="small" /> : <Text style={estilos.botonPrincipalTexto}>{t('profile.twoFactorModal.deactivate')}</Text>}
                                         </Pressable>
                                     </>
                                 )}
@@ -363,7 +375,7 @@ export default function Perfil() {
                         {/* Cancelar siempre disponible */}
                         {!exito && (
                             <Pressable style={estilos.botonCancelarModal} android_ripple={{ color: 'rgba(0,0,0,0.08)' }} onPress={cerrarModal}>
-                                <Text style={estilos.botonCancelarModalTexto}>Cancelar</Text>
+                                <Text style={estilos.botonCancelarModalTexto}>{t('profile.twoFactorModal.cancel')}</Text>
                             </Pressable>
                         )}
                     </View>

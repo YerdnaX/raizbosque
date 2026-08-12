@@ -3,7 +3,8 @@ import { View, Text, StyleSheet, Animated, AccessibilityInfo } from 'react-nativ
 import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useUsuario } from '../context/UsuarioContext';
-import { elegirMensajeBienvenida } from '../features/bienvenida/constants/mensajesBienvenida';
+import { useIdioma } from '../context/IdiomaContext';
+import { elegirIndiceMensajeBienvenida } from '../features/bienvenida/constants/mensajesBienvenida';
 import { SimboloBrote } from '../features/bienvenida/components/SimboloBrote';
 import { COLORES } from '../constants/colores';
 
@@ -14,7 +15,9 @@ const TIEMPO_MAXIMO_SEGURIDAD = 2500;
 export default function Bienvenida() {
     const insets = useSafeAreaInsets();
     const { usuario } = useUsuario();
-    const mensaje = useRef(elegirMensajeBienvenida()).current;
+    const { t, strings } = useIdioma();
+    const indiceMensaje = useRef(elegirIndiceMensajeBienvenida(strings.welcome.messages.length)).current;
+    const mensaje = strings.welcome.messages[indiceMensaje];
     const yaNavego = useRef(false);
 
     const iconoOpacidad = useRef(new Animated.Value(0)).current;
@@ -89,7 +92,7 @@ export default function Bienvenida() {
                 </Animated.View>
 
                 <Animated.View style={{ opacity: textoOpacidad, marginTop: 28 }}>
-                    {nombre ? <Text style={estilos.saludo}>Qué bueno verte, {nombre}.</Text> : null}
+                    {nombre ? <Text style={estilos.saludo}>{t('welcome.greeting', { name: nombre })}</Text> : null}
                     <Text style={estilos.mensaje}>{mensaje}</Text>
                 </Animated.View>
             </Animated.View>
