@@ -788,6 +788,21 @@ const es = {
         loadMenu: 'No se pudo cargar el menú.',
         loadProducts: 'No se pudieron cargar los productos.',
     },
+    onboarding: {
+        pasoIndicador: 'Paso {{current}} de {{total}}',
+        siguiente: 'Siguiente',
+        anterior: 'Anterior',
+        omitir: 'Omitir',
+        comenzar: 'Comenzar',
+        descripciones: {
+            index: 'Consulta un resumen de RaízBosque y accede rápidamente a sus principales servicios.',
+            restaurante: 'Explora el menú disponible y encuentra opciones para acompañar tu visita.',
+            vivero: 'Descubre las plantas disponibles, sus características y los cuidados que necesitan.',
+            productos: 'Explora los demás productos disponibles en RaízBosque.',
+            jardin: 'Consulta y administra las plantas que has agregado a tu jardín personal.',
+            perfil: 'Administra tu cuenta, reservaciones, compras, seguridad y preferencias.',
+        },
+    },
 };
 
 export default es;

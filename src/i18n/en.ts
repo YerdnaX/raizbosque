@@ -788,6 +788,21 @@ const en: typeof es = {
         loadMenu: "Couldn't load the menu.",
         loadProducts: "Couldn't load the products.",
     },
+    onboarding: {
+        pasoIndicador: 'Step {{current}} of {{total}}',
+        siguiente: 'Next',
+        anterior: 'Back',
+        omitir: 'Skip',
+        comenzar: 'Get Started',
+        descripciones: {
+            index: 'Check a summary of RaízBosque and quickly reach its main services.',
+            restaurante: 'Explore the available menu and find options to go with your visit.',
+            vivero: 'Discover the available plants, their features, and the care they need.',
+            productos: 'Explore the other products available at RaízBosque.',
+            jardin: 'Check and manage the plants you have added to your personal garden.',
+            perfil: 'Manage your account, reservations, purchases, security, and preferences.',
+        },
+    },
 };
 
 export default en;
